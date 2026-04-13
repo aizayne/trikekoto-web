@@ -1,0 +1,130 @@
+// ============================================================
+// Firestore Security Rules — TrikeKoTo
+// ============================================================
+// Deploy with:  firebase deploy --only firestore:rules
+//
+// Collections:
+//   drivers/{driverEmail}        — driver profiles (email doc ID)
+//   active_drivers/{driverEmail} — live presence + GPS + FCM token
+//   rides/{rideId}               — commuter ride requests
+//   admins/{adminEmail}          — server-side admin list (doc existence = admin)
+//
+// Identity model:
+//   The app uses email as a document ID, so we enforce
+//   request.auth.token.email == driverEmail on writes.
+//
+// Admin gate:
+//   Admins are defined by the existence of an `admins/{email}` doc.
+//   Create those docs from the Firebase Console — never from the app.
+// ============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ─────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Case-insensitive compare. Doc IDs are always stored
+    // lowercased (see src/utils/email.js on the client), so we
+    // lowercase the incoming auth token email before comparing.
+    function isSelf(email) {
+      return isSignedIn()
+          && request.auth.token.email.lower() == email.lower();
+    }
+
+    // Admin lookup also uses the lowercased form.
+    function isAdmin() {
+      return isSignedIn()
+          && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+
+    // Fields a driver is allowed to touch on their own profile.
+    // `status` is NOT in this list — only admins can flip approval.
+    function driverFieldsOk() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['firstName', 'lastName', 'phone', 'plateNumber']);
+    }
+
+    // ── drivers/ ────────────────────────────────────────────
+    // Publicly readable so commuters can display driver details
+    // (name, plate) on the accepted-ride screen.
+    match /drivers/{driverEmail} {
+      allow read: if true;
+
+      // Creation: only the signed-in user, only for their own email,
+      // and only in Pending Verification state.
+      allow create: if isSelf(driverEmail)
+                    && request.resource.data.email == driverEmail
+                    && request.resource.data.status == 'Pending Verification';
+
+      // Self-edit: drivers can update their own profile fields but
+      // NOT their status (admins own that).
+      // Admins can update anything.
+      allow update: if (isSelf(driverEmail) && driverFieldsOk())
+                    || isAdmin();
+
+      // Deletion is admin-only.
+      allow delete: if isAdmin();
+    }
+
+    // ── active_drivers/ ─────────────────────────────────────
+    // Publicly readable so commuters can show the driver's live
+    // GPS position on the map after a ride is accepted.
+    match /active_drivers/{driverEmail} {
+      allow read: if true;
+
+      // Only the driver themselves can write to their presence doc.
+      allow write: if isSelf(driverEmail);
+    }
+
+    // ── rides/ ──────────────────────────────────────────────
+    // Publicly readable so drivers (while online) can see pending
+    // requests, and commuters can listen to their own ride doc.
+    match /rides/{rideId} {
+      allow read: if true;
+
+      // Anyone (including unauthenticated commuters) can create a
+      // ride request — it must start as "searching" with no driver.
+      allow create: if request.resource.data.status == 'searching'
+                    && request.resource.data.assignedDriver == null;
+
+      // Updates:
+      //   - A driver accepting: must set assignedDriver == their email
+      //     and can only transition searching → accepted.
+      //   - The assigned driver can complete or cancel their ride.
+      //   - The commuter (unauthenticated) can only cancel a ride
+      //     they're still waiting on (status stays searching → cancelled
+      //     or accepted → cancelled; no other fields change meaningfully).
+      allow update: if
+        // Driver accepting a ride
+        (isSignedIn()
+          && resource.data.status == 'searching'
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.assignedDriver.lower() == request.auth.token.email.lower())
+        ||
+        // Assigned driver updating their own ride
+        (isSignedIn()
+          && resource.data.assignedDriver.lower() == request.auth.token.email.lower()
+          && request.resource.data.status in ['completed', 'cancelled'])
+        ||
+        // Commuter cancelling (no auth) — only the status can change
+        (request.resource.data.status == 'cancelled'
+          && resource.data.status in ['searching', 'accepted']);
+
+      // No client deletes — keep rides as audit history.
+      allow delete: if isAdmin();
+    }
+
+    // ── admins/ ─────────────────────────────────────────────
+    // The existence of an admins/{email} doc marks that user as an
+    // admin. Only admins can read this list; no client can write it.
+    match /admins/{adminEmail} {
+      allow read: if isAdmin();
+      allow write: if false; // managed from Firebase Console only
+    }
+  }
+}

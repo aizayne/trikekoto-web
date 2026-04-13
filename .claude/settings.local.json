@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx eslint:*)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(npx vite:*)",
+      "Bash(echo \"LINT_EXIT=$?\")",
+      "Bash(echo \"BUILD_EXIT=$?\")",
+      "Bash(node -e \"try { const s = require\\('sharp'\\); console.log\\('sharp:', s.versions\\); } catch\\(e\\) { console.log\\('no sharp:', e.message\\); }\")",
+      "Bash(node -e \"try { const s = require\\('@resvg/resvg-js'\\); console.log\\('resvg present'\\); } catch\\(e\\) { console.log\\('no resvg:', e.message.split\\('\\\\n'\\)[0]\\); }\")",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npx firebase:*)",
+      "Read(//c/Users/jeloooaceeew/AppData/Roaming/Google/**)",
+      "Read(//c/Users/jeloooaceeew/.config/configstore/**)",
+      "Bash(node -e \"try { require\\('firebase-admin/app'\\); console.log\\('present'\\); } catch { console.log\\('absent'\\); }\")",
+      "Bash(npm ls:*)",
+      "Bash(node scripts/generate-qr.mjs)"
+    ]
+  }
+}

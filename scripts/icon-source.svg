@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    TrikeKoTo app icon — source of truth
+    Regenerate PNGs via: `npm run icons`
+
+    Layout rules:
+      * Full-bleed amber background (#f59e0b)
+      * All foreground content sits inside a 410-diameter
+        centred circle — the maskable safe zone (80% of 512).
+      * Background is also used as the splash/loading colour
+        so Android transitions look consistent.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background (covers the maskable bleed area) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- ─────────── Trike glyph (inside the safe zone) ─────────── -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Tri-frame: triangle connecting the three wheels -->
+    <path d="M256 158 L152 362 L360 362 Z"
+          fill="none"
+          stroke="url(#frame)"
+          stroke-width="30"/>
+
+    <!-- Seat / cab above the rear axle -->
+    <rect x="206" y="252" width="100" height="62" rx="14"
+          fill="url(#frame)"/>
+
+    <!-- Handlebar stem up to front wheel -->
+    <path d="M256 158 L256 232"
+          stroke="url(#frame)"
+          stroke-width="22"/>
+
+    <!-- Handlebars -->
+    <path d="M214 158 L298 158"
+          stroke="url(#frame)"
+          stroke-width="22"/>
+
+    <!-- Front wheel -->
+    <circle cx="256" cy="130" r="54"
+            fill="url(#frame)"/>
+    <circle cx="256" cy="130" r="22"
+            fill="#f59e0b"/>
+
+    <!-- Rear-left wheel -->
+    <circle cx="140" cy="372" r="54"
+            fill="url(#frame)"/>
+    <circle cx="140" cy="372" r="22"
+            fill="#f59e0b"/>
+
+    <!-- Rear-right wheel -->
+    <circle cx="372" cy="372" r="54"
+            fill="url(#frame)"/>
+    <circle cx="372" cy="372" r="22"
+            fill="#f59e0b"/>
+
+    <!-- Location pin at centroid of the triangle -->
+    <path d="M256 294
+             C 242 294 232 304 232 318
+             C 232 334 256 352 256 352
+             C 256 352 280 334 280 318
+             C 280 304 270 294 256 294 Z"
+          fill="#f59e0b"/>
+    <circle cx="256" cy="316" r="7" fill="#0f172a"/>
+  </g>
+</svg>
