@@ -1,0 +1,99 @@
+@startuml use-case-diagram
+' ============================================================
+' TrikeKoTo — Use Case Diagram
+' ============================================================
+' Render with:
+'   java -jar plantuml.jar -tpng docs/use-case-diagram.puml
+' ============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 13
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowColor #475569
+skinparam ArrowFontColor #64748b
+skinparam ArrowFontSize 11
+skinparam ActorBorderColor #0f172a
+skinparam ActorBackgroundColor #f8fafc
+skinparam UsecaseBorderColor #1e3a5f
+skinparam UsecaseBackgroundColor #eff6ff
+skinparam UsecaseFontColor #0f172a
+skinparam PackageBorderColor #f59e0b
+skinparam PackageFontColor #b45309
+skinparam PackageFontStyle bold
+skinparam RectangleBorderColor #0f172a
+skinparam RectangleFontStyle bold
+
+left to right direction
+
+title <b>TrikeKoTo</b> — Use Case Diagram
+
+' ── Actors (left side) ──────────────────────────────────────
+actor "Commuter" as Commuter
+actor "Driver" as Driver
+actor "Admin" as Admin
+
+' Admin is a specialized Driver: admins authenticate through
+' the same driver-login flow and additionally require an
+' `admins/{email}` document.
+Admin --|> Driver
+
+' ── System boundary ─────────────────────────────────────────
+rectangle "TrikeKoTo Web App" {
+
+  package "Booking" as P1 {
+    usecase "Book a Ride" as UC_Book
+    usecase "Track Driver\non Live Map" as UC_Track
+    usecase "Cancel Ride" as UC_CancelC
+  }
+
+  package "Driver Account" as P2 {
+    usecase "Register" as UC_Register
+    usecase "Log In" as UC_Login
+    usecase "Edit Profile" as UC_Profile
+  }
+
+  package "Driver Operations" as P3 {
+    usecase "Go Online /\nGo Offline" as UC_Online
+    usecase "Receive Ride\nRequest" as UC_Receive
+    usecase "Accept Ride" as UC_Accept
+    usecase "Complete Ride" as UC_Complete
+    usecase "View Ride\nHistory" as UC_History
+  }
+
+  package "Admin Operations" as P4 {
+    usecase "Approve Driver" as UC_Approve
+    usecase "Suspend Driver" as UC_Suspend
+    usecase "View Analytics\nDashboard" as UC_Analytics
+  }
+}
+
+' ── Commuter associations ───────────────────────────────────
+Commuter --> UC_Book
+Commuter --> UC_Track
+Commuter --> UC_CancelC
+
+' ── Driver associations ─────────────────────────────────────
+Driver --> UC_Register
+Driver --> UC_Login
+Driver --> UC_Profile
+Driver --> UC_Online
+Driver --> UC_Receive
+Driver --> UC_Accept
+Driver --> UC_Complete
+Driver --> UC_History
+
+' ── Admin associations ──────────────────────────────────────
+Admin --> UC_Approve
+Admin --> UC_Suspend
+Admin --> UC_Analytics
+
+' ── Includes / Extends (only the essential ones) ────────────
+UC_Online  ..> UC_Receive : <<include>>
+UC_Receive ..> UC_Accept  : <<extend>>
+UC_Book    ..> UC_Track   : <<include>>
+UC_Login   <.. UC_Register : <<extend>>
+
+@enduml
