@@ -1,0 +1,16 @@
+{
+  "name": "trikekoto-admin-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Admin-SDK bootstrap and migration scripts for TrikeKoTo.",
+  "scripts": {
+    "seed-admin": "node seed_admin.mjs",
+    "migrate": "node migrate_from_web.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "firebase-admin": "^13.8.0",
+    "qrcode": "^1.5.4"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "trikekoto-rules-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Security-rules unit tests for TrikeKoTo, run against the Firestore emulator.",
+  "scripts": {
+    "test": "firebase emulators:exec --config ../firebase.json --only firestore,auth --project trikekoto-rules-test \"npm run test:mocha\"",
+    "test:mocha": "mocha --timeout 30000 rules.test.mjs lifecycle.test.mjs attacks.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^13.35.1",
+    "mocha": "^10.7.3"
+  }
+}

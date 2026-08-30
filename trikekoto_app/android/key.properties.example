@@ -1,0 +1,13 @@
+# Copy to android/key.properties and fill in.
+# That file is gitignored — it holds the password to your signing key.
+#
+# Create the keystore first (see README, "Release signing"):
+#
+#   keytool -genkey -v -keystore trikekoto-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias trikekoto
+#
+storePassword=
+keyPassword=
+keyAlias=trikekoto
+# Path relative to the android/ directory.
+storeFile=../trikekoto-release.jks

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    TrikeKoTo app icon — the "tk" wordmark.
+
+    Rebuilt as vector from the supplied reference rather than tracing the
+    screenshot, so every launcher density is sharp instead of upscaled from
+    ~340px.
+
+    Set in Poppins, the same face the app uses for headings, so the icon and
+    the first screen a driver sees share a voice. The ring under the k is a
+    wheel — the only figurative element, and the one that ties an otherwise
+    abstract monogram to what the app does.
+  -->
+
+  <rect width="1024" height="1024" fill="#101A2C"/>
+
+  <g fill="#F5A623">
+    <text x="512" y="640"
+          font-family="Poppins"
+          font-weight="700"
+          font-size="470"
+          letter-spacing="-14"
+          text-anchor="middle">tk</text>
+
+    <!-- Degree-style dot, level with the top of the k -->
+    <circle cx="742" cy="374" r="34"/>
+  </g>
+
+  <!-- Wheel, drawn as a ring so it stays open at small sizes -->
+  <circle cx="616" cy="742" r="42" fill="none" stroke="#F5A623" stroke-width="26"/>
+</svg>

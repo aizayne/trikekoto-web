@@ -1,0 +1,476 @@
+// ============================================================
+// TrikeKoTo — Firestore Security Rules (v2)
+// ============================================================
+// Deploy:  firebase deploy --only firestore:rules
+// Test:    cd test_rules && npm test
+//
+// Identity model
+// --------------
+//   Drivers & admins are keyed by their LOWERCASED email address.
+//   Commuters are keyed by their Firebase Anonymous Auth uid — they
+//   never create a password account, but they always have an auth
+//   token, which is what makes ride documents ownable.
+//
+// Trust boundary
+// --------------
+//   `request.auth.token.email` is only meaningful when the address
+//   has actually been verified. Firebase email/password signup does
+//   NOT prove ownership of an address, so any rule that grants power
+//   based on email (i.e. isAdmin) also requires email_verified.
+//
+// Collections
+// -----------
+//   drivers/{driverEmail}        driver profile + verification state
+//   active_drivers/{driverEmail} live presence + GPS (hot path)
+//   rides/{rideId}               ride lifecycle + dispatch state
+//   admins/{adminEmail}          admin allowlist (Console-managed)
+//   feedback/{feedbackId}        issue reports
+//   config/{configId}            runtime tunables (dispatch, fares)
+// ============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════
+    //  Identity helpers
+    // ═══════════════════════════════════════════════════════
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // Lowercased email from the auth token, or '' when the caller is
+    // anonymous. Returning '' rather than null keeps every downstream
+    // comparison total — no rule ever errors out on a missing claim.
+    function tokenEmail() {
+      return isSignedIn() && 'email' in request.auth.token
+             && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    function emailVerified() {
+      return isSignedIn() && request.auth.token.get('email_verified', false) == true;
+    }
+
+    function isSelf(email) {
+      return tokenEmail() != '' && tokenEmail() == email.lower();
+    }
+
+    // Admin power requires a VERIFIED address — see "Trust boundary".
+    function isAdmin() {
+      return emailVerified()
+        && exists(/databases/$(database)/documents/admins/$(tokenEmail()));
+    }
+
+    function driverProfile(email) {
+      return get(/databases/$(database)/documents/drivers/$(email.lower())).data;
+    }
+
+    // Approved == verified by an admin and not suspended. Costs one
+    // document read, so it is only called on low-frequency writes
+    // (accepting a ride), never on GPS pings.
+    function isApprovedSelfDriver() {
+      return tokenEmail() != ''
+        && exists(/databases/$(database)/documents/drivers/$(tokenEmail()))
+        && driverProfile(tokenEmail()).status == 'approved';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Diff helpers
+    // ═══════════════════════════════════════════════════════
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function onlyChanged(keys) {
+      return changedKeys().hasOnly(keys);
+    }
+
+    // Absent or a non-negative number. Used for the fare fields, which are
+    // optional but must never be negative.
+    function nullOrPositive(value) {
+      return value == null || (value is number && value >= 0);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Driver discovery switch
+    // ═══════════════════════════════════════════════════════
+    // The greedy nearest-driver search runs on the COMMUTER's device,
+    // so the commuter must be able to query active_drivers. That doc
+    // therefore holds no PII beyond the driver's email + coordinates.
+    //
+    // ── PREPARED CHANGE (roadmap step 69) ──────────────────
+    // This is why any signed-in user can enumerate online driver emails.
+    // The exposure is deliberately minimal — the presence document holds
+    // no name, phone, plate, or rating, only an email and a coordinate —
+    // but it is still readable by anyone with an account.
+    //
+    // Once `sweepStaleRides` is DEPLOYED and the client-side sweep has
+    // been removed from DispatchController, replace the body below with:
+    //
+    //     return isAdmin();
+    //
+    // Nothing else in this file moves. That single line was the whole
+    // point of routing every commuter read through this function rather
+    // than inlining `isSignedIn()` at the collection.
+    //
+    // Order matters: the client sweep must stop first. Tightening this
+    // while commuters still run the match means no ride is ever offered.
+    // Then update the tripwire test in test_rules/attacks.test.mjs that
+    // asserts this gap is open.
+    function canDiscoverDrivers() {
+      return isSignedIn();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  drivers/{driverEmail}
+    // ═══════════════════════════════════════════════════════
+    // Holds PII (phone, licence). NOT publicly readable: everything a
+    // commuter needs about their driver is denormalised onto the ride
+    // document at accept time (see rides.driverSnapshot).
+    match /drivers/{driverEmail} {
+
+      function validNewDriver() {
+        let d = request.resource.data;
+        return d.email == driverEmail.lower()
+          && d.uid == uid()
+          && d.status == 'pending'          // self-approval is impossible
+          && d.firstName is string   && d.firstName.size() >= 1   && d.firstName.size() <= 60
+          && d.lastName is string    && d.lastName.size() >= 1    && d.lastName.size() <= 60
+          && d.phone is string       && d.phone.size() >= 7       && d.phone.size() <= 20
+          && d.plateNumber is string && d.plateNumber.size() >= 3 && d.plateNumber.size() <= 16
+          && d.todaChapter is string && d.todaChapter.size() <= 80
+          && d.ratingSum == 0
+          && d.ratingCount == 0
+          && d.createdAt == request.time;
+      }
+
+      // Rating aggregates are the one field pair a third party may
+      // touch, because a commuter posts their star rating directly.
+      // The arithmetic is verified here: exactly one vote, worth 1..5.
+      //
+      // ── PREPARED CHANGE (roadmap step 68) ────────────────
+      // This clause is what lets any signed-in user inflate a driver's
+      // rating without taking a ride. The rules can check the arithmetic
+      // but cannot tie it to a completed ride, because each document in a
+      // transaction is authorised independently.
+      //
+      // The `onRideRated` Cloud Function already does this correctly and
+      // idempotently. Once it is DEPLOYED, close the gap by replacing the
+      // `(isSignedIn() && validRatingIncrement())` line in `allow update`
+      // below with nothing — the function writes via the Admin SDK and is
+      // not subject to these rules.
+      //
+      // Order matters: deploy the function FIRST. Tightening this before
+      // the function exists means no rating is ever counted. The client's
+      // own increment is already best-effort and fails quietly, so no app
+      // release is needed to make the cutover safe.
+      //
+      // Then update the two tripwire tests in test_rules/attacks.test.mjs
+      // that currently assert this gap is open.
+      function validRatingIncrement() {
+        let before = resource.data;
+        let after  = request.resource.data;
+        return onlyChanged(['ratingSum', 'ratingCount', 'updatedAt'])
+          && after.ratingCount == before.ratingCount + 1
+          && after.ratingSum >= before.ratingSum + 1
+          && after.ratingSum <= before.ratingSum + 5;
+      }
+
+      allow get: if isSelf(driverEmail) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if isSelf(driverEmail) && validNewDriver();
+
+      allow update: if
+        // Driver edits their own contact details. `status` is absent
+        // from this list, so approval/suspension stays with admins.
+        (isSelf(driverEmail)
+          && onlyChanged(['firstName', 'lastName', 'phone',
+                          'plateNumber', 'todaChapter', 'updatedAt']))
+        ||
+        // Any signed-in commuter may post one star rating.
+        (isSignedIn() && validRatingIncrement())
+        ||
+        isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  active_drivers/{driverEmail}
+    // ═══════════════════════════════════════════════════════
+    // The dispatch index. Written every few seconds while a driver is
+    // online, so its rules are deliberately cheap — no get() calls.
+    // Approval is enforced where it actually matters: accepting a ride.
+    match /active_drivers/{driverEmail} {
+
+      function validPresence() {
+        let d = request.resource.data;
+        return d.email == driverEmail.lower()
+          && d.isOnline is bool
+          && d.availability in ['idle', 'on_ride']
+          && d.position.geopoint is latlng
+          && d.position.geohash is string
+          && d.position.geohash.size() <= 12
+          && d.updatedAt == request.time;
+      }
+
+      allow read: if canDiscoverDrivers();
+      allow create, update: if isSelf(driverEmail) && validPresence();
+      allow delete: if isSelf(driverEmail) || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  rides/{rideId}
+    // ═══════════════════════════════════════════════════════
+    // Lifecycle: searching → accepted → in_transit → completed
+    //                     ↘ cancelled / expired
+    //
+    // While `searching`, the commuter's device drives the greedy
+    // search by rewriting `dispatch` (offeredTo / depth) every 15s.
+    // Each transition below is a separate, minimal grant.
+    match /rides/{rideId} {
+
+      function isRideCommuter() {
+        return isSignedIn() && resource.data.get('commuterUid', '') == uid();
+      }
+
+      // `.get(field, default)` rather than direct access: rides written by
+      // the previous web build have no `assignedDriver` or `dispatch` field
+      // at all, and a missing-field access is an evaluation error, which
+      // would fail an entire admin query rather than just that document.
+      function isAssignedDriver() {
+        return tokenEmail() != ''
+          && resource.data.get('assignedDriver', null) != null
+          && resource.data.assignedDriver.lower() == tokenEmail();
+      }
+
+      function isOfferedDriver() {
+        return tokenEmail() != ''
+          && resource.data.get('dispatch', {}).get('offeredTo', null) != null
+          && resource.data.dispatch.offeredTo.lower() == tokenEmail();
+      }
+
+      // Absent config, or an absent flag, means open. A project that has not
+      // seeded `config/app` yet must still work — failing closed here would
+      // make a missing document look like a broken ruleset.
+      function ridesAreOpen() {
+        let path = /databases/$(database)/documents/config/app;
+        return !exists(path)
+          || get(path).data.get('acceptingRides', true) != false;
+      }
+
+      function validNewRide() {
+        let d = request.resource.data;
+        return d.commuterUid == uid()
+          && d.status == 'searching'
+          && d.assignedDriver == null
+          && d.driverSnapshot == null
+          && d.rating == null
+          && d.commuterName is string  && d.commuterName.size() >= 1 && d.commuterName.size() <= 60
+          && d.commuterPhone is string && d.commuterPhone.size() >= 7 && d.commuterPhone.size() <= 20
+          && d.pickup.label is string  && d.pickup.label.size() >= 1  && d.pickup.label.size() <= 200
+          && d.dropoff.label is string && d.dropoff.label.size() >= 1 && d.dropoff.label.size() <= 200
+          && d.pickup.geopoint is latlng
+          && (d.notes == null || d.notes.size() <= 300)
+          && d.dispatch.depth == 0
+          && d.dispatch.attemptedDrivers.size() == 0
+          && d.createdAt == request.time;
+      }
+
+      // The snapshot the commuter sees must match the driver's real
+      // profile — a driver cannot advertise someone else's plate.
+      function snapshotMatchesProfile() {
+        let s = request.resource.data.driverSnapshot;
+        let p = driverProfile(tokenEmail());
+        return s.email == tokenEmail()
+          && s.plateNumber == p.plateNumber
+          && s.phone == p.phone
+          && s.firstName == p.firstName;
+      }
+
+      allow get: if isAdmin()
+        || isRideCommuter()
+        || isAssignedDriver()
+        || isOfferedDriver();
+
+      // Commuters list their own history; drivers list rides offered
+      // to them or assigned to them. Both are covered doc-by-doc by
+      // the same predicates.
+      allow list: if isAdmin()
+        || isRideCommuter()
+        || isAssignedDriver()
+        || isOfferedDriver();
+
+      // The pilot stop button. Flipping `config/app.acceptingRides` to false
+      // halts new bookings within seconds, for everyone, without anyone
+      // installing anything — the only rollback available when the app is an
+      // APK already sitting on drivers' phones.
+      //
+      // Deliberately scoped to `create`. Rides already in flight keep their
+      // full lifecycle, so pressing stop never strands a passenger who is
+      // sitting in a tricycle.
+      //
+      // Two document reads per ride created, and none on any other path. At
+      // pilot volume that is ~100 reads a day against a 50,000 allowance.
+      allow create: if isSignedIn() && ridesAreOpen() && validNewRide();
+
+      allow update: if
+        // ── 1. Commuter widens the greedy search ──────────────
+        // Rewrites dispatch only; depth is monotonic and capped at
+        // the 10-driver limit from the dispatch spec.
+        (isRideCommuter()
+          && resource.data.status == 'searching'
+          && request.resource.data.status == 'searching'
+          && onlyChanged(['dispatch'])
+          && request.resource.data.dispatch.depth >= resource.data.dispatch.depth
+          && request.resource.data.dispatch.depth <= 10
+          && request.resource.data.dispatch.attemptedDrivers.size() <= 10)
+        ||
+        // ── 2. Commuter cancels, or the search gives up ───────
+        (isRideCommuter()
+          && resource.data.status in ['searching', 'accepted']
+          && request.resource.data.status in ['cancelled', 'expired']
+          && request.resource.data.cancelledBy in ['commuter', 'system']
+          && onlyChanged(['status', 'cancelledAt', 'cancelledBy', 'dispatch']))
+        ||
+        // ── 3. Commuter rates a completed ride, once ──────────
+        (isRideCommuter()
+          && resource.data.status == 'completed'
+          && resource.data.rating == null
+          && onlyChanged(['rating', 'feedback', 'ratedAt'])
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && (request.resource.data.feedback == null
+              || request.resource.data.feedback.size() <= 500))
+        ||
+        // ── 4. The OFFERED driver accepts ─────────────────────
+        // Paired with a client-side runTransaction, this is what
+        // makes double-booking impossible: the rule requires the
+        // pre-image to still be unassigned, and the transaction
+        // aborts if that pre-image changed underneath it.
+        (isOfferedDriver()
+          && isApprovedSelfDriver()
+          && resource.data.status == 'searching'
+          && resource.data.assignedDriver == null
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.assignedDriver.lower() == tokenEmail()
+          && request.resource.data.acceptedAt == request.time
+          && snapshotMatchesProfile()
+          && onlyChanged(['status', 'assignedDriver', 'driverSnapshot',
+                          'driverLocation', 'driverLocationAt',
+                          'acceptedAt', 'dispatch']))
+        ||
+        // ── 5. The offered driver declines ────────────────────
+        // Clears the offer and adds itself to attemptedDrivers so the
+        // commuter's next sweep skips it.
+        (isOfferedDriver()
+          && onlyChanged(['dispatch'])
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.dispatch.offeredTo == null
+          && request.resource.data.dispatch.attemptedDrivers.hasAll([tokenEmail()])
+          && request.resource.data.dispatch.attemptedDrivers
+               .hasAll(resource.data.dispatch.attemptedDrivers))
+        ||
+        // ── 6. Assigned driver advances the lifecycle ─────────
+        (isAssignedDriver() && (
+          (resource.data.status == 'accepted'
+            && request.resource.data.status == 'in_transit'
+            && onlyChanged(['status', 'startedAt']))
+          ||
+          // On completion the driver also records the trip distance and
+          // the fare it implies. Both are optional — a driver whose GPS
+          // never produced a fix still has to be able to close the ride —
+          // but neither may be negative, and the commuter cannot alter
+          // them afterwards, since no commuter clause admits these keys.
+          (resource.data.status == 'in_transit'
+            && request.resource.data.status == 'completed'
+            && onlyChanged(['status', 'completedAt',
+                            'distanceKm', 'fareEstimate'])
+            && nullOrPositive(request.resource.data.get('distanceKm', null))
+            && nullOrPositive(request.resource.data.get('fareEstimate', null)))
+          ||
+          (resource.data.status in ['accepted', 'in_transit']
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.cancelledBy == 'driver'
+            && onlyChanged(['status', 'cancelledAt', 'cancelledBy']))
+        ))
+        ||
+        // ── 7. Assigned driver streams GPS to the commuter ────
+        // The commuter tracks the trike by listening to their OWN
+        // ride doc — they never need read access to active_drivers.
+        (isAssignedDriver()
+          && resource.data.status in ['accepted', 'in_transit']
+          && onlyChanged(['driverLocation', 'driverLocationAt']))
+        ||
+        isAdmin();
+
+      // Rides are the audit trail for analytics; nobody deletes them.
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  admins/{adminEmail}
+    // ═══════════════════════════════════════════════════════
+    // Membership is granted from the Firebase Console only. Self-read
+    // is allowed so the app can answer "am I an admin?" with a plain
+    // doc lookup instead of a permission error.
+    match /admins/{adminEmail} {
+      allow get: if isSelf(adminEmail) || isAdmin();
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  feedback/{feedbackId}
+    // ═══════════════════════════════════════════════════════
+    match /feedback/{feedbackId} {
+
+      function validFeedback() {
+        let d = request.resource.data;
+        return d.submittedByUid == uid()
+          && d.message is string
+          && d.message.size() > 0
+          && d.message.size() <= 2000
+          && d.category in ['issue', 'suggestion', 'question', 'other']
+          && d.role in ['commuter', 'driver', 'unknown']
+          && d.resolved == false
+          && (d.contact == null || d.contact.size() <= 120)
+          && d.createdAt == request.time;
+      }
+
+      allow get: if isAdmin()
+        || (isSignedIn() && resource.data.submittedByUid == uid());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && validFeedback();
+      allow update, delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  config/{configId}
+    // ═══════════════════════════════════════════════════════
+    // Runtime tunables (search radius, offer timeout, fare table) so
+    // dispatch behaviour can change without shipping a new APK.
+    match /config/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Default deny — anything not matched above is refused.
+    // ═══════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
