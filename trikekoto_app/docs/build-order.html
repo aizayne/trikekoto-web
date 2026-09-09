@@ -475,11 +475,18 @@
     <em>prerequisite</em> for UAT rather than a nicety, and roughly three and a
     half times the job it was this morning.
     <br><br>
-    <strong>One gap worth stating plainly:</strong> the build that passed the field
-    test is not the build on the download link. No logic changed — the flows,
-    dispatch, push and rating paths are untouched, and 411 tests cover them — but
-    every screen file was edited, and nobody has yet opened the bilingual build on
-    a handset. A ten-minute smoke test belongs before the next tester sees it.
+    <strong>The bilingual build has been opened on a handset.</strong> It came up in
+    Filipino without anything being configured, and the app-bar switch moved a whole
+    screen. That is the half of the localisation that no test can prove — a locale
+    that never reaches <span class="mono">MaterialApp</span> still shows <em>a</em>
+    language, just always the same one, and it looks correct until somebody presses
+    the button on a real phone.
+    <br><br>
+    <strong>What is still unchecked on that build:</strong> whether the choice
+    survives a restart, and — the one that matters — whether a booking still reaches
+    a driver. That path changed twice in a day: dispatch moved into a callable, then
+    every screen file was edited underneath it. The 411 tests and the field test each
+    cover one of those changes; neither has covered both at once, on a phone.
     <br><br>
     <strong>Step 69 moved the step count and not the headline.</strong> Closing the
     driver index took a Cloud Function, a rewritten controller, two inverted tripwires
