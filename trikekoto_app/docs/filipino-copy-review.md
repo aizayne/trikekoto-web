@@ -21,9 +21,9 @@ The open questions at the end are ones the author cannot answer.
 
 - [ ] Ano ang number mo?
 - [ ] Padadalhan ka namin ng code para makumpirma.
-- [ ] Hindi ito ipapakita sa driver hangga\
+- [ ] Hindi ito ipapakita sa driver hangga't hindi ka nagbo-book.
 - [ ] Ilagay ang code
-- [ ] Anim na numero, ipinadala sa ${_phone.text.trim()}.
+- [ ] Anim na numero, ipinadala sa [number].
 - [ ] Kumpirmahin
 
 ## Rider onboarding
@@ -32,13 +32,13 @@ The open questions at the end are ones the author cannot answer.
 - [ ] Anong itatawag namin sa iyo?
 - [ ] Ito ang makikita ng driver kapag sinundo ka.
 - [ ] Pangalan
-- [ ] $phone — nakumpirma na
+- [ ] [number] — nakumpirma na
 - [ ] Simulan
 
 ## Rider profile
 
 - [ ] Na-save ang profile mo.
-- [ ] Na-save ang pangalan, pero hindi ang litrato. ${describeError(e)}
+- [ ] Na-save ang pangalan, pero hindi ang litrato. [error]
 - [ ] Burahin ang account mo?
 - [ ] Mabubura nang tuluyan:
 - [ ] • Ang pangalan at litrato mo ⏎
@@ -60,7 +60,7 @@ The open questions at the end are ones the author cannot answer.
 - [ ] Pindutin ang litrato para palitan
 - [ ] Pangalan
 - [ ] Ito ang makikita ng driver
-- [ ] $phone — nakumpirma na
+- [ ] [number] — nakumpirma na
 
 ## Commuter booking
 
@@ -70,7 +70,7 @@ The open questions at the end are ones the author cannot answer.
 
 ## Location picker
 
-- [ ] Walang nakitang "$query" malapit dito. Kung malayo ito, i-drag
+- [ ] Walang nakitang "[hinanap]" malapit dito. Kung malayo ito, i-drag
 - [ ] muna ang mapa papunta roon — o ilagay ang pin nang manu-mano.
 - [ ] Hinahanap…
 - [ ] I-drag ang mapa para ilagay ang pin — o hanapin sa

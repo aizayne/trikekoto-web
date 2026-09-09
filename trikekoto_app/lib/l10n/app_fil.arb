@@ -1,0 +1,137 @@
+{
+  "@@locale": "fil",
+  "landingTagline": "Tricycle rides sa barangay mo, kahit kailan",
+  "@landingTagline": {
+    "description": "Landing screen strapline under the app name."
+  },
+  "landingBookRide": "Mag-book ng ride",
+  "landingStaffSignIn": "Mag-sign in bilang driver o admin",
+  "landingNeedsNumber": "Kailangan ng number para makapag-book.",
+  "signInTitle": "Mag-sign in",
+  "signInCodeTitle": "Ilagay ang code",
+  "signInAskNumber": "Ano ang number mo?",
+  "signInWhyNumber": "Padadalhan ka namin ng code para makumpirma. Hindi ito ipapakita sa driver hangga't hindi ka nagbo-book.",
+  "signInNumberLabel": "Mobile number",
+  "signInNumberHelper": "09XX XXX XXXX",
+  "signInNumberInvalid": "Maglagay ng 11-digit na number na nagsisimula sa 09",
+  "signInSending": "Ipinapadala…",
+  "signInSendCode": "Ipadala ang code",
+  "signInCodeSentSnack": "Ipinadala ang code sa {number}.",
+  "@signInCodeSentSnack": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "signInCodeSentTo": "Anim na numero, ipinadala sa {number}.",
+  "@signInCodeSentTo": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "signInEnterSixDigits": "Ilagay ang anim na numero mula sa message.",
+  "signInConfirm": "Kumpirmahin",
+  "signInOtherNumber": "Ibang number",
+  "authInvalidPhone": "Mukhang hindi ito mobile number.",
+  "authWrongCode": "Mali ang code. Tingnan ulit ang message.",
+  "authCodeExpired": "Nag-expire na ang code. Humingi ng bago.",
+  "authTooManyTries": "Masyadong maraming subok. Maghintay ng ilang minuto bago ulitin.",
+  "authQuotaExceeded": "Hindi makapagpadala ng code ngayon. Subukan mamaya.",
+  "authNoConnection": "Walang connection. Tingnan ang signal mo.",
+  "authPhoneSignInOff": "Naka-off ang phone sign-in sa project na ito.",
+  "authCaptchaFailed": "Hindi pumasa ang browser check. I-reload ang page at subukan ulit.",
+  "authAppNotRegistered": "Hindi pa naka-register ang app na ito para sa phone sign-in.",
+  "authSiteNotAllowed": "Wala ang site na ito sa allowed list para sa sign-in.",
+  "authUnknown": "{message} [{code}]",
+  "@authUnknown": {
+    "description": "Fallback for an unmapped FirebaseAuthException. The code is kept because it is what makes a support message actionable.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "authCouldNotVerify": "Hindi ma-verify ang number na iyon.",
+  "authCouldNotSend": "Hindi naipadala ang code. ({detail})",
+  "@authCouldNotSend": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingTitle": "Konti na lang",
+  "onboardingPhotoOptional": "Litrato — puwedeng laktawan",
+  "onboardingAskName": "Anong itatawag namin sa iyo?",
+  "onboardingNameWhy": "Ito ang makikita ng driver kapag sinundo ka.",
+  "onboardingStart": "Simulan",
+  "nameLabel": "Pangalan",
+  "nameRequired": "Ilagay ang pangalan mo",
+  "nameTooLong": "Masyadong mahaba",
+  "phoneConfirmed": "{number} — nakumpirma na",
+  "@phoneConfirmed": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "signOut": "Mag-sign out",
+  "photoTake": "Kumuha ng litrato",
+  "photoGallery": "Pumili sa gallery",
+  "photoRemove": "Alisin ang litrato",
+  "photoChange": "Palitan ang profile photo",
+  "photoAdd": "Maglagay ng profile photo",
+  "profileTitle": "Profile",
+  "profileSaved": "Na-save ang profile mo.",
+  "profileNamedSavedNotPhoto": "Na-save ang pangalan, pero hindi ang litrato. {error}",
+  "@profileNamedSavedNotPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNameHelper": "Ito ang makikita ng driver",
+  "profilePhotoWillSave": "Ise-save ang litrato pagpindot mo ng Save",
+  "profilePhotoTapToChange": "Pindutin ang litrato para palitan",
+  "profileIdVerification": "ID verification",
+  "profileSave": "I-save",
+  "profileLoadFailedTitle": "Hindi mabuksan ang profile",
+  "profileLoadFailedBody": "Tingnan ang signal mo, tapos subukang muli.",
+  "profileRetry": "Subukang muli",
+  "profileNoneTitle": "Walang profile",
+  "profileNoneBody": "Mag-sign in muli para makagawa ng account.",
+  "deleteAccount": "Burahin ang account",
+  "deleteAccountQuestion": "Burahin ang account mo?",
+  "deleteAccountPermanent": "Mabubura nang tuluyan:",
+  "deleteAccountList": "• Ang pangalan at litrato mo\n• Ang ID mo, kung nagpadala ka\n• Ang mga naka-save na lugar\n• Ang account mo — kakailanganin mong magparehistro ulit",
+  "deleteAccountRetained": "Ang mga naunang biyahe ay mananatili bilang record ng TODA — pero tatanggalin dito ang pangalan at number mo, kaya hindi na ito maiuugnay sa iyo.",
+  "deleteAccountIrreversible": "Hindi na ito maibabalik.",
+  "deleteAccountNo": "Hindi",
+  "deleteAccountReauth": "Para sa seguridad, mag-sign in muli bago burahin ang account.",
+  "pickerSearchHint": "Maghanap ng lugar",
+  "pickerSearch": "Hanapin",
+  "pickerNotFound": "Walang nakitang \"{query}\" malapit dito. Kung malayo ito, i-drag muna ang mapa papunta roon — o ilagay ang pin nang manu-mano.",
+  "@pickerNotFound": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerPermissionOff": "Naka-off ang location permission. I-on ito sa Settings para ma-center ang mapa sa iyo.",
+  "pickerNeedsName": "Bigyan ng pangalan ang lugar para makilala ito ng driver mo.",
+  "pickerLocating": "Hinahanap…",
+  "pickerMyLocation": "Nasa akin ngayon",
+  "pickerHelp": "I-drag ang mapa para ilagay ang pin — o hanapin sa itaas, o gamitin ang location mo.",
+  "pickerNameLabel": "Pangalanan ang lugar",
+  "pickerNameHint": "hal. Plaza, Palengke, Barangay Hall",
+  "pickerConfirm": "Kumpirmahin ang location"
+}

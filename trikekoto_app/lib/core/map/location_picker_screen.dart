@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../routing/geocoding_service.dart';
 import '../ui/app_theme.dart';
 import 'osm_map.dart';
+import '../../core/ui/locale_controller.dart';
 
 /// What the picker returns: a point plus the label the commuter typed for it.
 class PickedLocation {
@@ -89,8 +90,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
       // empty. Saying it was not found would be a lie the commuter cannot
       // check, and would read as the app not knowing their own province.
       showSnack(context,
-          'Walang nakitang "$query" malapit dito. Kung malayo ito, i-drag '
-          'muna ang mapa papunta roon — o ilagay ang pin nang manu-mano.');
+          context.l.pickerNotFound(query));
     }
   }
 
@@ -116,8 +116,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (mounted) {
-          showSnack(context, 'Location permission is off. Enable it in '
-              'Settings to centre the map on you.', error: true);
+          showSnack(context, context.l.pickerPermissionOff, error: true);
         }
         return;
       }
@@ -138,7 +137,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
   void _confirm() {
     final label = _label.text.trim();
     if (label.isEmpty) {
-      showSnack(context, 'Give this place a name so your driver recognises it.',
+      showSnack(context, context.l.pickerNeedsName,
           error: true);
       return;
     }
@@ -205,7 +204,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       textInputAction: TextInputAction.search,
                       onSubmitted: (_) => _runSearch(),
                       decoration: InputDecoration(
-                        hintText: 'Search a place',
+                        hintText: context.l.pickerSearchHint,
                         prefixIcon: const Icon(Icons.search),
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -221,7 +220,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                                 ),
                               )
                             : IconButton(
-                                tooltip: 'Search',
+                                tooltip: context.l.pickerSearch,
                                 icon: const Icon(Icons.arrow_forward),
                                 onPressed: _runSearch,
                               ),
@@ -289,7 +288,9 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.my_location),
-              label: Text(_locating ? 'Hinahanap…' : 'Nasa akin ngayon'),
+              label: Text(_locating
+                  ? context.l.pickerLocating
+                  : context.l.pickerMyLocation),
             ),
           ),
 
@@ -317,8 +318,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'I-drag ang mapa para ilagay ang pin — o hanapin sa '
-                      'itaas, o gamitin ang lokasyon mo.',
+                      context.l.pickerHelp,
                       textAlign: TextAlign.center,
                       style: context.text.bodySmall,
                     ),
@@ -326,16 +326,16 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     TextField(
                       controller: _label,
                       textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Name this place',
-                        hintText: 'e.g. Plaza, Palengke, Barangay Hall',
+                      decoration: InputDecoration(
+                        labelText: context.l.pickerNameLabel,
+                        hintText: context.l.pickerNameHint,
                       ),
                       onSubmitted: (_) => _confirm(),
                     ),
                     const Gap(AppSpacing.lg),
                     FilledButton(
                       onPressed: _confirm,
-                      child: const Text('Confirm location'),
+                      child: Text(context.l.pickerConfirm),
                     ),
                   ],
                 ),

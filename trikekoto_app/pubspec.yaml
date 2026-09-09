@@ -56,6 +56,9 @@ dependencies:
   firebase_storage: ^13.5.0
   image_picker: ^1.2.3
   cloud_functions: ^6.4.0
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
 # ── Pinned transitive dependency ─────────────────────────────
 # firebase_core_web 3.10.0+ calls `isA` from dart:js_interop, which this
@@ -129,6 +132,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Generates lib/l10n/app_localizations.dart from the .arb files, per
+  # l10n.yaml. Filipino is the template; English is the translation of it.
+  generate: true
 
   # Poppins carries headings, titles, and buttons. Body text stays on the
   # platform face (Roboto on Android), which is more legible at small sizes

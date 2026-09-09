@@ -11,6 +11,8 @@ import 'core/map/osm_map.dart';
 import 'core/notifications/push_service.dart';
 import 'core/router/app_router.dart';
 import 'core/ui/app_theme.dart';
+import 'core/ui/locale_controller.dart';
+import 'l10n/app_localizations.dart';
 import 'core/ui/theme_controller.dart';
 import 'firebase_options.dart';
 
@@ -151,6 +153,13 @@ class TrikeKoToApp extends ConsumerWidget {
       // Drivers on night shifts can switch from the app bar; that choice is
       // theirs to make rather than their handset's.
       themeMode: ref.watch(themeModeProvider),
+      // Filipino unless the person chose otherwise. Not the device locale:
+      // a cheap Android handset ships set to English and most owners never
+      // change it, so following the device would hand English to exactly the
+      // drivers this was built for. See LocaleController.
+      locale: ref.watch(localeProvider).locale,
+      supportedLocales: L.supportedLocales,
+      localizationsDelegates: L.localizationsDelegates,
       routerConfig: ref.watch(routerProvider),
     );
   }

@@ -1,0 +1,13 @@
+# Localisation codegen.
+#
+# Filipino is the template, not English. That is deliberate: this app is for
+# a TODA chapter in San Marcelino, and the Filipino wording is the original
+# that was written, tested on hardware, and reviewed — the English is the
+# translation of it. Making `app_fil.arb` the template keeps it that way, so
+# a missing translation shows up as missing *English*, which is the harmless
+# direction for it to fail.
+arb-dir: lib/l10n
+template-arb-file: app_fil.arb
+output-localization-file: app_localizations.dart
+output-class: L
+nullable-getter: false

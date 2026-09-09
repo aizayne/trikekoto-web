@@ -9,6 +9,7 @@ import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../application/commuter_location.dart';
 import 'profile_photo_picker.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// The rider's own profile — the only place a photo can be changed after
 /// sign-up.
@@ -68,7 +69,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
 
       if (!mounted) return;
       setState(() => _photoTouched = false);
-      showSnack(context, 'Na-save ang profile mo.');
+      showSnack(context, context.l.profileSaved);
     } catch (e) {
       if (!mounted) return;
       // Says which half landed. "Save failed" after a successful rename would
@@ -76,7 +77,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
       showSnack(
         context,
         renamed
-            ? 'Na-save ang pangalan, pero hindi ang litrato. ${describeError(e)}'
+            ? context.l.profileNamedSavedNotPhoto(describeError(e))
             : describeError(e),
         error: true,
       );
@@ -91,38 +92,33 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (d) => AlertDialog(
-        title: const Text('Burahin ang account mo?'),
-        content: const SingleChildScrollView(
+        title: Text(context.l.deleteAccountQuestion),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Mabubura nang tuluyan:'),
+              Text(context.l.deleteAccountPermanent),
               Gap(AppSpacing.sm),
-              Text('• Ang pangalan at litrato mo\n'
-                  '• Ang ID mo, kung nagpadala ka\n'
-                  '• Ang mga naka-save na lugar\n'
-                  '• Ang account mo — kakailanganin mong magparehistro ulit'),
+              Text(context.l.deleteAccountList),
               Gap(AppSpacing.lg),
               // Said plainly rather than buried. A deletion notice that omits
               // what is retained is the part people later discover and feel
               // lied to about.
-              Text('Ang mga naunang biyahe ay mananatili bilang record ng '
-                  'TODA — pero tatanggalin dito ang pangalan at number mo, '
-                  'kaya hindi na ito maiuugnay sa iyo.'),
+              Text(context.l.deleteAccountRetained),
               Gap(AppSpacing.lg),
-              Text('Hindi na ito maibabalik.'),
+              Text(context.l.deleteAccountIrreversible),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(d, false),
-            child: const Text('Hindi'),
+            child: Text(context.l.deleteAccountNo),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(d, true),
-            child: const Text('Burahin ang account'),
+            child: Text(context.l.deleteAccount),
           ),
         ],
       ),
@@ -142,7 +138,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
         e.code == 'requires-recent-login'
             // Firebase refusing a destructive act on a stale credential.
             // Worth saying precisely, because "try again" would not work.
-            ? 'Para sa seguridad, mag-sign in muli bago burahin ang account.'
+            ? context.l.deleteAccountReauth
             : describeError(e),
         error: true,
       );
@@ -161,7 +157,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(context.l.profileTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/commuter'),
@@ -169,7 +165,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
         actions: [
           const ThemeToggleButton(),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(sessionProvider.notifier).signOut(),
           ),
@@ -182,19 +178,19 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
         // blind, so this offers a retry instead of a form.
         error: (_, _) => AppEmptyState(
           icon: Icons.cloud_off,
-          title: 'Hindi mabuksan ang profile',
-          body: 'Tingnan ang signal mo, tapos subukang muli.',
+          title: context.l.profileLoadFailedTitle,
+          body: context.l.profileLoadFailedBody,
           action: FilledButton(
             onPressed: () => ref.invalidate(myRiderProfileProvider),
-            child: const Text('Subukang muli'),
+            child: Text(context.l.profileRetry),
           ),
         ),
         data: (rider) {
           if (rider == null) {
-            return const AppEmptyState(
+            return AppEmptyState(
               icon: Icons.person_off_outlined,
-              title: 'Walang profile',
-              body: 'Mag-sign in muli para makagawa ng account.',
+              title: context.l.profileNoneTitle,
+              body: context.l.profileNoneBody,
             );
           }
 
@@ -229,8 +225,8 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                         const Gap(AppSpacing.sm),
                         Text(
                           _photoTouched
-                              ? 'Ise-save ang litrato pagpindot mo ng Save'
-                              : 'Pindutin ang litrato para palitan',
+                              ? context.l.profilePhotoWillSave
+                              : context.l.profilePhotoTapToChange,
                           textAlign: TextAlign.center,
                           style: context.text.bodySmall?.copyWith(
                               color: context.scheme.onSurfaceVariant),
@@ -240,15 +236,15 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                         TextFormField(
                           controller: _name,
                           textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            labelText: 'Pangalan',
-                            prefixIcon: Icon(Icons.badge_outlined),
-                            helperText: 'Ito ang makikita ng driver',
+                          decoration: InputDecoration(
+                            labelText: context.l.nameLabel,
+                            prefixIcon: const Icon(Icons.badge_outlined),
+                            helperText: context.l.profileNameHelper,
                           ),
                           validator: (v) => (v ?? '').trim().isEmpty
-                              ? 'Ilagay ang pangalan mo'
+                              ? context.l.nameRequired
                               : (v!.trim().length > 60
-                                  ? 'Masyadong mahaba'
+                                  ? context.l.nameTooLong
                                   : null),
                         ),
                         const Gap(AppSpacing.lg),
@@ -265,7 +261,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                               const Gap(AppSpacing.sm),
                               Expanded(
                                 child: Text(
-                                  '$phone — nakumpirma na',
+                                  context.l.phoneConfirmed(phone),
                                   style: context.text.bodySmall?.copyWith(
                                       color: context.scheme.onSurfaceVariant),
                                 ),
@@ -283,7 +279,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                               ? null
                               : () => context.push('/commuter/id'),
                           icon: const Icon(Icons.badge_outlined),
-                          label: const Text('ID verification'),
+                          label: Text(context.l.profileIdVerification),
                         ),
                         const Gap(AppSpacing.lg),
 
@@ -297,7 +293,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                                       strokeWidth: 2,
                                       color: AppColors.onAccent),
                                 )
-                              : const Text('Save'),
+                              : Text(context.l.profileSave),
                         ),
 
                         // Set well apart from Save, at the end, in the error
@@ -311,7 +307,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                           onPressed: _busy ? null : _delete,
                           icon: Icon(Icons.delete_forever_outlined,
                               color: context.scheme.error),
-                          label: Text('Burahin ang account',
+                          label: Text(context.l.deleteAccount,
                               style: TextStyle(color: context.scheme.error)),
                         ),
                       ],

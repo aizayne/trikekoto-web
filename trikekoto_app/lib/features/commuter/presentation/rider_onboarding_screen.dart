@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
+import '../../../core/ui/locale_controller.dart';
 import 'profile_photo_picker.dart';
 
 /// The one screen between a verified number and a working account.
@@ -55,11 +56,11 @@ class _RiderOnboardingScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Almost done'),
+        title: Text(context.l.onboardingTitle),
         actions: [
           const ThemeToggleButton(),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(sessionProvider.notifier).signOut(),
           ),
@@ -85,19 +86,19 @@ class _RiderOnboardingScreenState
                     ),
                     const Gap(AppSpacing.sm),
                     Text(
-                      'Litrato — puwedeng laktawan',
+                      context.l.onboardingPhotoOptional,
                       textAlign: TextAlign.center,
                       style: context.text.bodySmall
                           ?.copyWith(color: context.scheme.onSurfaceVariant),
                     ),
                     const Gap(AppSpacing.xl),
 
-                    Text('Anong itatawag namin sa iyo?',
+                    Text(context.l.onboardingAskName,
                         textAlign: TextAlign.center,
                         style: context.text.headlineSmall),
                     const Gap(AppSpacing.sm),
                     Text(
-                      'Ito ang makikita ng driver kapag sinundo ka.',
+                      context.l.onboardingNameWhy,
                       textAlign: TextAlign.center,
                       style: context.text.bodyMedium
                           ?.copyWith(color: context.scheme.onSurfaceVariant),
@@ -108,14 +109,14 @@ class _RiderOnboardingScreenState
                       controller: _name,
                       textCapitalization: TextCapitalization.words,
                       autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Pangalan',
-                        prefixIcon: Icon(Icons.badge_outlined),
+                      decoration: InputDecoration(
+                        labelText: context.l.nameLabel,
+                        prefixIcon: const Icon(Icons.badge_outlined),
                       ),
                       validator: (v) => (v ?? '').trim().isEmpty
-                          ? 'Ilagay ang pangalan mo'
+                          ? context.l.nameRequired
                           : (v!.trim().length > 60
-                              ? 'Masyadong mahaba'
+                              ? context.l.nameTooLong
                               : null),
                       onFieldSubmitted: (_) => _busy ? null : _finish(),
                     ),
@@ -133,7 +134,7 @@ class _RiderOnboardingScreenState
                           const Gap(AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              '$phone — nakumpirma na',
+                              context.l.phoneConfirmed(phone),
                               style: context.text.bodySmall?.copyWith(
                                   color: context.scheme.onSurfaceVariant),
                             ),
@@ -151,7 +152,7 @@ class _RiderOnboardingScreenState
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: AppColors.onAccent),
                             )
-                          : const Text('Simulan'),
+                          : Text(context.l.onboardingStart),
                     ),
                   ],
                 ),

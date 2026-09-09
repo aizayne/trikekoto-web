@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/locale_controller.dart';
 import '../application/profile_photo_service.dart';
 
 /// A tappable avatar that picks a photo and hands back the bytes.
@@ -72,7 +73,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Kumuha ng litrato'),
+              title: Text(context.l.photoTake),
               onTap: () {
                 Navigator.pop(sheet);
                 _choose(ImageSource.camera);
@@ -80,7 +81,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Pumili sa gallery'),
+              title: Text(context.l.photoGallery),
               onTap: () {
                 Navigator.pop(sheet);
                 _choose(ImageSource.gallery);
@@ -90,7 +91,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
               ListTile(
                 leading: Icon(Icons.delete_outline,
                     color: context.scheme.error),
-                title: Text('Alisin ang litrato',
+                title: Text(context.l.photoRemove,
                     style: TextStyle(color: context.scheme.error)),
                 onTap: () {
                   Navigator.pop(sheet);
@@ -107,7 +108,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: _hasPhoto ? 'Change profile photo' : 'Add a profile photo',
+      label: _hasPhoto ? context.l.photoChange : context.l.photoAdd,
       child: InkWell(
         onTap: _openSheet,
         customBorder: const CircleBorder(),

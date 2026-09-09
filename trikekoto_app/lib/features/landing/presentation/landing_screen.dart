@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/locale_controller.dart';
 import '../../../core/ui/trike_icon.dart';
 
 /// Both buttons only navigate, so this holds no state.
@@ -50,7 +51,7 @@ class LandingScreen extends StatelessWidget {
                   ),
                   const Gap(AppSpacing.sm),
                   Text(
-                    'On-demand tricycle rides for your barangay',
+                    context.l.landingTagline,
                     textAlign: TextAlign.center,
                     style: context.text.bodyMedium
                         ?.copyWith(color: scheme.onSurfaceVariant),
@@ -64,17 +65,17 @@ class LandingScreen extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: () => context.go('/rider-signin'),
                     icon: const Icon(Icons.phone_iphone_outlined),
-                    label: const Text('Book a ride'),
+                    label: Text(context.l.landingBookRide),
                   ),
                   const Gap(AppSpacing.md),
                   OutlinedButton.icon(
                     onPressed: () => context.go('/login'),
                     icon: const Icon(Icons.badge_outlined),
-                    label: const Text('Driver / Admin sign in'),
+                    label: Text(context.l.landingStaffSignIn),
                   ),
                   const Gap(AppSpacing.xxl),
                   Text(
-                    'Kailangan ng number para makapag-book.',
+                    context.l.landingNeedsNumber,
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall,
                   ),

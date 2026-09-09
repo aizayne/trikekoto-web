@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/locale_controller.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../data/phone_number.dart';
 
@@ -56,7 +58,7 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
                 _verificationId = id;
                 _busy = false;
               });
-              showSnack(context, 'Code sent to $e164.');
+              showSnack(context, context.l.signInCodeSentSnack(e164));
             },
             // Play Integrity can verify the device without an SMS. When that
             // happens the session is already signed in, and sitting on a code
@@ -68,25 +70,25 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
             failed: (e) {
               if (!mounted) return;
               setState(() => _busy = false);
-              showSnack(context, _explain(e), error: true);
+              showSnack(context, _explain(context.l, e), error: true);
             },
           );
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showSnack(context, _explain(e), error: true);
+        showSnack(context, _explain(context.l, e), error: true);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showSnack(context, _explainUnknown(e), error: true);
+        showSnack(context, _explainUnknown(context.l, e), error: true);
       }
     }
   }
 
   Future<void> _confirm() async {
     if (_code.text.trim().length < 6) {
-      showSnack(context, 'Enter the six digits from the message.', error: true);
+      showSnack(context, context.l.signInEnterSixDigits, error: true);
       return;
     }
     setState(() => _busy = true);
@@ -98,9 +100,9 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
       // The router takes over: onboarding if this is a new account, the
       // booking screen if the profile already exists.
     } on FirebaseAuthException catch (e) {
-      if (mounted) showSnack(context, _explain(e), error: true);
+      if (mounted) showSnack(context, _explain(context.l, e), error: true);
     } catch (e) {
-      if (mounted) showSnack(context, _explainUnknown(e), error: true);
+      if (mounted) showSnack(context, _explainUnknown(context.l, e), error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -108,28 +110,23 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
 
   /// Firebase's codes say what went wrong to a developer. These say it to a
   /// commuter standing at a terminal.
-  static String _explain(FirebaseAuthException e) => switch (e.code) {
-        'invalid-phone-number' => 'That does not look like a mobile number.',
-        'invalid-verification-code' => 'Wrong code. Check the message again.',
-        'session-expired' => 'That code expired. Ask for a new one.',
-        'too-many-requests' =>
-          'Too many tries. Wait a few minutes before asking again.',
-        'quota-exceeded' =>
-          'Cannot send codes right now. Try again later, or book without '
-              'an account.',
-        'network-request-failed' => 'No connection. Check your signal.',
-        'operation-not-allowed' =>
-          'Phone sign-in is switched off for this project.',
-        'captcha-check-failed' =>
-          'The browser check failed. Reload the page and try again.',
-        'invalid-app-credential' =>
-          'This app is not registered for phone sign-in yet.',
-        'app-not-authorized' =>
-          'This site is not on the allowed list for sign-in.',
+  static String _explain(L l, FirebaseAuthException e) => switch (e.code) {
+        'invalid-phone-number' => l.authInvalidPhone,
+        'invalid-verification-code' => l.authWrongCode,
+        'session-expired' => l.authCodeExpired,
+        'too-many-requests' => l.authTooManyTries,
+        // This used to end "...or book without an account", which stopped
+        // being true the day accounts became mandatory. Nobody noticed,
+        // because the string only appears once Firebase's SMS quota is spent.
+        'quota-exceeded' => l.authQuotaExceeded,
+        'network-request-failed' => l.authNoConnection,
+        'operation-not-allowed' => l.authPhoneSignInOff,
+        'captcha-check-failed' => l.authCaptchaFailed,
+        'invalid-app-credential' => l.authAppNotRegistered,
+        'app-not-authorized' => l.authSiteNotAllowed,
         // Unknown codes keep the code visible. A bare "error" tells the
         // person nothing and tells whoever they report it to even less.
-        _ => '${e.message ?? 'Could not verify that number.'} '
-            '[${e.code}]',
+        _ => l.authUnknown(e.message ?? l.authCouldNotVerify, e.code),
       };
 
   /// Anything that is not a [FirebaseAuthException].
@@ -137,10 +134,10 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
   /// The web SDK can surface failures that never become a typed auth error —
   /// a blocked reCAPTCHA, an interop failure. The generic handler stripped
   /// those to the single word "error", which is unreportable.
-  static String _explainUnknown(Object e) {
+  static String _explainUnknown(L l, Object e) {
     final text = e.toString().replaceAll(RegExp(r'\[.*?\]\s*'), '').trim();
     return text.isEmpty || text.toLowerCase() == 'error'
-        ? 'Could not send the code. (${e.runtimeType})'
+        ? l.authCouldNotSend('${e.runtimeType}')
         : '$text (${e.runtimeType})';
   }
 
@@ -150,7 +147,8 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(onCode ? 'Enter the code' : 'Sign in'),
+        title: Text(
+            onCode ? context.l.signInCodeTitle : context.l.signInTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => onCode
@@ -179,11 +177,11 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Ano ang number mo?', style: context.text.headlineSmall),
+            Text(context.l.signInAskNumber,
+                style: context.text.headlineSmall),
             const Gap(AppSpacing.sm),
             Text(
-              'Padadalhan ka namin ng code para makumpirma. '
-              'Hindi ito ipapakita sa driver hangga\'t hindi ka nagbo-book.',
+              context.l.signInWhyNumber,
               style: context.text.bodyMedium
                   ?.copyWith(color: context.scheme.onSurfaceVariant),
             ),
@@ -195,13 +193,13 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9+ -]')),
               ],
-              decoration: const InputDecoration(
-                labelText: 'Mobile number',
-                prefixIcon: Icon(Icons.phone_outlined),
-                helperText: '09XX XXX XXXX',
+              decoration: InputDecoration(
+                labelText: context.l.signInNumberLabel,
+                prefixIcon: const Icon(Icons.phone_outlined),
+                helperText: context.l.signInNumberHelper,
               ),
               validator: (v) => toE164Ph(v ?? '') == null
-                  ? 'Enter an 11-digit mobile number starting 09'
+                  ? context.l.signInNumberInvalid
                   : null,
             ),
             const Gap(AppSpacing.xxl),
@@ -215,7 +213,8 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
                           strokeWidth: 2, color: AppColors.onAccent),
                     )
                   : const Icon(Icons.sms_outlined),
-              label: Text(_busy ? 'Sending…' : 'Send code'),
+              label: Text(
+                  _busy ? context.l.signInSending : context.l.signInSendCode),
             ),
             // There is deliberately no "book without an account" escape here.
             // It existed while accounts were optional; once booking required a
@@ -231,10 +230,11 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Ilagay ang code', style: context.text.headlineSmall),
+          Text(context.l.signInCodeTitle,
+              style: context.text.headlineSmall),
           const Gap(AppSpacing.sm),
           Text(
-            'Anim na numero, ipinadala sa ${_phone.text.trim()}.',
+            context.l.signInCodeSentTo(_phone.text.trim()),
             style: context.text.bodyMedium
                 ?.copyWith(color: context.scheme.onSurfaceVariant),
           ),
@@ -259,12 +259,12 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.onAccent),
                   )
-                : const Text('Kumpirmahin'),
+                : Text(context.l.signInConfirm),
           ),
           const Gap(AppSpacing.md),
           TextButton(
             onPressed: _busy ? null : () => setState(() => _verificationId = null),
-            child: const Text('Ibang number'),
+            child: Text(context.l.signInOtherNumber),
           ),
         ],
       );
