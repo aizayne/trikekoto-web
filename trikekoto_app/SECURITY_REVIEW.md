@@ -20,8 +20,8 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | | |
 |---|---|
 | Critical issues | **0** |
-| High | **1** — SMS toll fraud via phone sign-in *(partly mitigated: region policy set, App Check still open on web)* |
-| Medium | **2** — no App Check on web, unrestricted API key |
+| High | **0** — the SMS toll-fraud finding is closed; App Check is enforced on both platforms |
+| Medium | **1** — unrestricted API key |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Accepted by design | **3** — documented below with tripwire tests |
 
@@ -68,7 +68,7 @@ anything. Authorisation rests entirely on the rules.
 
 ## Findings
 
-### HIGH — SMS toll fraud through phone sign-in
+### ~~HIGH — SMS toll fraud through phone sign-in~~ — CLOSED
 
 **Originally written as "Phone sign-in is enabled and unused", with the fix
 being to disable it. That fix is now impossible and the finding is worse.**
@@ -91,16 +91,28 @@ anyone with the link can make the project send SMS.
 |---|---|
 | SMS region policy | **Allowlist, Philippines only.** Removes essentially all the profit — the expensive destinations are unreachable. Costs nothing in legitimate reach: every user of a Zambales tricycle service has a `+63` number. |
 | App Check (Android) | Play Integrity, attesting the real APK. |
+| App Check (web) | **reCAPTCHA Enterprise, enforced.** |
 | Budget alert | ₱500/month. Detection, not prevention — it fires after the money is spent. |
 
-**Still open — App Check on web.** `providerWeb` is `null` in `main.dart`, so
-enforcement cannot be switched on without locking the web build out of its own
-backend. It needs a reCAPTCHA Enterprise site key. Until then nothing
-distinguishes a browser from a script, and the region policy is what bounds
-the damage rather than preventing the requests.
+**Closed.** App Check is now *enforced*, not merely activated — the distinction
+that matters. Activated means a token is offered; enforced means Firebase
+refuses the request without one. Until enforcement was switched on, a script
+could ignore App Check entirely and still be served.
 
-Residual risk: someone can still burn SMS against Philippine numbers. Bounded
-and far cheaper than the unrestricted case, but not zero.
+Enterprise rather than the classic v3 provider, because Firebase deprecated
+plain reCAPTCHA for App Check. Its free tier is 10,000 assessments a month,
+which one TODA chapter will not approach.
+
+Verified end to end rather than assumed: the deployed page loads
+`enterprise.js` and defines `grecaptcha.enterprise`, and after enforcement was
+switched on a real number still received a real code and reached the booking
+screen. That second half is the one that matters — enforcing against a build
+whose tokens are rejected takes the whole web app down at once, and the only
+proof it has not is a working sign-in.
+
+Residual risk: someone holding a genuine attested client can still request
+codes. Bounded by the region allowlist and Firebase's own per-number rate
+limits, and visible through the budget alert.
 
 ~~**Google sign-in is also enabled and unused.**~~ **Disabled.** It carried no
 cost, but it was live attack surface for no benefit. That half of the original
@@ -138,15 +150,15 @@ No app release was required. The client's increment is best-effort inside a
 try/catch that records a non-fatal and stays silent, so installed APKs now
 fail that write invisibly while their rating still lands on the ride.
 
-### MEDIUM — App Check is not enabled
+### ~~MEDIUM — App Check is not enabled~~ — CLOSED
 
-Nothing distinguishes the real APK from a script holding the same public API
-key. App Check would attest that requests originate from your genuine app via
-Play Integrity.
+Nothing distinguished the real APK from a script holding the same public API
+key, and every "any signed-in user" gap below was therefore reachable by a
+script rather than requiring a modified client.
 
-Without it, every "any signed-in user" gap above is reachable by a script
-rather than requiring a modified client. This is the single highest-leverage
-hardening step available, and it is free.
+Both platforms now attest and both are enforced: Play Integrity on Android,
+reCAPTCHA Enterprise on web. The remaining gaps still exist, but reaching them
+now requires a genuine build of this app rather than a shell script.
 
 ### MEDIUM — API key restrictions not applied
 
@@ -203,10 +215,8 @@ before deploying.
    ways.** Google sign-in: disabled. Phone sign-in: cannot be disabled, since
    it is how every commuter authenticates — mitigated instead with an SMS
    region allowlist (Philippines only).
-2. **App Check on web** — Play Integrity covers Android; `providerWeb` is
-   still `null`, and enforcement cannot be switched on until it holds a
-   reCAPTCHA Enterprise key. This is where the SMS abuse surface now lives,
-   and it is the last unmitigated part of the HIGH finding.
+2. ~~**App Check on web**~~ — done. reCAPTCHA Enterprise, wired and
+   **enforced**, verified by a real sign-in after enforcement was switched on.
 3. ~~**A budget alert**~~ — done, ₱500/month scoped to the project.
 4. **Restrict API keys** — the release keystore now exists, so this is
    unblocked.
