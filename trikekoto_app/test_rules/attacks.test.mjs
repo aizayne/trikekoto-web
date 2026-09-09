@@ -38,6 +38,8 @@ const ATTACKER = 'attacker@toda.ph';
 const ATTACKER_UID = 'attacker-uid';
 const COMMUTER_UID = 'commuter-uid-1';
 const OTHER_COMMUTER = 'commuter-uid-2';
+const ADMIN_EMAIL = 'admin@trikekoto.ph';
+const ADMIN_UID = 'admin-uid';
 
 let testEnv;
 
@@ -51,6 +53,13 @@ const commuter = (uid = COMMUTER_UID, phone = '+639171234567') =>
 /** A leftover anonymous session, from before accounts were required. */
 const anonCommuter = (uid = COMMUTER_UID) =>
   testEnv.authenticatedContext(uid, { provider_id: 'anonymous' }).firestore();
+/** A TODA officer. Needs the `admins/{email}` document seeded to count. */
+const admin = () =>
+  testEnv
+    .authenticatedContext(ADMIN_UID,
+      { email: ADMIN_EMAIL, email_verified: true })
+    .firestore();
+
 const driver = (email = ATTACKER, uid = ATTACKER_UID, verified = true) =>
   testEnv
     .authenticatedContext(uid, { email, email_verified: verified })
@@ -85,6 +94,7 @@ after(async () => testEnv.cleanup());
 beforeEach(async () => {
   await testEnv.clearFirestore();
   await seed(async (db) => {
+    await setDoc(doc(db, 'admins', ADMIN_EMAIL), { email: ADMIN_EMAIL });
     await setDoc(doc(db, 'drivers', VICTIM), profileOf(VICTIM));
     await setDoc(doc(db, 'drivers', ATTACKER), profileOf(ATTACKER));
     await setDoc(doc(db, 'rides', 'victim-ride'), {
@@ -346,10 +356,40 @@ describe('known gaps — asserted so they cannot change unnoticed', () => {
     );
   });
 
-  it('GAP: any signed-in user can enumerate online driver emails', async () => {
-    // The greedy search runs on the commuter's device, so it must be able to
-    // query the dispatch index. That document deliberately carries no name,
-    // phone, or plate — an email and a coordinate is the whole exposure.
+  it('CLOSED: a commuter cannot enumerate online drivers', async () => {
+    // This was a known gap until roadmap step 69. The nearest-driver search
+    // ran on the commuter's device, so every signed-in account could read
+    // the dispatch index — an email and a live coordinate for every driver
+    // on shift, readable indefinitely by anyone who had verified a phone
+    // number and never booked a thing.
+    //
+    // The match moved into the `requestDispatch` callable, which reads this
+    // collection with admin credentials and returns one word. Nothing on a
+    // commuter's device needs it now, so nothing on a commuter's device may
+    // have it. If this test ever goes red, the fleet is trackable again.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'active_drivers', VICTIM), {
+        email: VICTIM,
+        isOnline: true,
+        availability: 'idle',
+        position: {
+          geohash: 'wdw2q1abc',
+          geopoint: new GeoPoint(14.5995, 120.9842),
+        },
+        updatedAt: new Date(),
+      });
+    });
+
+    await assertFails(getDocs(collection(commuter(), 'active_drivers')));
+    // Single-document reads too — a query is not the only way to ask, and
+    // driver emails are guessable.
+    await assertFails(getDoc(doc(commuter(), 'active_drivers', VICTIM)));
+  });
+
+  it('an admin still sees the shift board', async () => {
+    // The dispatch monitor is the legitimate reader, and closing the gap
+    // above would be a hollow win if it also blinded the TODA officer who
+    // needs to know who is on shift.
     await seed(async (db) => {
       await setDoc(doc(db, 'active_drivers', VICTIM), {
         email: VICTIM,
@@ -364,12 +404,14 @@ describe('known gaps — asserted so they cannot change unnoticed', () => {
     });
 
     const snap = await assertSucceeds(
-      getDocs(collection(commuter(), 'active_drivers')),
+      getDocs(collection(admin(), 'active_drivers')),
     );
     const row = snap.docs[0].data();
     assert.equal(row.email, VICTIM);
 
-    // What the row must never contain.
+    // Still worth asserting on the admin path: the presence document is the
+    // one a driver writes themselves, and it must stay a coordinate and an
+    // email whoever is reading it.
     for (const field of ['phone', 'plateNumber', 'firstName', 'lastName']) {
       assert.equal(row[field], undefined,
         `active_drivers must not expose ${field}`);

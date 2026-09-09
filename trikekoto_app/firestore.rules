@@ -106,31 +106,25 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     //  Driver discovery switch
     // ═══════════════════════════════════════════════════════
-    // The greedy nearest-driver search runs on the COMMUTER's device,
-    // so the commuter must be able to query active_drivers. That doc
-    // therefore holds no PII beyond the driver's email + coordinates.
+    // Closed at roadmap step 69. It used to read `isSignedIn()`,
+    // because the nearest-driver search ran on the commuter's device
+    // and could not rank drivers it was not allowed to read. The
+    // consequence was that anyone with an account could enumerate
+    // every online driver's email and live coordinate, indefinitely,
+    // without booking anything — a fleet tracker for the price of a
+    // phone number.
     //
-    // ── PREPARED CHANGE (roadmap step 69) ──────────────────
-    // This is why any signed-in user can enumerate online driver emails.
-    // The exposure is deliberately minimal — the presence document holds
-    // no name, phone, plate, or rating, only an email and a coordinate —
-    // but it is still readable by anyone with an account.
+    // The match now runs in `requestDispatch`, which reads the index
+    // with admin credentials and replies with a single word. So the
+    // commuter no longer needs this collection, and no longer gets it.
     //
-    // Once `sweepStaleRides` is DEPLOYED and the client-side sweep has
-    // been removed from DispatchController, replace the body below with:
+    // Admins keep it because the dispatch monitor is how a TODA
+    // officer sees who is on shift, which is the legitimate use.
     //
-    //     return isAdmin();
-    //
-    // Nothing else in this file moves. That single line was the whole
-    // point of routing every commuter read through this function rather
-    // than inlining `isSignedIn()` at the collection.
-    //
-    // Order matters: the client sweep must stop first. Tightening this
-    // while commuters still run the match means no ride is ever offered.
-    // Then update the tripwire test in test_rules/attacks.test.mjs that
-    // asserts this gap is open.
+    // Drivers write their own presence here; that is the rule below,
+    // and it is unaffected.
     function canDiscoverDrivers() {
-      return isSignedIn();
+      return isAdmin();
     }
 
     // ═══════════════════════════════════════════════════════
