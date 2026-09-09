@@ -376,8 +376,8 @@
   </p>
 
   <div class="reality">
-    <div><div class="n">97</div><div class="k">Total steps</div></div>
-    <div><div class="n" style="color:var(--done)">91</div><div class="k">Complete</div></div>
+    <div><div class="n">98</div><div class="k">Total steps</div></div>
+    <div><div class="n" style="color:var(--done)">92</div><div class="k">Complete</div></div>
     <div><div class="n" style="color:var(--partial)">4</div><div class="k">Partial</div></div>
     <div><div class="n" style="color:var(--blocked)">1</div><div class="k">Blocked</div></div>
     <div><div class="n" style="color:var(--todo)">1</div><div class="k">Not started</div></div>
@@ -386,7 +386,7 @@
 
 <div class="note">
   <strong>Read the status column first.</strong> Most of this roadmap is built, deployed, and
-  covered by <strong>356 passing tests</strong> — 187 Dart and 169 against the Firestore
+  covered by <strong>400 passing tests</strong> — 201 Dart and 199 against the Firestore
   emulator.
   <br><br>
   <strong>The backend is finished.</strong> Blaze cleared the one dependency that had grown to
@@ -417,9 +417,9 @@
 
   <div class="reality" style="margin-top:0">
     <div><div class="n" style="color:var(--done)">94%</div><div class="k">By step count</div></div>
-    <div><div class="n" style="color:var(--partial)">85%</div><div class="k">Weighted</div></div>
-    <div><div class="n">91<span style="color:var(--ink-faint);font-size:1rem">/97</span></div><div class="k">Steps complete</div></div>
-    <div><div class="n">356</div><div class="k">Tests passing</div></div>
+    <div><div class="n" style="color:var(--partial)">84%</div><div class="k">Weighted</div></div>
+    <div><div class="n">92<span style="color:var(--ink-faint);font-size:1rem">/98</span></div><div class="k">Steps complete</div></div>
+    <div><div class="n">400</div><div class="k">Tests passing</div></div>
   </div>
 
   <div class="note">
@@ -428,8 +428,8 @@
     for a capstone, testing is a chapter rather than a coda.
     <br><br>
     Weighted so that proving the system counts for as much as building it, the honest figure
-    is <strong>about 85%</strong> — the mean of the six areas below, which comes to 84% and
-    is not worth pretending is more precise than that. The build is nearly finished; the
+    is <strong>about 84%</strong> — the mean of the six areas below, and not worth pretending
+    is more precise than that. The build is nearly finished; the
     evidence is barely started. Quote 94% and a panel will ask what has actually been
     demonstrated.
     <br><br>
@@ -443,6 +443,12 @@
     an HTTPS link instead of a LAN server, so a tester no longer has to be on the same Wi-Fi
     — or in the same building. That does not move the percentage, because handing someone a
     build is not the same as watching them use it. It removes the logistics excuse.
+    <br><br>
+    <strong>And one change moved a number the wrong way, correctly.</strong> ID verification
+    shipped complete and well tested, and <em>backend &amp; security dropped from 100% to
+    95%</em> — because it introduced sensitive personal information whose 90-day retention
+    nothing enforces. Building a feature can lower a score honestly. Rounding that back up
+    would make the number describe the code rather than the obligations attached to it.
   </div>
 
   <div class="scroll" style="margin-top:22px">
@@ -453,9 +459,9 @@
     <tbody>
       <tr>
         <td class="task">Backend &amp; security</td>
-        <td class="pct">~100%</td>
-        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
-        <td class="desc">Rules deployed and cut over, four gen-2 functions live, Storage provisioned, budget alert and SMS region policy set. App Check <strong>enforced</strong> on both platforms and verified by a real sign-in after enforcement; API keys restricted. Security review: zero High, zero Medium.</td>
+        <td class="pct">~95%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:95%;background:var(--done)"></i></div></td>
+        <td class="desc">Rules deployed and cut over, four gen-2 functions live, Storage provisioned, budget alert and SMS region policy set. App Check <strong>enforced</strong> on both platforms and verified by a real sign-in after enforcement; API keys restricted. Zero High and zero Medium findings. <strong>Down from 100%, deliberately:</strong> ID verification added a category of data the system did not previously hold, and its retention is a policy an admin performs by hand rather than a scheduled job. An obligation with nothing enforcing it is not a finished control.</td>
       </tr>
       <tr>
         <td class="task">Feature build, three roles</td>
@@ -467,7 +473,7 @@
         <td class="task">Automated testing</td>
         <td class="pct">~100%</td>
         <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
-        <td class="desc">356 passing — 187 Dart, 169 against the emulator, including a whole ride through the deployed ruleset and four concurrency races.</td>
+        <td class="desc">400 passing — 201 Dart, 199 against the emulator, including a whole ride through the deployed ruleset and four concurrency races.</td>
       </tr>
       <tr>
         <td class="task">Documentation</td>
@@ -561,6 +567,7 @@
       <tr><td class="step">37b</td><td class="task">Rider profile</td><td class="desc">The photo could previously be set <em>only</em> during sign-up — on a screen that invites skipping it — so anyone who skipped could never add one and anyone who added one could never replace it. Meanwhile <span class="mono">setRiderPhoto()</span> sat in the session controller with no caller, written for a screen that did not exist. This is that screen: avatar, name, the verified number shown but not editable. Name and photo save <strong>independently</strong>, because they finish at different moments — the name on tap, the photo only once an upload returns — so a failed upload cannot discard a good rename, and the error says which half landed. Building it also defused <span class="mono">updateProfile()</span>, which writes <span class="mono">profilePhotoUrl</span> unconditionally and would have <em>deleted a rider's picture</em> on rename; <span class="mono">updateName()</span> now exists and the trap is documented with a test asserting it.</td><td class="deps">37a</td><td class="deliv">rider_profile_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">38a</td><td class="task">Fare engine — <em>removed</em></td><td class="desc"><strong>Built, then deliberately taken out.</strong> TODA tariffs are set by ordinance and posted at the terminal; a second figure on a phone could only ever disagree with the board, and the disagreement would land on the driver at the drop-off. Removed end to end — calculator, stored <span class="mono">fareEstimate</span> and <span class="mono">distanceKm</span>, admin fare table, analytics money box, and the rules clauses. Completion now permits only <span class="mono">status</span> and <span class="mono">completedAt</span>, so a modified client writing a fare is <em>refused</em> rather than validated. Distance and ETA stayed: they are not pricing.</td><td class="deps">28, 36</td><td class="deliv">Removed in full</td><td><span class="chip s-done">Removed</span></td></tr>
       <tr><td class="step">39</td><td class="task">Rating flow</td><td class="desc">Write-once 1–5 stars plus a rules-verified aggregate increment on the driver.</td><td class="deps">37</td><td class="deliv">Rating card</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">39a</td><td class="task">ID verification</td><td class="desc">Government ID capture and manual review, <strong>for both roles</strong>. Built to the owner's instruction; the recommendation was drivers only, and the security review records that the trade was made knowingly. This is a <strong>step change in what the system holds</strong> — sensitive personal information under RA 10173, a category it did not touch before. Its own collection, so <span class="mono">riders/</span> keeps <span class="mono">list: false</span> and stays un-enumerable even by an admin. <strong>No download URLs anywhere:</strong> a reviewer reads bytes checked against the Storage rules on every call, because a URL carries a token that bypasses them and outlives the deletion. Consent is a gate, not a footnote — the button is disabled until it is given and the rules refuse a back-dated timestamp. Nobody approves their own; nobody reads another's, including the driver they ride with; a reviewer cannot alter what they are reviewing. <strong>Nothing gates on it yet</strong>, which is the safest starting state.</td><td class="deps">37b, 40</td><td class="deliv">id_submissions · 3 screens</td><td><span class="chip s-done">Done</span></td></tr>
 
       <tr class="phase-start"><td class="phase" rowspan="8">6 · Driver</td><td class="step">40</td><td class="task">Driver registration</td><td class="desc">Account creation then profile write, forced to <span class="mono">pending</span> by rule.</td><td class="deps">31</td><td class="deliv">Register screen</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">41</td><td class="task">Staff sign-in</td><td class="desc">Shared form for drivers and admins; destination decided by resolved role.</td><td class="deps">30</td><td class="deliv">Login screen</td><td><span class="chip s-done">Done</span></td></tr>
@@ -603,7 +610,7 @@
       <tr><td class="step">73</td><td class="task">Integration tests</td><td class="desc">A whole ride driven through the deployed ruleset against the emulator: book, dispatch, accept, drive, complete, rate.</td><td class="deps">72</td><td class="deliv">lifecycle.test.mjs</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">74</td><td class="task">Concurrency test</td><td class="desc">Four real races: double-tap accept, un-offered driver, accept-versus-cancel, and double rating. Exactly one writer wins each.</td><td class="deps">73</td><td class="deliv">Race-condition tests</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">75</td><td class="task">Manual end-to-end run</td><td class="desc"><strong>Unblocked and underway.</strong> Admin verified, rules deployed, driver registered and approved, signed APK installing over the LAN. The log was <strong>rewritten on 10 September</strong> and the old results are not comparable. It had been written before commuter accounts, before the functions were deployed and before fares were removed, so six steps expected the <em>opposite</em> of current behaviour — three of them described deployed features as known limitations, meaning a tester would have recorded real successes as expected failures, and one instruction (<span class="mono">Phone off</span>) would have locked every commuter out. Now 56 steps across 11 phases, with the account flow, GPS pickup, push, the server sweep, the kill switch and a profile phase added. <strong>Phase 03 — real permission prompts, real GPS, a 50 m walk — remains the part nothing else can cover</strong>, and its expectations are now verified against the code rather than assumed.</td><td class="deps">20</td><td class="deliv">Field test log</td><td><span class="chip s-partial">In progress</span></td></tr>
-      <tr><td class="step">76</td><td class="task">Security review</td><td class="desc">19 adversarial tests covering data harvesting, privilege escalation and ride hijacking, plus an APK secret scan. Three accepted gaps carry tripwire tests. <strong>Every finding is now closed — zero High, zero Medium.</strong> The HIGH was overtaken by events twice over: an enabled-but-unused Phone provider became load-bearing, so the mitigation changed from <em>disable it</em> to <em>attest it</em>, and App Check is now enforced on both platforms. Key restrictions are applied but recorded with a caveat rather than a clean close — the web key was still accepted from a foreign origin across three Firebase endpoints, so they are defence in depth rather than a control worth claiming. <strong>The review itself is due a re-run</strong>: rider accounts, mandatory sign-in and the rating cutover all postdate it.</td><td class="deps">71</td><td class="deliv">SECURITY_REVIEW.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">76</td><td class="task">Security review</td><td class="desc">19 adversarial tests covering data harvesting, privilege escalation and ride hijacking, plus an APK secret scan. Three accepted gaps carry tripwire tests. <strong>Every finding is now closed — zero High, zero Medium.</strong> The HIGH was overtaken by events twice over: an enabled-but-unused Phone provider became load-bearing, so the mitigation changed from <em>disable it</em> to <em>attest it</em>, and App Check is now enforced on both platforms. Key restrictions are applied but recorded with a caveat rather than a clean close — the web key was still accepted from a foreign origin across three Firebase endpoints, so they are defence in depth rather than a control worth claiming. <strong>The review itself is due a re-run</strong>: rider accounts, mandatory sign-in, the rating cutover and now ID verification all postdate it. That last one adds a <em>new surface</em> rather than closing a finding — the review carries its controls and, more usefully, the four things deliberately not done: no scheduled deletion enforcing the 90-day retention, no privacy notice outside the app, no review by anyone legally qualified, and nothing gating on ID status.</td><td class="deps">71</td><td class="deliv">SECURITY_REVIEW.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">77</td><td class="task">Performance &amp; cost test</td><td class="desc">Operation model built from the code. Finding: presence GPS is 93.5% of all writes and even an 8-driver pilot exceeds the free write tier. Distance filter widened to 50 m, cutting writes 2.5x.</td><td class="deps">73</td><td class="deliv">COST_AND_PERFORMANCE.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">78</td><td class="task">User acceptance testing</td><td class="desc">Real TODA drivers and commuters on their own handsets, in Filipino.</td><td class="deps">75</td><td class="deliv">UAT sign-off</td><td><span class="chip s-todo">Not started</span></td></tr>
 
@@ -789,7 +796,9 @@
     <div class="card high">
       <h3>High priority</h3>
       <ul>
-        <li>Re-run the security review (76) — the rider collection, mandatory accounts, the rating cutover and App Check enforcement all postdate it</li>
+        <li><strong>Scheduled deletion for ID submissions</strong> — the 90-day retention is a policy an admin performs by hand, and it will be forgotten. A scheduled function is the honest fix</li>
+        <li><strong>Ethics review before collecting a real ID</strong> — PRMSU will have a process; this belongs in it, and nothing should be collected from a real person first</li>
+        <li>Re-run the security review (76) — the rider collection, mandatory accounts, the rating cutover, App Check enforcement and ID verification all postdate it</li>
         <li>Native-speaker read of the Filipino copy (91) — the one deliverable still marked Draft</li>
         <li>Self-host OSRM before the pilot (58) — the road-distance change put a routing call on the dispatch path, so throttling now degrades ranking, not just a map line</li>
       </ul>
