@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../diagnostics/crash_reporter.dart';
 import '../../features/commuter/application/profile_photo_service.dart';
 import '../../features/commuter/data/rider.dart';
+import '../../features/identity/application/id_verification_service.dart';
 import '../firestore/collection_paths.dart';
 import '../providers.dart';
 
@@ -391,6 +392,56 @@ class SessionController extends Notifier<SessionState> {
     await ref.read(refsProvider).rider(user.uid).update(
           RiderWrites.updateName(name),
         );
+  }
+
+  /// Deletes the rider's account and everything the client can reach.
+  ///
+  /// Order is the whole design. Firestore and Storage writes are authorised
+  /// by the signed-in credential, so the Auth user has to go **last** — delete
+  /// it first and every step after it is refused, leaving a person with no
+  /// account and all of their data still present.
+  ///
+  /// What this does not do, and cannot: rides are never deleted. They are the
+  /// audit trail, refused to everyone including admins, and they carry the
+  /// commuter's name and number denormalised so a driver can recognise who
+  /// they are collecting. Removing the profile alone would leave those behind
+  /// and make the word "delete" a lie. `onRiderDeleted` strips them server-side
+  /// the moment the rider document goes — the ride survives, the person does
+  /// not.
+  ///
+  /// Throws `requires-recent-login` when the credential is stale. That is
+  /// Firebase refusing a destructive act on an old session rather than a
+  /// failure to handle, and the caller surfaces it as an instruction to sign
+  /// in again.
+  Future<void> deleteAccount() async {
+    final auth = ref.read(firebaseAuthProvider);
+    final user = auth.currentUser;
+    if (user == null) throw StateError('not signed in');
+    final uid = user.uid;
+
+    // Best-effort, in order of sensitivity. A failure here must not abort the
+    // deletion: someone who has asked to be deleted should not be left with a
+    // live account because one orphaned object refused to go. Anything that
+    // survives is reported, not swallowed.
+    try {
+      await ref.read(idVerificationServiceProvider).withdraw(uid);
+    } catch (e, stack) {
+      await CrashReporter.recordNonFatal(e, stack,
+          context: 'account deletion: id submission');
+    }
+
+    try {
+      await ref.read(profilePhotoServiceProvider).remove(uid);
+    } catch (e, stack) {
+      await CrashReporter.recordNonFatal(e, stack,
+          context: 'account deletion: profile photo');
+    }
+
+    // The rider document is the trigger for onRiderDeleted, which anonymises
+    // the ride history. It therefore has to succeed, and is not caught.
+    await ref.read(refsProvider).rider(uid).delete();
+
+    await user.delete();
   }
 
   Future<void> signOut() => ref.read(firebaseAuthProvider).signOut();

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,6 +82,75 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
       );
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Deleting the account, behind a confirmation that says what actually
+  /// happens — including the part that does not go away.
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text('Burahin ang account mo?'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Mabubura nang tuluyan:'),
+              Gap(AppSpacing.sm),
+              Text('• Ang pangalan at litrato mo\n'
+                  '• Ang ID mo, kung nagpadala ka\n'
+                  '• Ang mga naka-save na lugar\n'
+                  '• Ang account mo — kakailanganin mong magparehistro ulit'),
+              Gap(AppSpacing.lg),
+              // Said plainly rather than buried. A deletion notice that omits
+              // what is retained is the part people later discover and feel
+              // lied to about.
+              Text('Ang mga naunang biyahe ay mananatili bilang record ng '
+                  'TODA — pero tatanggalin dito ang pangalan at number mo, '
+                  'kaya hindi na ito maiuugnay sa iyo.'),
+              Gap(AppSpacing.lg),
+              Text('Hindi na ito maibabalik.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(d, false),
+            child: const Text('Hindi'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(d, true),
+            child: const Text('Burahin ang account'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(sessionProvider.notifier).deleteAccount();
+      // The router takes over the moment the session clears; no navigation
+      // and no success message, because there is no longer a screen or an
+      // account for either to belong to.
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      showSnack(
+        context,
+        e.code == 'requires-recent-login'
+            // Firebase refusing a destructive act on a stale credential.
+            // Worth saying precisely, because "try again" would not work.
+            ? 'Para sa seguridad, mag-sign in muli bago burahin ang account.'
+            : describeError(e),
+        error: true,
+      );
+      setState(() => _busy = false);
+    } catch (e) {
+      if (!mounted) return;
+      showSnack(context, describeError(e), error: true);
+      setState(() => _busy = false);
     }
   }
 
@@ -228,6 +298,21 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                                       color: AppColors.onAccent),
                                 )
                               : const Text('Save'),
+                        ),
+
+                        // Set well apart from Save, at the end, in the error
+                        // colour and without a filled background. Destructive
+                        // and irreversible: it should never be the thing a
+                        // thumb finds by accident.
+                        const Gap(AppSpacing.xxxl),
+                        const Divider(),
+                        const Gap(AppSpacing.lg),
+                        TextButton.icon(
+                          onPressed: _busy ? null : _delete,
+                          icon: Icon(Icons.delete_forever_outlined,
+                              color: context.scheme.error),
+                          label: Text('Burahin ang account',
+                              style: TextStyle(color: context.scheme.error)),
                         ),
                       ],
                     ),

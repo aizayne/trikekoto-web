@@ -25,7 +25,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, GeoPoint, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { onDocumentDeleted, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 
@@ -573,5 +573,71 @@ export const purgeExpiredIds = onSchedule(
       `${ID_RETENTION_DAYS} days` +
       (imageFailures > 0 ? `; ${imageFailures} image deletes deferred` : ''),
     );
+  },
+);
+
+
+// ════════════════════════════════════════════════════════════
+// 37c · Account deletion — erase the person, keep the record.
+// ════════════════════════════════════════════════════════════
+/**
+ * Strips a deleted rider's personal details from their ride history.
+ *
+ * Rides carry `commuterName` and `commuterPhone` denormalised, because a
+ * driver has to know who they are collecting and cannot read `riders/`. That
+ * denormalisation is what makes deletion incomplete on its own: removing the
+ * profile would leave the name and number in every ride the person ever took,
+ * so "delete my account" would be untrue in the one way that matters.
+ *
+ * Rides themselves are never deleted — `allow delete: if false`, for everyone
+ * including admins, because they are the audit trail a TODA chapter and a
+ * dispute both depend on. So the answer is not to remove the record but to
+ * remove the person from it: timestamps, coordinates, driver, status and
+ * rating all survive; the name becomes "Deleted account", the phone and photo
+ * go, and `commuterUid` is cleared so the remaining rows cannot be joined back
+ * together into one person's travel history.
+ *
+ * Runs on the deletion of `riders/{uid}`, which the rider performs themselves.
+ * A client cannot do this: the ride rules admit no clause for rewriting these
+ * fields, and widening them so a commuter could edit their own historical
+ * rides would be a far larger hole than the one it closed.
+ */
+export const onRiderDeleted = onDocumentDeleted(
+  { document: 'riders/{riderUid}', region: REGION },
+  async (event) => {
+    const uid = event.params.riderUid;
+
+    // Bounded per run. A rider with an implausible number of rides should not
+    // turn one deletion into a multi-minute write storm; the tail is picked
+    // up by re-running, and the fields left behind are already the ones this
+    // job exists to clear.
+    const rides = await db
+      .collection('rides')
+      .where('commuterUid', '==', uid)
+      .limit(400)
+      .get();
+
+    if (rides.empty) {
+      logger.info('Rider deleted with no ride history');
+      return;
+    }
+
+    // Batched at 400, below Firestore's 500-write limit, so a large history
+    // commits rather than failing wholesale.
+    const batch = db.batch();
+    for (const snap of rides.docs) {
+      batch.update(snap.ref, {
+        commuterUid: null,
+        commuterName: 'Deleted account',
+        commuterPhone: null,
+        commuterPhotoUrl: null,
+        commuterFcmToken: null,
+      });
+    }
+    await batch.commit();
+
+    // A count, never the uid. Logging it would put the identifier back into
+    // the log retention window, which is the record this job just removed.
+    logger.info(`Anonymised ${rides.size} rides for a deleted account`);
   },
 );
