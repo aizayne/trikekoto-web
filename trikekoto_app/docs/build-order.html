@@ -386,7 +386,7 @@
 
 <div class="note">
   <strong>Read the status column first.</strong> Most of this roadmap is built, deployed, and
-  covered by <strong>402 passing tests</strong> — 201 Dart and 201 against the Firestore
+  covered by <strong>411 passing tests</strong> — 210 Dart and 201 against the Firestore
   emulator.
   <br><br>
   <strong>The backend is finished.</strong> Blaze cleared the one dependency that had grown to
@@ -420,7 +420,7 @@
     <div><div class="n" style="color:var(--done)">96%</div><div class="k">By step count</div></div>
     <div><div class="n" style="color:var(--partial)">95%</div><div class="k">Weighted</div></div>
     <div><div class="n">95<span style="color:var(--ink-faint);font-size:1rem">/99</span></div><div class="k">Steps complete</div></div>
-    <div><div class="n">402</div><div class="k">Tests passing</div></div>
+    <div><div class="n">411</div><div class="k">Tests passing</div></div>
   </div>
 
   <div class="note">
@@ -466,6 +466,21 @@
     author: real TODA drivers, on their own handsets, in Filipino, without the person who
     built it standing next to them. That is step 78, and nothing about it is technical.
     <br><br>
+    <strong>Localisation added a risk while removing one.</strong> The app is
+    bilingual now, which is a real gain — and it means <strong>258 Filipino strings
+    nobody has read</strong> are live on a download link, where before those screens
+    showed English that was at least correct. The headline does not move for it:
+    building a thing is not evidence about it, and no number here should rise
+    because the author typed more. What it does is make step 91 a
+    <em>prerequisite</em> for UAT rather than a nicety, and roughly three and a
+    half times the job it was this morning.
+    <br><br>
+    <strong>One gap worth stating plainly:</strong> the build that passed the field
+    test is not the build on the download link. No logic changed — the flows,
+    dispatch, push and rating paths are untouched, and 411 tests cover them — but
+    every screen file was edited, and nobody has yet opened the bilingual build on
+    a handset. A ten-minute smoke test belongs before the next tester sees it.
+    <br><br>
     <strong>Step 69 moved the step count and not the headline.</strong> Closing the
     driver index took a Cloud Function, a rewritten controller, two inverted tripwires
     and a full release — and it moved validation by nothing at all, because not one
@@ -503,7 +518,7 @@
         <td class="task">Automated testing</td>
         <td class="pct">~100%</td>
         <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
-        <td class="desc">402 passing — 201 Dart, 201 against the emulator, including a whole ride through the deployed ruleset, four concurrency races, and a second inverted tripwire: the case that used to assert commuters <em>could</em> enumerate online drivers now asserts they cannot.</td>
+        <td class="desc">411 passing — 210 Dart, 201 against the emulator, including a whole ride through the deployed ruleset, four concurrency races, a second inverted tripwire, and nine guarding the bilingual UI — four of which exist because <span class="mono">gen-l10n</span> warns about a missing translation and then generates anyway, so an English user would have quietly been shown a Filipino string with no red line anywhere.</td>
       </tr>
       <tr>
         <td class="task">Documentation</td>
@@ -586,6 +601,7 @@
       <tr><td class="step">31</td><td class="task">Role-based routing</td><td class="desc">GoRouter redirect keyed on resolved role; single place deciding which shell loads.</td><td class="deps">30</td><td class="deliv">app_router.dart</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">32</td><td class="task">Shared UI kit</td><td class="desc">Theme, spacing primitive, snackbars.</td><td class="deps">11</td><td class="deliv">Shared widgets</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">32a</td><td class="task">Design system rollout</td><td class="desc">ui-ux-pro-max skill installed and applied, then rethemed to the icon’s brand amber on navy. Amber is a fill only — 2.03:1 on white — so text uses a darkened orange at 5.02:1. 16 automated WCAG checks guard it.</td><td class="deps">11, 32</td><td class="deliv">app_theme.dart + screens</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">32b</td><td class="task">Bilingual UI</td><td class="desc">Filipino and English, switchable from the app bar at any moment. This started as the copy review and turned into a feature: asked whether the English buttons sitting beside Filipino body text were natural or unfinished, the owner answered neither — ship both languages. <strong>327 strings</strong> moved out of the screens into an ARB pair, so no screen holds its own copy any more. Filipino is the template and the default, which makes a missing translation fail as missing <em>English</em> — the harmless direction. The locale is deliberately <em>not</em> taken from the device: a cheap Android handset ships set to English and most owners never change it, so following it would hand English to exactly the drivers this is built for. Writing the test found the switch missing from the landing screen — the one screen a newcomer sees, and the one place it has to be.</td><td class="deps">11, 32</td><td class="deliv">app_fil.arb · app_en.arb · LocaleController</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">33</td><td class="task">Error translation</td><td class="desc">Turns <span class="mono">permission-denied</span> into language a driver can act on.</td><td class="deps">32</td><td class="deliv">describeError()</td><td><span class="chip s-done">Done</span></td></tr>
 
       <tr class="phase-start"><td class="phase" rowspan="7">5 · Commuter</td><td class="step">34</td><td class="task">Landing &amp; entry</td><td class="desc">One tap to start. <em>"Anonymous entry"</em> is gone — the button now leads to phone sign-in, since booking requires a verified number. A dead control survived that change and was only caught while drawing the plates for step 10: the sign-in screen still offered <span class="mono">"Mag-book na lang nang walang account"</span>, which sent people to the landing screen, whose own button sent them straight back. A loop under a label promising something the rules refuse. Removed, along with a class comment still claiming sign-in was optional.</td><td class="deps">31</td><td class="deliv">landing_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
@@ -659,7 +675,7 @@
       <tr><td class="step">89</td><td class="task">Pilot rollout</td><td class="desc">Plan written, and the rollback it assumed now exists. An APK passed around over Wi-Fi cannot be recalled, so <span class="mono">config/app.acceptingRides</span> is a server-side stop button enforced by the rules — one switch in the admin panel halts new bookings on every phone within seconds, with no app update, while rides already in progress finish normally. Entry criteria, daily monitoring, stop thresholds and report structure in <span class="mono">docs/pilot-plan.md</span>. Awaits UAT and a live system.</td><td class="deps">78, 85</td><td class="deliv">pilot-plan.md · kill switch</td><td><span class="chip s-partial">Prepared</span></td></tr>
 
       <tr class="phase-start"><td class="phase" rowspan="4">14 · Docs &amp; ops</td><td class="step">90</td><td class="task">Technical documentation</td><td class="desc">Schema reference, rationale, and known limits.</td><td class="deps">6</td><td class="deliv">SCHEMA.md, README.md</td><td><span class="chip s-done">Done</span></td></tr>
-      <tr><td class="step">91</td><td class="task">End-user manuals</td><td class="desc">Three role guides, reconciled against the shipped app rather than the code they were written from. Closed three gaps that would have cost a pilot: the admin guide described a service-account bootstrap that no longer applies and never mentioned the stop button; the driver guide did not say <strong>the app must stay open to receive offers</strong>; the commuter guide did not say that closing the app stops the driver search. Driver and commuter lead in Filipino with English beneath; admin in English since the work touches the Firebase console. <strong>Native-speaker review of the Filipino is still outstanding</strong>, and the phone-readable page now trails the Markdown. <strong>A review sheet now exists</strong> — 93 user-facing strings across 14 screens, extracted from the Dart source rather than a translation file, grouped by screen so a reader judges each in its context. It carries five questions that settle many strings at once: three words doing the job of <em>remove</em>; English and Filipino mixed on the same screens; <span class="mono">mo/ka</span> everywhere and never <span class="mono">po</span>; where the loanword line falls; and the one that decides the rest — would a tricycle driver in his fifties understand the driver dashboard on first reading, without asking anyone. <strong>Still Draft, deliberately:</strong> the author is not a native speaker, and reviewing one’s own copy certifies nothing.</td><td class="deps">4</td><td class="deliv">docs/*-guide.md</td><td><span class="chip s-partial">Draft</span></td></tr>
+      <tr><td class="step">91</td><td class="task">End-user manuals</td><td class="desc">Three role guides, reconciled against the shipped app rather than the code they were written from. Closed three gaps that would have cost a pilot: the admin guide described a service-account bootstrap that no longer applies and never mentioned the stop button; the driver guide did not say <strong>the app must stay open to receive offers</strong>; the commuter guide did not say that closing the app stops the driver search. Driver and commuter lead in Filipino with English beneath; admin in English since the work touches the Firebase console. <strong>Native-speaker review of the Filipino is still outstanding</strong>, and the phone-readable page now trails the Markdown. Four of the five cross-cutting questions the sheet raised are now <strong>answered</strong> by the owner: <span class="mono">mo/ka</span> throughout, the three removal words kept as three, a leaner line on loanwords — and the mixing question resolved by shipping both languages (32b) rather than choosing one. <strong>But the review got bigger, not smaller.</strong> The sheet is regenerated from the ARB pair, so it can no longer drift from the build, and it now runs to <strong>327 strings</strong>. Of those, 69 shipped months ago and survived the field test; <strong>258 were written during localisation by a non-native speaker and have been read by nobody.</strong> The sheet marks every line <span class="mono">[shipped]</span> or <span class="mono">[new]</span> for exactly that reason — twenty minutes spent on the <span class="mono">[new]</span> lines is worth more than an hour spread evenly. <strong>Still Draft, and more urgently so:</strong> the app now puts unvetted Filipino in front of anyone who installs it, where before it put correct English.</td><td class="deps">4</td><td class="deliv">docs/*-guide.md</td><td><span class="chip s-partial">Draft</span></td></tr>
       <tr><td class="step">92</td><td class="task">Operations runbook</td><td class="desc">Nine incident playbooks written from failure modes actually hit during the build, plus access prerequisites, rollback speeds, and backup gaps. Symptom-first, not architecture-first.</td><td class="deps">4</td><td class="deliv">docs/RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">93</td><td class="task">Maintenance cycle</td><td class="desc">Per-release, quarterly, and outgrow-the-chapter checklists, plus a register of debt carried deliberately with the reason each is acceptable now.</td><td class="deps">92</td><td class="deliv">RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
 
@@ -691,6 +707,7 @@
     <div class="tl-row"><div class="tl-mark">J3 · done</div><div class="tl-body"><strong>Screen plates &amp; flow re-trace</strong><span>Step 10. 38 plates on a design canvas, drawn from the real theme; screen-flows.md corrected where it described an app that no longer exists. Found and fixed two defects on the way.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K1 · done</div><div class="tl-body"><strong>App Check enforced on web</strong><span>reCAPTCHA Enterprise wired and enforced, verified by a real sign-in <em>after</em> enforcement went on — the only proof that tokens are actually accepted. The security review's HIGH finding is closed.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K3 · done</div><div class="tl-body"><strong>Driver index locked</strong><span>Step 69. Dispatch moved into a <span class="mono">requestDispatch</span> callable, the client sweep became a heartbeat, both tripwires inverted, APK and web rebuilt clean and released, and only then did <span class="mono">canDiscoverDrivers()</span> become <span class="mono">isAdmin()</span>. The last accepted-by-design exposure in the security review is closed.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">K4 · done</div><div class="tl-body"><strong>Bilingual UI</strong><span>Step 32b. 327 strings into an ARB pair, Filipino as template and default, a switch in every app bar, nine tests. The copy review asked which language to keep and the answer was both. Live on Hosting; 258 of those Filipino strings are still unread by a native speaker.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K2 · next</div><div class="tl-body"><strong>A whole ride on two handsets</strong><span>Steps 75, 78. Every piece is deployed and none of it has been run end to end by two people on two phones. This is the demo, and the only remaining unknown of consequence.</span></div></div>
     <div class="tl-row"><div class="tl-mark">J2</div><div class="tl-body"><strong>Remaining test depth</strong><span>Steps 76, 77. Security review, performance and cost at 50 drivers.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K</div><div class="tl-body"><strong>Release engineering</strong><span>Steps 80–85. Done. Icon, keystore, signed build verified with apksigner, CI, crash reporting.</span></div></div>
@@ -829,7 +846,8 @@
       <h3>High priority</h3>
       <ul>
         <li><strong>Ethics review before collecting a real ID</strong> — PRMSU will have a process; this belongs in it, and nothing should be collected from a real person first</li>
-        <li><strong>Hand the Filipino copy sheet to a native speaker</strong> (91) — 93 strings, twenty minutes, and it should happen <em>before</em> UAT so real drivers spend their session on the system rather than on wording</li>
+        <li><strong>Hand the Filipino copy sheet to a native speaker</strong> (91) — now <strong>327 strings, 258 of them never read</strong>. The sheet marks which, so the twenty minutes can go where it counts. This is no longer a nicety before UAT: the app shows unvetted Filipino to anyone who installs it</li>
+        <li><strong>Smoke-test the bilingual build on a handset</strong> — the field-tested build predates localisation. No logic changed and 411 tests pass, but nobody has opened this one on a phone</li>
         <li><strong>Run UAT</strong> (78) — the kit is revised and the blocker is cleared. Needs participants, a dummy ID card, and an afternoon. It is the whole of the remaining validation gap</li>
         <li>Re-run the security review (76) — the rider collection, mandatory accounts, the rating cutover, App Check enforcement and ID verification all postdate it</li>
         <li>Native-speaker read of the Filipino copy (91) — the one deliverable still marked Draft</li>
