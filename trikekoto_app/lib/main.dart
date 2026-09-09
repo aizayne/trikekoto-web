@@ -14,6 +14,34 @@ import 'core/ui/app_theme.dart';
 import 'core/ui/theme_controller.dart';
 import 'firebase_options.dart';
 
+/// reCAPTCHA **Enterprise** site key, for App Check on the web build.
+///
+/// **Public by design.** It ships in the page and identifies the site; it
+/// authorises nothing, and the secret half never leaves Google. Committing it
+/// is correct — the same reasoning that puts the Firebase API keys in
+/// `firebase_options.dart`.
+///
+/// Empty means *no web attestation*: `activate()` is called without a web
+/// provider, exactly as before this existed. That fallback has to keep
+/// working, because enforcement is a console switch — turning it on against a
+/// build with no key locks the web app out of its own backend, and the symptom
+/// is every Firestore read failing at once with nothing on screen to explain
+/// it.
+///
+/// Note that Enterprise and the deprecated classic reCAPTCHA hand Firebase
+/// different halves: classic wants the **secret** key in the console, while
+/// Enterprise wants the **site** key in both the console and here. Pasting a
+/// classic secret into an Enterprise field fails in a way the console does not
+/// explain.
+///
+/// Overridable per build for a second project or a staging site:
+///
+///     flutter build web --release --dart-define=RECAPTCHA_SITE_KEY=6Lxxxx
+const _recaptchaSiteKey = String.fromEnvironment(
+  'RECAPTCHA_SITE_KEY',
+  defaultValue: '6LdegbItAAAAAO4d1IMzgHpV-pephdYMk2jpmJIT',
+);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -42,15 +70,29 @@ Future<void> main() async {
       providerApple: kDebugMode
           ? const AppleDebugProvider()
           : const AppleAppAttestProvider(),
-      // Replace with the site key from Firebase Console → App Check → Web.
-      // Left null so an unconfigured project still runs; enforcement is a
-      // console setting and turning it on before this is set would lock the
-      // web build out of its own backend.
-      providerWeb: null,
+      // Enterprise rather than the classic v3 provider: Firebase deprecated
+      // plain reCAPTCHA for App Check, and the console now refuses to
+      // recommend it. Enterprise's free tier is 10,000 assessments a month,
+      // which a single TODA chapter will not approach.
+      //
+      // See [_recaptchaSiteKey] for why an empty key must stay valid.
+      providerWeb: _recaptchaSiteKey.isEmpty
+          ? null
+          : ReCaptchaEnterpriseProvider(_recaptchaSiteKey),
     );
   } catch (e, stack) {
-    debugPrint('App Check unavailable: \$e');
+    debugPrint('App Check unavailable: $e');
     await CrashReporter.recordNonFatal(e, stack, context: 'app check init');
+  }
+
+  // Says, in the one place someone would look, whether this build attests
+  // itself on web. An unattested web build is not broken — it is unprotected,
+  // and that difference is invisible until a bill arrives.
+  if (kIsWeb && _recaptchaSiteKey.isEmpty) {
+    debugPrint(
+      'App Check: no web site key compiled in — this build is UNATTESTED on '
+      'web. Do not enable App Check enforcement until one is set.',
+    );
   }
 
   // Must be registered before runApp: Android may deliver a message into a
