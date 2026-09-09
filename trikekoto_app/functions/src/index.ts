@@ -35,6 +35,21 @@ const db = getFirestore();
 const REGION = 'asia-southeast1';
 
 /** Mirrors DispatchDefaults in the Flutter client. */
+/**
+ * How long a ride may sit unmatched before the system gives up on it.
+ *
+ * The candidate budget alone is not enough. Both sweeps skip a ride when no
+ * driver is available, deliberately — someone may come online — but they skip
+ * it *without* spending a candidate. So a ride booked when the chapter is
+ * asleep never reaches the budget and never expires: the commuter watches a
+ * spinner indefinitely, with nothing on screen admitting that nobody is
+ * coming.
+ *
+ * Five minutes is long enough for a driver starting a shift to still pick it
+ * up, and short enough that nobody stares at a spinner wondering.
+ */
+const SEARCH_TIMEOUT_MINUTES = 5;
+
 const FALLBACK = {
   searchRadiusKm: 5,
   offerTimeoutSeconds: 15,
@@ -55,6 +70,7 @@ type RideDispatch = {
 
 type Ride = {
   status?: string;
+  createdAt?: FirebaseFirestore.Timestamp;
   rating?: number | null;
   ratingCounted?: boolean;
   commuterName?: string;
@@ -406,6 +422,29 @@ export const sweepStaleRides = onSchedule(
 
       const attempted = dispatch.attemptedDrivers ?? [];
       const depth = dispatch.depth ?? 0;
+
+      // Wall clock first, because it catches the case the candidate budget
+      // structurally cannot: nobody was ever available, so no candidate was
+      // ever spent, so `depth` is still 0 and always will be.
+      const createdAt = (ride as { createdAt?: FirebaseFirestore.Timestamp })
+        .createdAt?.toDate();
+      const searchingFor = createdAt
+        ? (now.getTime() - createdAt.getTime()) / 60000
+        : 0;
+
+      if (searchingFor > SEARCH_TIMEOUT_MINUTES) {
+        await doc.ref.update({
+          status: 'expired',
+          cancelledAt: FieldValue.serverTimestamp(),
+          cancelledBy: 'system',
+          dispatch: emptyDispatch(),
+        });
+        logger.info(
+          `Ride ${doc.id} expired after ${Math.round(searchingFor)} min ` +
+          `unmatched (${depth} candidates tried)`,
+        );
+        continue;
+      }
 
       if (depth >= config.maxDriversToTry) {
         await doc.ref.update({
