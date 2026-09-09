@@ -176,6 +176,7 @@ class Ride {
     required this.commuterUid,
     required this.commuterName,
     required this.commuterPhone,
+    this.commuterPhotoUrl,
     required this.pickup,
     required this.dropoff,
     required this.status,
@@ -186,8 +187,6 @@ class Ride {
     this.driverLocation,
     this.driverLocationAt,
     this.scheduledFor,
-    this.fareEstimate,
-    this.distanceKm,
     this.rating,
     this.feedback,
     this.createdAt,
@@ -203,6 +202,17 @@ class Ride {
   final String commuterUid;
   final String commuterName;
   final String commuterPhone;
+
+  /// The rider's profile photo, copied here at booking time.
+  ///
+  /// Denormalised the same way the driver's details are — a driver cannot read
+  /// `riders/{uid}`, and should not be able to. Null for the anonymous
+  /// commuters who never made an account, which is most of them.
+  ///
+  /// Visible to every driver *offered* this ride, not only the one who
+  /// accepts, because Firestore read rules are per-document. Those drivers
+  /// already see the commuter's name and phone number on this same document.
+  final String? commuterPhotoUrl;
   final RidePlace pickup;
   final RidePlace dropoff;
   final String? notes;
@@ -217,8 +227,6 @@ class Ride {
   final Timestamp? driverLocationAt;
 
   final Timestamp? scheduledFor;
-  final num? fareEstimate;
-  final num? distanceKm;
   final int? rating;
   final String? feedback;
   final Timestamp? createdAt;
@@ -251,6 +259,7 @@ class Ride {
       commuterUid: d['commuterUid'] as String? ?? '',
       commuterName: d['commuterName'] as String? ?? '',
       commuterPhone: d['commuterPhone'] as String? ?? '',
+      commuterPhotoUrl: d['commuterPhotoUrl'] as String?,
       pickup: RidePlace.fromAny(d['pickup']),
       dropoff: RidePlace.fromAny(d['dropoff']),
       notes: d['notes'] as String?,
@@ -265,8 +274,6 @@ class Ride {
           d['driverLocation'] is GeoPoint ? d['driverLocation'] as GeoPoint : null,
       driverLocationAt: d['driverLocationAt'] as Timestamp?,
       scheduledFor: d['scheduledFor'] as Timestamp?,
-      fareEstimate: d['fareEstimate'] as num?,
-      distanceKm: d['distanceKm'] as num?,
       rating: (d['rating'] as num?)?.toInt(),
       feedback: d['feedback'] as String?,
       createdAt: d['createdAt'] as Timestamp?,
@@ -283,6 +290,7 @@ class Ride {
         'commuterUid': commuterUid,
         'commuterName': commuterName,
         'commuterPhone': commuterPhone,
+        'commuterPhotoUrl': commuterPhotoUrl,
         'pickup': pickup.toMap(),
         'dropoff': dropoff.toMap(),
         'notes': notes,
@@ -293,8 +301,6 @@ class Ride {
         'driverLocation': driverLocation,
         'driverLocationAt': driverLocationAt,
         'scheduledFor': scheduledFor,
-        'fareEstimate': fareEstimate,
-        'distanceKm': distanceKm,
         'rating': rating,
         'feedback': feedback,
         'createdAt': createdAt,
@@ -322,18 +328,18 @@ class RideWrites {
     required String commuterUid,
     required String commuterName,
     required String commuterPhone,
+    String? commuterPhotoUrl,
     required RidePlace pickup,
     required RidePlace dropoff,
     String? notes,
     Timestamp? scheduledFor,
-    num? fareEstimate,
-    num? distanceKm,
     String? commuterFcmToken,
   }) =>
       {
         'commuterUid': commuterUid,
         'commuterName': commuterName.trim(),
         'commuterPhone': commuterPhone.trim(),
+        'commuterPhotoUrl': commuterPhotoUrl,
         'pickup': pickup.toMap(),
         'dropoff': dropoff.toMap(),
         'notes': (notes?.trim().isEmpty ?? true) ? null : notes!.trim(),
@@ -344,8 +350,6 @@ class RideWrites {
         'driverLocation': null,
         'driverLocationAt': null,
         'scheduledFor': scheduledFor,
-        'fareEstimate': fareEstimate,
-        'distanceKm': distanceKm,
         'rating': null,
         'feedback': null,
         // Lets a Cloud Function tell this commuter their driver accepted or
@@ -408,21 +412,14 @@ class RideWrites {
         'startedAt': FieldValue.serverTimestamp(),
       };
 
-  /// Closes the ride, recording what it cost.
+  /// Closes the ride.
   ///
-  /// [distanceKm] and [fareEstimate] are optional because a driver whose GPS
-  /// never produced a fix must still be able to complete the trip — the rule
-  /// permits them absent for exactly that reason. When absent, the fare is
-  /// settled in cash off-app, as it is today.
-  static Map<String, dynamic> complete({
-    double? distanceKm,
-    num? fareEstimate,
-  }) =>
-      {
+  /// Records nothing about money. TODA tariffs are set by ordinance and posted
+  /// at the terminal; the app never quoted, collected, or stored a fare, and a
+  /// second figure on a phone could only ever disagree with the official one.
+  static Map<String, dynamic> complete() => {
         'status': RideStatus.completed.wire,
         'completedAt': FieldValue.serverTimestamp(),
-        'distanceKm': ?distanceKm,
-        'fareEstimate': ?fareEstimate,
       };
 
   static Map<String, dynamic> cancelByDriver() => {

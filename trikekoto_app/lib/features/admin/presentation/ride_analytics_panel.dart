@@ -174,48 +174,6 @@ class _Body extends StatelessWidget {
         ),
         const Gap(AppSpacing.xl),
 
-        // Money is separated from the operational counts and labelled as an
-        // estimate on purpose. The app never handles payment — TODA fares are
-        // cash — so this is the sum of what the app quoted, not what was
-        // collected. Calling it revenue would put a number that looks like
-        // accounting in front of someone making decisions.
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: context.scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: AppSpacing.xxl,
-                runSpacing: AppSpacing.lg,
-                children: [
-                  _Stat(value: _peso(a.fares), label: 'fares quoted'),
-                  _Stat(
-                    value: a.averageFare == null ? '—' : _peso(a.averageFare!),
-                    label: 'average fare',
-                  ),
-                  _Stat(
-                    value: a.averageDistanceKm == null
-                        ? '—'
-                        : '${a.averageDistanceKm!.toStringAsFixed(1)} km',
-                    label: 'average trip',
-                  ),
-                ],
-              ),
-              const Gap(AppSpacing.sm),
-              Text(
-                'Estimated from the app\'s fare table. Passengers pay the '
-                'driver in cash, so this is not collected revenue.',
-                style: context.text.bodySmall
-                    ?.copyWith(color: context.scheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-
         if (a.unrated > 0) ...[
           const Gap(AppSpacing.md),
           Text(
@@ -371,7 +329,6 @@ class _DriverTable extends StatelessWidget {
           DataColumn(label: Text('Driver')),
           DataColumn(label: Text('Done'), numeric: true),
           DataColumn(label: Text('Cancelled'), numeric: true),
-          DataColumn(label: Text('Fares'), numeric: true),
           DataColumn(label: Text('Rating'), numeric: true),
         ],
         rows: [
@@ -388,7 +345,6 @@ class _DriverTable extends StatelessWidget {
                 '${r.cancelled}',
                 tone: r.cancelled > 0 ? context.scheme.error : null,
               )),
-              DataCell(_Num(_peso(r.fares))),
               DataCell(_Num(
                 r.averageRating == null
                     ? '—'
@@ -470,16 +426,4 @@ class _Notice extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Pesos with thousands separators, no decimals. Fares are whole pesos and a
-/// trailing `.00` on every figure just adds noise to a dense panel.
-String _peso(double value) {
-  final digits = value.round().abs().toString();
-  final buffer = StringBuffer();
-  for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(',');
-    buffer.write(digits[i]);
-  }
-  return '${value < 0 ? '-' : ''}₱$buffer';
 }

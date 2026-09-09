@@ -4,8 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../../core/fare/fare_calculator.dart';
-import '../../../core/config/app_config.dart';
 import '../../../core/diagnostics/crash_reporter.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/firestore/collection_paths.dart';
@@ -238,49 +236,15 @@ class RideActions {
   Future<void> start(Ride ride) =>
       _ref.read(refsProvider).ride(ride.id).update(RideWrites.startTrip());
 
-  /// Completes the ride and records what it cost.
+  /// Completes the ride.
   ///
-  /// Distance is straight-line from the pickup point to wherever the trike
-  /// actually stopped, which under-reads against the road distance a
-  /// passenger travels — a fare quoted from it is a floor, not a final
-  /// price. Replace [_tripDistanceKm] with a routed distance once the
-  /// mapping phase lands; nothing else here has to change.
-  Future<void> complete(Ride ride) async {
-    final distanceKm = await _tripDistanceKm(ride);
-    final quote = distanceKm == null
-        ? null
-        : estimateFare(
-            distanceKm: distanceKm,
-            config: _ref.read(fareConfigProvider),
-          );
-
-    await _ref.read(refsProvider).ride(ride.id).update(
-          RideWrites.complete(
-            distanceKm: distanceKm,
-            fareEstimate: quote?.total,
-          ),
-        );
-  }
-
-  /// Straight-line pickup-to-dropoff distance, or null when either endpoint
-  /// is unknown — legacy rides carry no pickup coordinate, and a driver
-  /// whose GPS never fixed has no endpoint. Completion must succeed either
-  /// way, so the fare is simply omitted.
-  Future<double?> _tripDistanceKm(Ride ride) async {
-    final pickup = ride.pickup.geopoint;
-    if (pickup == null) return null;
-
-    GeoPoint? end = ride.driverLocation;
-    if (end == null) {
-      final position = await Geolocator.getLastKnownPosition();
-      if (position != null) {
-        end = GeoPoint(position.latitude, position.longitude);
-      }
-    }
-    if (end == null) return null;
-
-    return distanceKmBetween(pickup, end);
-  }
+  /// Records nothing about money or distance. The app does not quote fares:
+  /// TODA tariffs are set by ordinance and posted at the terminal, and
+  /// passengers pay the driver in cash.
+  Future<void> complete(Ride ride) => _ref
+      .read(refsProvider)
+      .ride(ride.id)
+      .update(RideWrites.complete());
 
   Future<void> cancel(Ride ride) => _ref
       .read(refsProvider)

@@ -29,6 +29,11 @@ class FirestoreRefs {
   DocumentReference<Driver> driver(String email) =>
       drivers.doc(normalizeEmail(email));
 
+  /// Rider profiles. Keyed by uid — the rules admit only the caller's own
+  /// document, so there is no collection-level query for these at all.
+  DocumentReference<Map<String, dynamic>> rider(String uid) =>
+      _db.collection(FsCollections.riders).doc(uid);
+
   CollectionReference<ActiveDriver> get activeDrivers => _db
       .collection(FsCollections.activeDrivers)
       .withConverter<ActiveDriver>(

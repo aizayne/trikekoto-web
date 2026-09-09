@@ -41,14 +41,73 @@ if (!existsSync(apkPath)) {
   process.exit(1);
 }
 
-/** First non-internal IPv4 address — the one the phone can reach. */
+/**
+ * The address the phone can actually reach.
+ *
+ * "First non-internal IPv4" is not good enough. A laptop running a VPN or a
+ * hypervisor has several, and the first one is often a virtual adapter —
+ * CloudflareWARP hands out 172.16.x, which is a private range and passes every
+ * naive check, but no phone on the Wi-Fi can route to it. The QR then encodes a
+ * URL that simply times out, and it looks like the server is broken.
+ *
+ * So: skip adapters whose names give them away, prefer the ranges home and
+ * office Wi-Fi actually use, and let `HOST` override when the guess is wrong.
+ */
+const VIRTUAL_ADAPTER =
+  /warp|vpn|virtual|vethernet|hyper-v|wsl|docker|tailscale|zerotier|loopback|bluetooth/i;
+
+/**
+ * Windows Mobile Hotspot / Internet Connection Sharing.
+ *
+ * Windows always gives this adapter 192.168.137.1, and always names it
+ * "Local Area Connection* N". It is a 192.168 address on a real, enabled
+ * adapter, so it passes every check above and outranks the actual Wi-Fi —
+ * but it is a *different network*. A phone joined to the house Wi-Fi cannot
+ * route to it unless it is tethered to this laptop specifically, which is
+ * not what "same Wi-Fi" means to anyone reading the instructions.
+ *
+ * This is the second adapter to produce a dead QR here; CloudflareWARP's
+ * 172.16.x was the first. The pattern is the same both times: a plausible
+ * private address on an interface nothing else is on.
+ */
+const HOTSPOT_ADAPTER = /local area connection\*/i;
+const ICS_SUBNET = '192.168.137.';
+
 function lanAddress() {
-  for (const addresses of Object.values(networkInterfaces())) {
+  if (process.env.HOST) return process.env.HOST;
+
+  const candidates = [];
+  for (const [name, addresses] of Object.entries(networkInterfaces())) {
+    if (VIRTUAL_ADAPTER.test(name) || HOTSPOT_ADAPTER.test(name)) continue;
     for (const address of addresses ?? []) {
-      if (address.family === 'IPv4' && !address.internal) return address.address;
+      if (address.family !== 'IPv4' || address.internal) continue;
+      // 169.254.x is a link-local address assigned when DHCP failed. The
+      // interface is up but not on a network anyone else is on.
+      if (address.address.startsWith('169.254.')) continue;
+      // Belt and braces: skip the ICS subnet even if the adapter was
+      // renamed, since that address is never the one to hand out.
+      if (address.address.startsWith(ICS_SUBNET)) continue;
+      candidates.push({ name, ip: address.address });
     }
   }
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // 192.168.x and 10.x are what home and office Wi-Fi hand out. 172.16-31.x is
+  // also private, but it is where VPN and container networks tend to live, so
+  // it is the last resort rather than the first match.
+  const rank = (ip) =>
+    ip.startsWith('192.168.') ? 0 : ip.startsWith('10.') ? 1 : 2;
+  candidates.sort((a, b) => rank(a.ip) - rank(b.ip));
+
+  if (candidates.length > 1) {
+    console.log(
+      `  Using ${candidates[0].ip} (${candidates[0].name}). Others seen: ` +
+        candidates.slice(1).map((c) => `${c.ip} (${c.name})`).join(', ') +
+        '\n  Override with:  HOST=<ip> node scripts/serve_apk.mjs\n',
+    );
+  }
+  return candidates[0].ip;
 }
 
 const host = lanAddress();

@@ -14,7 +14,7 @@ trikekoto_app/
 │   └── migrate_from_web.mjs       one-off migration off the web build's data
 ├── test_rules/
 │   ├── package.json
-│   └── rules.test.mjs             102 rules tests against the emulator
+│   └── rules.test.mjs             167 rules tests against the emulator
 └── lib/
     ├── core/firestore/
     │   ├── collection_paths.dart  collection names, enums, normalizeEmail()
@@ -34,8 +34,49 @@ trikekoto_app/
 
 Firebase Console → Authentication → Sign-in method:
 
-- **Anonymous** — commuters. This is what gives a ride document an owner.
+- **Phone** — commuters. Every commuter verifies a number before booking;
+  `hasVerifiedPhone()` in the rules refuses a ride creation without one.
 - **Email/Password** — drivers and admins.
+- **Anonymous** — no longer used. The provider can stay off.
+
+> ### Phone sign-in requires the Blaze plan
+>
+> Not a cost concern — a hard requirement. On the free plan phone verification
+> fails with **"billing not enabled"**, and because accounts are mandatory,
+> no commuter can use the app at all until billing is on.
+>
+> **Blaze is enabled on `trikekoto`.** It was the same wall as Cloud Functions
+> (step 65) and Cloud Storage, and enabling it cleared all three.
+>
+> Anyone standing this project up on a fresh project hits the same wall and
+> needs the same fix. See **Set a budget alert** below before doing anything
+> else with it.
+
+### 1b. Set a budget alert
+
+**Done on `trikekoto`: ₱500/month, scoped to this project, email alerts.**
+
+Blaze bills past the free quotas with no ceiling. At pilot scale the real cost
+is close to nothing — see [COST_AND_PERFORMANCE.md](COST_AND_PERFORMANCE.md) —
+but "close to nothing" is a projection, and a runaway loop or a leaked API key
+does not respect projections.
+
+Google Cloud Console → Billing → Budgets & alerts → **Create budget**:
+
+- Scope: the `trikekoto` project only, not "All projects"
+- Amount: **₱500/month** is well above the modelled pilot cost, so a trip
+  means something is wrong rather than merely busy
+- Alerts at 25%, 50%, 90%, 100%, emailed to the billing account owner
+
+Email alerts need no Pub/Sub topic.
+
+> **A budget alerts. It does not cap.** Nothing stops when the number is hit;
+> Google offers no hard spending limit on Blaze. The actual stop is the pilot
+> switch — setting `config/app.acceptingRides` to `false` refuses every new
+> ride at the rules layer, so it holds even against a modified client.
+>
+> If an alert ever fires: **flip that switch first, investigate second.** See
+> [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ### 2. Point the CLI at your project
 
@@ -71,8 +112,6 @@ Collection `config`, document `app`:
   "searchRadiusKm": 5,
   "offerTimeoutSeconds": 15,
   "maxDriversToTry": 10,
-  "baseFare": 15,
-  "farePerKm": 5,
   "acceptingRides": true,
   "minAppVersion": "1.0.0"
 }
@@ -84,7 +123,7 @@ and redistributing the APK.
 `acceptingRides` is the **pilot stop button**, enforced by the security rules
 rather than the app: setting it to `false` halts new bookings on every phone
 within seconds, while rides already in progress finish normally. Flip it from
-**Admin → Dispatch & fares**. Omitting it means open — a project that has not
+**Admin → Dispatch**. Omitting it means open — a project that has not
 been seeded must still work. See [pilot-plan.md](docs/pilot-plan.md).
 
 > `minAppVersion` is seeded here by convention but **nothing enforces it**.
@@ -146,7 +185,7 @@ them down.
 bash scripts/verify.sh
 ```
 
-Runs all four checks CI runs — analyze, 132 Dart tests, 102 rules tests, and the
+Runs all four checks CI runs — analyze, 162 Dart tests, 167 rules tests, and the
 functions typecheck — and applies the `TEMP=C:\Temp` workaround automatically on
 Windows.
 
@@ -169,8 +208,8 @@ runs on every push and pull request that touches `trikekoto_app/`:
 
 | Job | What it guards |
 |---|---|
-| **analyze** | `flutter analyze --fatal-infos` and 132 Dart tests |
-| **rules** | 102 Firestore emulator tests — rules, lifecycle, adversarial |
+| **analyze** | `flutter analyze --fatal-infos` and 162 Dart tests |
+| **rules** | 167 Firestore emulator tests — rules, lifecycle, adversarial |
 | **functions** | `tsc --noEmit` on the Cloud Functions |
 | **build** | Release APK, uploaded as an artifact for 30 days |
 
@@ -274,15 +313,23 @@ which is deliberately yours to do.
 **1. Create the keystore.** Run this from `trikekoto_app/`:
 
 ```bash
-keytool -genkey -v -keystore trikekoto-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias trikekoto
+bash scripts/make-keystore.sh
 ```
 
-It asks for a password and some identifying details. The password is the only
-thing protecting the key, so treat it as one.
+It asks for a password, creates `trikekoto-release.jks`, writes
+`android/key.properties` to match, and reads the certificate back to confirm
+it worked. Both files are gitignored.
 
-**2. Point the build at it.** Copy `android/key.properties.example` to
-`android/key.properties` and fill in the password you just chose. Both that
-file and `*.jks` are gitignored.
+The password is read from your terminal and handed to `keytool` through the
+environment — never as a command-line argument, which would put it in your
+shell history and the process list. Run it yourself; nobody else should know
+this password.
+
+It refuses to overwrite an existing keystore. Replacing one that has already
+signed an installed APK means every device holding that APK must uninstall and
+reinstall, so that is not something a script should make easy.
+
+**2.** Nothing — step 1 wrote `android/key.properties` for you.
 
 **3. Build.** `flutter build apk --release` now signs with your key. Confirm:
 

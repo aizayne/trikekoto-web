@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:16px;display:flex;flex-direction:column;gap:12px}
+    .card{background:#fff;border:1px solid #E7E5E4;border-radius:12px;padding:16px}
+    .seg{flex:1;height:36px;border-radius:8px;display:flex;align-items:center;
+      justify-content:center;font-size:14px;color:#57534E}
+    .seg.on{background:#101A2C;color:#fff;font-family:Poppins,system-ui,sans-serif;font-weight:600}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Admin</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" stroke="#1C1917" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+</div>
+
+<div class="body">
+  <div style="display:flex;gap:4px;background:#E7E5E4;border-radius:10px;padding:4px">
+    <div class="seg on">Today</div>
+    <div class="seg">7 days</div>
+    <div class="seg">30 days</div>
+  </div>
+
+  <!-- "No rides in this window", NOT a row of zeroes. A grid of 0s reads as
+       a broken panel; a sentence reads as an answer. -->
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;
+    gap:12px;padding:48px 24px;text-align:center">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 19V9M10 19V5M16 19v-7M4.5 21.5h15" stroke="#A8A29E"
+        stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    <div class="disp" style="font-size:17px;color:#57534E">No rides in this window.</div>
+    <p style="margin:0;color:#57534E;font-size:15px;max-width:250px">
+      Subukan ang 7 days o 30 days, o hintayin ang unang biyahe ngayong araw.
+    </p>
+  </div>
+
+  <div class="card" style="display:flex;align-items:center;gap:14px">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="flex:none" aria-hidden="true">
+      <path d="M4.5 6.5h15v13h-15v-13ZM8 3.5v4M16 3.5v4M8 12h8M8 15.5h5"
+        stroke="#57534E" stroke-width="1.5" stroke-linecap="round"></path>
+    </svg>
+    <span style="flex:1;font-size:16px">Feedback</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="#57534E" stroke-width="1.7"
+        stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+
+  <div class="card" style="display:flex;align-items:center;gap:14px">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="flex:none" aria-hidden="true">
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4Z"
+        stroke="#57534E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <span style="flex:1;font-size:16px">Dispatch</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="#57534E" stroke-width="1.7"
+        stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

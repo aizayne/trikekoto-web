@@ -1,7 +1,7 @@
 # TrikeKoTo — Security Review
 
 **Reviewed:** 24 August 2026 · **Project:** `trikekoto` · **Ruleset:** deployed
-**Verification:** 102 emulator tests, 19 of them adversarial
+**Verification:** 125 emulator tests, 19 of them adversarial
 ([`test_rules/attacks.test.mjs`](test_rules/attacks.test.mjs))
 
 Every claim below was executed against the deployed ruleset in the Firestore
@@ -20,8 +20,9 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | | |
 |---|---|
 | Critical issues | **0** |
-| High | **1** — Phone auth enabled but unused |
-| Medium | **3** — rating inflation, no App Check, unrestricted API key |
+| High | **1** — SMS toll fraud via phone sign-in *(partly mitigated: region policy set, App Check still open on web)* |
+| Medium | **2** — no App Check on web, unrestricted API key |
+| Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Accepted by design | **3** — documented below with tripwire tests |
 
 The two findings from the original web build — an admin gate that trusted an
@@ -67,55 +68,75 @@ anything. Authorisation rests entirely on the rules.
 
 ## Findings
 
-### HIGH — Phone sign-in is enabled and unused
+### HIGH — SMS toll fraud through phone sign-in
 
-**[Authentication → Sign-in method](https://console.firebase.google.com/project/trikekoto/authentication/providers)**
-lists **Phone** as Enabled. Nothing in the app calls it: drivers and admins use
-Email/Password, commuters use Anonymous.
+**Originally written as "Phone sign-in is enabled and unused", with the fix
+being to disable it. That fix is now impossible and the finding is worse.**
 
-An enabled SMS provider with no App Check is the standard toll-fraud vector —
-an attacker drives verification texts toward premium-rate numbers they control
-and the cost lands on your project. This is exactly what the console's own
-"protect against billing fraud" banner refers to.
+Phone verification is how every commuter authenticates — accounts are
+mandatory on every platform — so the provider cannot be turned off. Two things
+changed the risk since this review was written:
 
-**Google is also enabled and unused.** No cost attached, but it is live
-attack surface for no benefit.
+1. It went from **unused** to **load-bearing**.
+2. Blaze was enabled, so abuse now **bills** instead of being refused.
 
-**Fix:** disable both unless you plan to use them. If your panel requires
-phone verification as a feature, implement it *and* enable App Check first —
-an enabled provider is not a security control, only a cost.
+The attack is the standard one: drive verification texts at premium-rate
+numbers the attacker controls and collect a cut of the termination fee. The
+web build is the exposed surface — `https://trikekoto.web.app` is public, and
+anyone with the link can make the project send SMS.
 
-### MEDIUM — Ratings can be inflated without taking a ride
+**Mitigations in place**
 
-Any signed-in user can increment `ratingSum`/`ratingCount` on any driver. The
-rules verify the *arithmetic* — exactly one vote, worth 1 to 5 — but cannot
-tie the increment to a completed ride, because each document in a transaction
-is authorised independently.
+| | |
+|---|---|
+| SMS region policy | **Allowlist, Philippines only.** Removes essentially all the profit — the expensive destinations are unreachable. Costs nothing in legitimate reach: every user of a Zambales tricycle service has a `+63` number. |
+| App Check (Android) | Play Integrity, attesting the real APK. |
+| Budget alert | ₱500/month. Detection, not prevention — it fires after the money is spent. |
 
-**Bounded:** one vote per write, maximum 5 stars. There is no way to write an
-arbitrary total; test `rejects an inflated aggregate increment` proves a
-5000-point write is refused. Inflating a reputation meaningfully would take
-hundreds of scripted writes, which would be visible in usage.
+**Still open — App Check on web.** `providerWeb` is `null` in `main.dart`, so
+enforcement cannot be switched on without locking the web build out of its own
+backend. It needs a reCAPTCHA Enterprise site key. Until then nothing
+distinguishes a browser from a script, and the region policy is what bounds
+the damage rather than preventing the requests.
 
-**Fix — written, awaiting deployment.** `onRideRated` in
-[`functions/src/index.ts`](functions/src/index.ts) derives the increment from
-the ride itself, so it can only happen once, for a real completed ride, with
-the rating the commuter actually gave. It is idempotent: the transaction
-re-reads the ride and refuses if `ratingCounted` is already set.
+Residual risk: someone can still burn SMS against Philippine numbers. Bounded
+and far cheaper than the unrestricted case, but not zero.
 
-**Cutover, in this order:**
+~~**Google sign-in is also enabled and unused.**~~ **Disabled.** It carried no
+cost, but it was live attack surface for no benefit. That half of the original
+recommendation survived the rewrite intact and has been actioned.
 
-1. Enable Blaze and `firebase deploy --only functions`.
-2. Delete the `(isSignedIn() && validRatingIncrement())` line from the
-   `drivers` update rule and redeploy rules. The exact instructions are in a
-   comment beside that function in `firestore.rules`.
-3. Update the two tripwire tests in `test_rules/attacks.test.mjs` that
-   currently assert this gap is open.
+### ~~MEDIUM — Ratings can be inflated without taking a ride~~ — CLOSED
 
-Tightening the rules **before** the function is deployed means no rating is
-ever counted. No app release is required: the client's own increment is
-already best-effort and fails quietly, and the function's idempotency guard
-covers older APKs still attempting it.
+Any signed-in user could increment `ratingSum`/`ratingCount` on any driver.
+The rules verified the *arithmetic* — exactly one vote, worth 1 to 5 — but
+could not tie the increment to a completed ride, because each document in a
+transaction is authorised independently.
+
+**Closed by the step 68 cutover.** `onRideRated` in
+[`functions/src/index.ts`](functions/src/index.ts) is deployed and owns the
+aggregate: it derives the increment from the ride itself, so it can only
+happen once, for a real completed ride, with the rating the commuter actually
+gave. It writes through the Admin SDK, which bypasses the rules. The
+`validRatingIncrement()` clause is gone from `firestore.rules`, so no client
+write of those fields is admitted at all — well-formed or not.
+
+The tripwire that asserted the gap was open is now an assertion that it is
+shut, in `attacks.test.mjs`, alongside a new case covering a driver inflating
+their own rating.
+
+> **A note on the window between the two steps.** The order was: deploy the
+> function, *then* delete the rule. Reversing it means no rating is counted at
+> all. But leaving both in place — which is the state that existed between the
+> two deploys — means **every rating counts twice**: the function's
+> `ratingCounted` guard stops it re-running, and cannot see a client
+> increment at all. If a rating was cast in that window, its driver's
+> aggregate is double. Nothing rated during it here, because no commuter could
+> sign in yet.
+
+No app release was required. The client's increment is best-effort inside a
+try/catch that records a non-fatal and stays silent, so installed APKs now
+fail that write invisibly while their rating still lands on the ride.
 
 ### MEDIUM — App Check is not enabled
 
@@ -178,11 +199,21 @@ before deploying.
 
 ## Recommended order
 
-1. **Disable Phone and Google sign-in** — one click, removes a live cost risk
-2. **Enable App Check** — free, and closes the "script vs real app" gap
-3. **Restrict API keys** — after the release keystore exists
-4. **Blaze plan** → server-side rating aggregation (68) and dispatch (67)
-5. Re-run this review after any rules change
+1. ~~**Disable Phone and Google sign-in**~~ — **resolved, in two different
+   ways.** Google sign-in: disabled. Phone sign-in: cannot be disabled, since
+   it is how every commuter authenticates — mitigated instead with an SMS
+   region allowlist (Philippines only).
+2. **App Check on web** — Play Integrity covers Android; `providerWeb` is
+   still `null`, and enforcement cannot be switched on until it holds a
+   reCAPTCHA Enterprise key. This is where the SMS abuse surface now lives,
+   and it is the last unmitigated part of the HIGH finding.
+3. ~~**A budget alert**~~ — done, ₱500/month scoped to the project.
+4. **Restrict API keys** — the release keystore now exists, so this is
+   unblocked.
+5. ~~**Blaze plan** → server-side rating aggregation (68) and dispatch (67)~~
+   — done. Both functions are deployed.
+6. Re-run this review after any rules change. **It is due one now:** the rider
+   collection, mandatory accounts, and the rating cutover all postdate it.
 
 ---
 

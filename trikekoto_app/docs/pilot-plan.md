@@ -17,7 +17,7 @@ hoping.
 
 So there is now a **server-side stop button**: `config/app.acceptingRides`.
 
-- Flip it in **Admin → Dispatch & fares**. One switch, saves immediately, no
+- Flip it in **Admin → Dispatch**. One switch, saves immediately, no
   Save button to remember.
 - The **security rules** enforce it, not the app. A modified or stale client
   cannot book while it is false, because the server refuses the write.
@@ -67,7 +67,7 @@ doubling the information you get, which is a bad trade at this stage.
 - [ ] Push notifications confirmed working on a backgrounded phone
 - [ ] APK signed with the real keystore, **and the keystore backed up offline**
 - [ ] Admin account created and email verified
-- [ ] `config/app` seeded, fares checked by hand against the chapter's tariff
+- [ ] `config/app` seeded (search radius, offer timeout, drivers to try)
 - [ ] Crashlytics receiving a deliberately triggered test crash
 - [ ] Every driver has the [driver guide](driver-guide.md) and a way to reach you
 
@@ -87,7 +87,8 @@ Do this in person, at the terminal, with the drivers who will actually use it.
 3. Have every driver complete **one practice ride** with you as the commuter.
 4. Give them the stop signal: what you will say, and where, if you halt the
    pilot. A group chat that everyone is already in beats anything new.
-5. Tell them plainly: **fares are cash, as always. The app never handles money.**
+5. Tell them plainly: **the app shows no fares at all. Payment is the posted
+   tariff, in cash, exactly as before.**
 
 Then agree the one thing that will decide whether this works — **that they keep
 the app running during their shift** — and find out what that costs them in
@@ -128,7 +129,6 @@ Flip `acceptingRides` off, then investigate. Do not debug a live system.
 - A commuter's data appearing to the wrong person
 - Rides being assigned to the wrong driver, or double-assigned
 - A crash loop — the app closing repeatedly for anyone
-- Money being displayed wrongly in a way a passenger could act on
 - Any write failure caused by hitting a quota
 
 ### Stop at the end of the day
@@ -141,9 +141,9 @@ Flip `acceptingRides` off, then investigate. Do not debug a live system.
 ### Keep going, but fix
 
 - One driver struggling — retrain before you change the app
-- Fare disputes — check `config/app` against the tariff first; it is usually
-  the configuration, not the calculation
-- Slow route quoting — OSRM latency, falls back to straight-line automatically
+- Fare disputes — nothing to do with the app; it shows no prices. Point to the
+  posted tariff at the terminal
+- Slow route lookups — OSRM latency, falls back to straight-line automatically
 
 ### How to restart after a stop
 

@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:24px;display:flex;flex-direction:column;gap:16px}
+    .card{background:#fff;border:1px solid #E7E5E4;border-radius:12px;padding:20px}
+    .btn{height:48px;border-radius:12px;border:1px solid #B91C1C;color:#B91C1C;background:transparent;
+      font-family:Poppins,system-ui,sans-serif;font-weight:600;font-size:15px;
+      display:flex;align-items:center;justify-content:center;gap:8px}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Saan tayo?</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" stroke="#1C1917" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 12H4M8 8l-4 4 4 4M10 4.5h8a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-8"
+        stroke="#1C1917" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+
+<div class="body">
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 20px">
+    <div style="width:56px;height:56px;border:3px solid #E7E5E4;border-top-color:#F5A623;
+      border-radius:50%"></div>
+    <h2 class="disp" style="font-size:20px;text-align:center">Looking for a driver…</h2>
+    <p style="margin:0;text-align:center;color:#57534E;font-size:15px;max-width:260px">
+      Inaalok namin ang pinakamalapit na driver. Kung hindi sumagot,
+      lilipat kami sa susunod.
+    </p>
+    <!-- Depth of the greedy sweep, capped at 10 by the security rules -->
+    <div style="display:flex;gap:6px;margin-top:4px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#F5A623"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#F5A623"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#D6D3D1"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#D6D3D1"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#D6D3D1"></div>
+    </div>
+    <span style="color:#57534E;font-size:13px">Ikalawang driver sa 10</span>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <div style="font-size:12px;color:#57534E">Pickup</div>
+    <div style="font-size:16px">Sari-sari Store, Purok 3</div>
+    <div style="height:1px;background:#E7E5E4;margin:12px 0"></div>
+    <div style="font-size:12px;color:#57534E">Drop-off</div>
+    <div style="font-size:16px">Palengke, San Marcelino</div>
+  </div>
+
+  <div class="btn">Cancel ride</div>
+</div>
+</x-dc>
+</body>
+</html>

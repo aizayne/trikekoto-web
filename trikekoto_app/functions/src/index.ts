@@ -37,7 +37,11 @@ const FALLBACK = {
   searchRadiusKm: 5,
   offerTimeoutSeconds: 15,
   maxDriversToTry: 10,
+  routingBaseUrl: 'https://router.project-osrm.org',
 };
+
+/** Mirrors DispatchDefaults.roadRankLimit in the Flutter client. */
+const ROAD_RANK_LIMIT = 8;
 
 type RideDispatch = {
   offeredTo?: string | null;
@@ -58,7 +62,6 @@ type Ride = {
   dispatch?: RideDispatch;
   assignedDriver?: string | null;
   driverSnapshot?: { firstName?: string; plateNumber?: string } | null;
-  fareEstimate?: number | null;
 };
 
 async function readConfig() {
@@ -76,6 +79,14 @@ async function readConfig() {
         Number(d.maxDriversToTry ?? FALLBACK.maxDriversToTry),
         FALLBACK.maxDriversToTry,
       ),
+      // Same guard as routingBaseUrlProvider on the client: a blank or
+      // non-HTTPS value falls back rather than issuing requests at whatever
+      // ended up in the document.
+      routingBaseUrl:
+        typeof d.routingBaseUrl === 'string' &&
+        d.routingBaseUrl.trim().startsWith('https://')
+          ? d.routingBaseUrl.trim()
+          : FALLBACK.routingBaseUrl,
     };
   } catch (e) {
     logger.warn('config/app unreadable, using defaults', e);
@@ -95,6 +106,58 @@ function haversineKm(a: GeoPoint, b: GeoPoint): number {
       Math.cos(toRad(b.latitude)) *
       Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+/**
+ * Road distance in kilometres from `origin` to each destination, in order.
+ *
+ * The server half of the same two-stage ranking the client does: haversine
+ * to shortlist, road distance to decide. One OSRM table request for the whole
+ * shortlist — asking per driver would multiply the request rate against a
+ * server that is rate-limited.
+ *
+ * Returns null when the lookup is unusable, and a null entry for a driver
+ * with no road connection to the pickup. The sweep must survive both: a
+ * routing outage may degrade the ordering but must never stop rides being
+ * offered.
+ */
+async function roadDistancesKm(
+  baseUrl: string,
+  origin: GeoPoint,
+  destinations: GeoPoint[],
+): Promise<(number | null)[] | null> {
+  if (destinations.length === 0) return [];
+
+  const coords = [origin, ...destinations]
+    .map((p) => `${p.longitude},${p.latitude}`)
+    .join(';');
+  const url = `${baseUrl}/table/v1/driving/${coords}?sources=0&annotations=distance`;
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'ph.trikekoto.trikekoto_app' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) {
+      logger.warn(`Table HTTP ${response.status}; ranking by straight line`);
+      return null;
+    }
+
+    const body = (await response.json()) as {
+      code?: string;
+      distances?: (number | null)[][];
+    };
+    if (body.code !== 'Ok') return null;
+
+    const row = body.distances?.[0];
+    // Row is origin→[origin, ...destinations], so it is one longer.
+    if (!row || row.length !== destinations.length + 1) return null;
+
+    return row.slice(1).map((m) => (m === null ? null : m / 1000));
+  } catch (e) {
+    logger.warn('Table unavailable; ranking by straight line', e);
+    return null;
+  }
 }
 
 /**
@@ -207,9 +270,7 @@ export const onRideStatusChanged = onDocumentUpdated(
         case 'completed':
           return {
             title: 'Ride complete',
-            body: after.fareEstimate
-              ? `Estimated fare ₱${after.fareEstimate}. Rate your driver.`
-              : 'Rate your driver.',
+            body: 'Rate your driver.',
             type: 'ride_completed',
           };
         default:
@@ -358,21 +419,45 @@ export const sweepStaleRides = onSchedule(
       const pickup = ride.pickup?.geopoint;
       if (!pickup) continue;
 
-      const candidate = online.docs
+      // Stage one: straight-line, to apply the radius and cut the field.
+      const shortlist = online.docs
         .map((d) => ({ email: d.id, data: d.data() }))
         .filter((d) => !attempted.includes(d.email))
         .map((d) => ({
           email: d.email,
+          point: d.data.position?.geopoint as GeoPoint | undefined,
           km: d.data.position?.geopoint
             ? haversineKm(pickup, d.data.position.geopoint as GeoPoint)
             : Number.POSITIVE_INFINITY,
         }))
-        .filter((d) => d.km <= config.searchRadiusKm)
-        .sort((a, b) => a.km - b.km)[0];
+        .filter((d) => d.point !== undefined && d.km <= config.searchRadiusKm)
+        .sort((a, b) => a.km - b.km)
+        .slice(0, ROAD_RANK_LIMIT);
 
       // Nobody free right now. Leave the ride searching — a driver may come
       // online before the budget runs out.
-      if (!candidate) continue;
+      if (shortlist.length === 0) continue;
+
+      // Stage two: road distance over the shortlist decides the winner.
+      // Crow-flies is wrong wherever geography does not follow the streets.
+      let candidate = shortlist[0];
+      if (shortlist.length > 1) {
+        const roadKm = await roadDistancesKm(
+          config.routingBaseUrl,
+          pickup,
+          shortlist.map((d) => d.point as GeoPoint),
+        );
+        if (roadKm) {
+          // A null entry means no road connection to the pickup. Drop those
+          // rather than ranking them last — offering a ride to a driver who
+          // cannot reach it burns a whole offer timeout.
+          const routed = shortlist
+            .map((d, i) => ({ ...d, road: roadKm[i] }))
+            .filter((d): d is typeof d & { road: number } => d.road !== null)
+            .sort((a, b) => a.road - b.road);
+          if (routed.length > 0) candidate = routed[0];
+        }
+      }
 
       await doc.ref.update({
         dispatch: {

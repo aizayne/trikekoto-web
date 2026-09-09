@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .btn{height:48px;border-radius:12px;background:#F5A623;color:#101A2C;
+      font-family:Poppins,system-ui,sans-serif;font-weight:600;font-size:15px;
+      display:flex;align-items:center;justify-content:center;border:0}
+    .btn.ghost{background:transparent;color:#B45309;border:1px solid #D6D3D1}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Admin</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 12H4M8 8l-4 4 4 4M10 4.5h8a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-8"
+        stroke="#1C1917" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+
+<!-- Replaces the whole dashboard. The client resolves the admin role from the
+     `admins/{email}` document alone, but the rules ALSO require a confirmed
+     address — without this screen the panel would load and every read beneath
+     it would fail with a permission error explaining nothing. -->
+<div style="height:calc(844px - 56px);display:flex;flex-direction:column;
+  justify-content:center;padding:32px;gap:16px">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style="align-self:center" aria-hidden="true">
+    <path d="M3.5 6.5h17v11h-17v-11ZM3.5 7l8.5 6 8.5-6" stroke="#B45309"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+
+  <h2 class="disp" style="font-size:24px;text-align:center;margin-top:8px">
+    Kumpirmahin ang email mo
+  </h2>
+  <p style="margin:0;text-align:center;color:#57534E;font-size:15px">
+    Kailangan ng nakumpirmang email address bago mabuksan ang admin panel.
+    Ito ang hinihingi ng security rules, hindi lang ng app.
+  </p>
+
+  <div style="background:#fff;border:1px solid #E7E5E4;border-radius:12px;
+    padding:14px 16px;text-align:center;margin-top:8px">
+    <div style="font-size:12px;color:#57534E">Naka-sign in bilang</div>
+    <div style="font-size:16px;margin-top:2px">admin@trikekoto.ph</div>
+  </div>
+
+  <div class="btn" style="margin-top:8px">Send verification email</div>
+  <div class="btn ghost">I have verified — check again</div>
+
+  <p style="margin:8px 0 0;text-align:center;color:#57534E;font-size:13px;line-height:1.45">
+    Pagkatapos mong pindutin ang link sa email, pindutin ang pangalawang
+    button. Kino-force nito ang pag-refresh ng ID token — ang token ang
+    binabasa ng rules, hindi ang app.
+  </p>
+</div>
+</x-dc>
+</body>
+</html>

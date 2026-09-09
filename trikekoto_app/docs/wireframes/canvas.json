@@ -1,0 +1,90 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Commuter" },
+    { "id": "page-2", "name": "Driver" },
+    { "id": "page-3", "name": "Admin" }
+  ],
+  "artboards": [
+    { "file": "Landing.dc.html", "page": "page-1", "title": "1 · Landing", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "SignInNumber.dc.html", "page": "page-1", "title": "1a · Sign-in — number", "x": 470, "y": 0, "w": 390, "h": 844 },
+    { "file": "SignInNumberError.dc.html", "page": "page-1", "title": "1a · Sign-in — bad number", "x": 940, "y": 0, "w": 390, "h": 844 },
+    { "file": "SignInCode.dc.html", "page": "page-1", "title": "1a · Sign-in — OTP", "x": 1410, "y": 0, "w": 390, "h": 844 },
+    { "file": "SignInError.dc.html", "page": "page-1", "title": "1a · Sign-in — wrong code", "x": 1880, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "Onboarding.dc.html", "page": "page-1", "title": "1b · Onboarding", "x": 0, "y": 964, "w": 390, "h": 844 },
+    { "file": "OnboardingError.dc.html", "page": "page-1", "title": "1b · Onboarding — no name", "x": 470, "y": 964, "w": 390, "h": 844 },
+    { "file": "BookLocating.dc.html", "page": "page-1", "title": "4 · Booking — locating", "x": 940, "y": 964, "w": 390, "h": 844 },
+    { "file": "BookPickupFilled.dc.html", "page": "page-1", "title": "4 · Booking — pickup found", "x": 1410, "y": 964, "w": 390, "h": 844 },
+    { "file": "BookRouting.dc.html", "page": "page-1", "title": "4 · Booking — routing", "x": 1880, "y": 964, "w": 390, "h": 844 },
+
+    { "file": "Main.dc.html", "page": "page-1", "title": "4 · Booking — routed", "x": 0, "y": 1928, "w": 390, "h": 844 },
+    { "file": "BookSearching.dc.html", "page": "page-1", "title": "4 · searching", "x": 470, "y": 1928, "w": 390, "h": 844 },
+    { "file": "BookAccepted.dc.html", "page": "page-1", "title": "4 · accepted", "x": 940, "y": 1928, "w": 390, "h": 844 },
+    { "file": "BookInTransit.dc.html", "page": "page-1", "title": "4 · in_transit", "x": 1410, "y": 1928, "w": 390, "h": 844 },
+    { "file": "BookCompleted.dc.html", "page": "page-1", "title": "4 · completed — rate", "x": 1880, "y": 1928, "w": 390, "h": 844 },
+
+    { "file": "BookError.dc.html", "page": "page-1", "title": "4 · listener failed", "x": 0, "y": 2892, "w": 390, "h": 844 },
+    { "file": "PickerDefault.dc.html", "page": "page-1", "title": "5 · Picker", "x": 470, "y": 2892, "w": 390, "h": 844 },
+    { "file": "PickerResults.dc.html", "page": "page-1", "title": "5 · Picker — results", "x": 940, "y": 2892, "w": 390, "h": 844 },
+
+    { "file": "StaffLogin.dc.html", "page": "page-2", "title": "2 · Staff login", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "StaffLoginError.dc.html", "page": "page-2", "title": "2 · Login — field errors", "x": 470, "y": 0, "w": 390, "h": 844 },
+    { "file": "Register.dc.html", "page": "page-2", "title": "3 · Registration", "x": 940, "y": 0, "w": 390, "h": 844 },
+    { "file": "RegisterError.dc.html", "page": "page-2", "title": "3 · Registration — errors", "x": 1410, "y": 0, "w": 390, "h": 844 },
+    { "file": "DriverPending.dc.html", "page": "page-2", "title": "6 · pending", "x": 1880, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "DriverSuspended.dc.html", "page": "page-2", "title": "6 · suspended", "x": 0, "y": 964, "w": 390, "h": 844 },
+    { "file": "DriverOffline.dc.html", "page": "page-2", "title": "6 · approved, offline", "x": 470, "y": 964, "w": 390, "h": 844 },
+    { "file": "DriverOnlineIdle.dc.html", "page": "page-2", "title": "6 · online, idle", "x": 940, "y": 964, "w": 390, "h": 844 },
+    { "file": "DriverOffer.dc.html", "page": "page-2", "title": "6 · offer received", "x": 1410, "y": 964, "w": 390, "h": 844 },
+    { "file": "DriverAccepted.dc.html", "page": "page-2", "title": "6 · ride accepted", "x": 1880, "y": 964, "w": 390, "h": 844 },
+
+    { "file": "DriverInTransit.dc.html", "page": "page-2", "title": "6 · in_transit", "x": 0, "y": 1928, "w": 390, "h": 844 },
+
+    { "file": "AdminVerifyEmail.dc.html", "page": "page-3", "title": "7 · unverified admin", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "AdminEmpty.dc.html", "page": "page-3", "title": "7 · no rides in window", "x": 470, "y": 0, "w": 390, "h": 844 },
+    { "file": "AdminPopulated.dc.html", "page": "page-3", "title": "7 · analytics", "x": 940, "y": 0, "w": 390, "h": 844 },
+    { "file": "AdminQueueEmpty.dc.html", "page": "page-3", "title": "7 · queue empty", "x": 1410, "y": 0, "w": 390, "h": 844 },
+    { "file": "AdminQueue.dc.html", "page": "page-3", "title": "7 · queue populated", "x": 1880, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "FeedbackEmpty.dc.html", "page": "page-3", "title": "8 · feedback empty", "x": 0, "y": 964, "w": 390, "h": 844 },
+    { "file": "FeedbackMixed.dc.html", "page": "page-3", "title": "8 · open + resolved", "x": 470, "y": 964, "w": 390, "h": 844 },
+    { "file": "DispatchForm.dc.html", "page": "page-3", "title": "9 · dispatch config", "x": 940, "y": 964, "w": 390, "h": 844 },
+    { "file": "DispatchError.dc.html", "page": "page-3", "title": "9 · out-of-range", "x": 1410, "y": 964, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    {
+      "id": "commuter-intro",
+      "page": "page-1",
+      "x": 0,
+      "y": -180,
+      "w": 900,
+      "text": "COMMUTER — 18 plates\n\nEvery commuter verifies a mobile number before booking. There is no anonymous path: hasVerifiedPhone() in the security rules refuses a ride creation without one, so the gate is the rule rather than the screen.\n\nRow 3 is the ride lifecycle. Note that in_transit has no cancel button — the passenger is physically in the vehicle, and the rules refuse that transition."
+    },
+    {
+      "id": "commuter-pickup",
+      "page": "page-1",
+      "x": 940,
+      "y": 830,
+      "w": 390,
+      "text": "Pickup defaults to where the commuter is standing: a GPS fix on load, reverse-geocoded into an address a driver can act on.\n\nA late fix never overwrites a point set by hand, and a denied permission falls back to the tap-to-set behaviour."
+    },
+    {
+      "id": "driver-intro",
+      "page": "page-2",
+      "x": 0,
+      "y": -180,
+      "w": 900,
+      "text": "DRIVER — 11 plates\n\nEvery non-approved state hides the online switch AND the offer list, so a driver is never shown work they cannot legally take.\n\nOffers arrive one at a time, not as a broadcast: the greedy sweep pings the nearest untried driver alone for 15 seconds, so there is no race to tap first."
+    },
+    {
+      "id": "admin-intro",
+      "page": "page-3",
+      "x": 0,
+      "y": -180,
+      "w": 900,
+      "text": "ADMIN — 9 plates\n\nThe unverified-admin plate replaces the whole dashboard. The client resolves the admin role from the admins document alone, but the rules also require a confirmed address — without this screen the panel would load and every read beneath it would fail with a permission error explaining nothing.\n\nNo money appears anywhere: the fare engine was removed, and the app quotes no prices and stores none."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

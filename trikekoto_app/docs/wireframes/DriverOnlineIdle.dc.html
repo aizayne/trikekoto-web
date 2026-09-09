@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:24px;display:flex;flex-direction:column;gap:16px}
+    .card{background:#fff;border:1px solid #E7E5E4;border-radius:12px;padding:16px}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Dashboard</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" stroke="#1C1917" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 12H4M8 8l-4 4 4 4M10 4.5h8a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-8"
+        stroke="#1C1917" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+
+<div class="body">
+  <div class="card" style="display:flex;align-items:center;gap:14px;padding:18px 16px;
+    border-color:#15803D">
+    <div style="flex:1">
+      <div class="disp" style="font-size:17px;color:#15803D">Naka-online ka</div>
+      <div style="font-size:13px;color:#57534E;margin-top:2px">
+        Nakikita ka na ng mga malapit na pasahero
+      </div>
+    </div>
+    <div style="width:52px;height:32px;border-radius:16px;background:#15803D;
+      display:flex;align-items:center;justify-content:flex-end;padding:3px">
+      <div style="width:26px;height:26px;border-radius:50%;background:#fff"></div>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;
+    gap:14px;padding:48px 24px;text-align:center">
+    <div style="width:56px;height:56px;border:3px solid #E7E5E4;border-top-color:#F5A623;
+      border-radius:50%"></div>
+    <div class="disp" style="font-size:20px">Waiting for a ride</div>
+    <p style="margin:0;color:#57534E;font-size:15px;max-width:250px">
+      Aabisuhan ka namin kahit naka-lock ang telepono mo.
+    </p>
+  </div>
+
+  <div class="card" style="padding:14px 16px;display:flex;justify-content:space-between;
+    align-items:center">
+    <div>
+      <div style="font-size:13px;color:#57534E">Ngayong araw</div>
+      <div class="disp" style="font-size:20px;margin-top:2px">4 na biyahe</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;color:#57534E">Rating</div>
+      <div class="disp" style="font-size:20px;margin-top:2px">★ 4.8</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

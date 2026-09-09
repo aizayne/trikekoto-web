@@ -41,6 +41,11 @@ const PROXIMITY_KM = 5;
 // Hide ride requests older than this (client-side sliding window).
 const RIDE_MAX_AGE_MS = 10 * 60 * 1000;
 
+// Scheduled rides: surface to drivers this many minutes before pickup.
+// Anything further out stays invisible on the dashboard — it'll appear
+// in the "Upcoming" list instead and auto-surface as pickup approaches.
+const SCHEDULE_LEAD_MS = 15 * 60 * 1000;
+
 // ─── Greedy nearest-driver matching ──────────────────────────
 // Each ride is offered to the closest driver first. Every
 // OFFER_EXPAND_MS milliseconds, the offer widens to include the
@@ -364,6 +369,15 @@ export default function DriverDashboard({ onSignOut, onHistory, onProfile }) {
     return rawRides
       .filter((r) => !ignoredIdsRef.current.has(r.id))
       .filter((r) => {
+        // Scheduled rides: suppress until pickup time is within
+        // SCHEDULE_LEAD_MS. Immediate rides (scheduledFor == null)
+        // fall through unchanged.
+        const scheduledMs = r.scheduledFor?.toMillis?.()
+          ?? (r.scheduledFor ? new Date(r.scheduledFor).getTime() : null);
+        if (scheduledMs) {
+          return scheduledMs - nowMs <= SCHEDULE_LEAD_MS;
+        }
+        // Immediate ride — enforce the sliding age window on createdAt.
         const createdMs = r.createdAt?.toMillis?.() ?? 0;
         return nowMs - createdMs <= RIDE_MAX_AGE_MS;
       })
@@ -416,6 +430,24 @@ export default function DriverDashboard({ onSignOut, onHistory, onProfile }) {
         return tb - ta;
       });
   }, [rawRides, coords, onlineDrivers, driverEmail, filterTick]);
+
+  // ── Upcoming scheduled rides (still hidden from matching) ──
+  // Drivers can glance at this to see what's booked ahead even
+  // though those rides aren't yet in the acceptance queue.
+  const upcomingScheduled = useMemo(() => {
+    void filterTick; // refresh with ticks so the countdown stays current
+    const nowMs = Date.now();
+    return rawRides
+      .map((r) => {
+        const scheduledMs = r.scheduledFor?.toMillis?.()
+          ?? (r.scheduledFor ? new Date(r.scheduledFor).getTime() : null);
+        return scheduledMs ? { ...r, scheduledMs } : null;
+      })
+      .filter((r) => r !== null)
+      .filter((r) => r.scheduledMs - nowMs > SCHEDULE_LEAD_MS) // still hidden
+      .sort((a, b) => a.scheduledMs - b.scheduledMs)
+      .slice(0, 3);
+  }, [rawRides, filterTick]);
 
   // ── Firestore: write live location ─────────────────────────
   // NOTE: use { lat, lng } to match the shape stored on the ride
@@ -992,6 +1024,71 @@ export default function DriverDashboard({ onSignOut, onHistory, onProfile }) {
 
       {/* Incoming ride cards */}
       {renderIncomingRides()}
+
+      {/* Upcoming scheduled rides (not yet in queue) */}
+      {isOnline && !activeRide && upcomingScheduled.length > 0 && (
+        <div style={{ ...S.card, borderLeft: "3px solid #fbbf24" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "1.1rem" }}>📅</span>
+            <span style={{ fontWeight: 700, color: "#fde68a", fontSize: "0.9rem" }}>
+              Upcoming Scheduled Rides
+            </span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0, lineHeight: 1.6 }}>
+            These rides will appear in your queue ~15 minutes before pickup.
+            Stay online to accept them.
+          </p>
+          {upcomingScheduled.map((r) => {
+            const when = new Date(r.scheduledMs);
+            const minsUntil = Math.round((r.scheduledMs - Date.now()) / 60000);
+            const humanWhen = minsUntil < 60
+              ? `in ${minsUntil} min`
+              : minsUntil < 24 * 60
+                ? `in ${Math.floor(minsUntil / 60)}h ${minsUntil % 60}m`
+                : when.toLocaleString("en-PH", {
+                    weekday: "short", month: "short", day: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                  });
+            return (
+              <div
+                key={r.id}
+                style={{
+                  backgroundColor: "#0f172a",
+                  borderRadius: "0.625rem",
+                  padding: "0.7rem 0.9rem",
+                  fontSize: "0.8rem",
+                  color: "#cbd5e1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                }}
+              >
+                <div style={{ overflow: "hidden" }}>
+                  <div style={{ fontWeight: 600, color: "#e2e8f0", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                    {r.pickup ?? "—"} → {r.dropoff ?? "—"}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "0.15rem" }}>
+                    {r.commuter ?? "Commuter"}
+                  </div>
+                </div>
+                <span style={{
+                  backgroundColor: "#1c1917",
+                  border: "1px solid #78350f",
+                  color: "#fde68a",
+                  borderRadius: "9999px",
+                  padding: "0.25rem 0.65rem",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                }}>
+                  {humanWhen}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
     </div>
   );

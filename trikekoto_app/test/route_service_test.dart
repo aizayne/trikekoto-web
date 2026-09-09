@@ -120,6 +120,130 @@ void main() {
     });
   });
 
+  group('the distance table used to rank drivers', () {
+    const driverA = GeoPoint(14.6001, 120.9850);
+    const driverB = GeoPoint(14.6010, 120.9860);
+
+    String tableBody(List<double?> metres) => jsonEncode({
+          'code': 'Ok',
+          // Row is origin→[origin, ...destinations], so a leading zero.
+          'distances': [
+            [0, ...metres],
+          ],
+        });
+
+    test('returns one distance per destination, in kilometres and in order',
+        () async {
+      final service = _serviceReturning(
+        (_) => http.Response(tableBody([1500, 800]), 200),
+      );
+
+      final km = await service.roadDistancesKm(_plaza, [driverA, driverB]);
+
+      // Order is what the caller ranks by. Getting it right matters more
+      // than the values: a shuffled row offers the ride to the wrong driver
+      // while looking entirely plausible.
+      expect(km, [1.5, 0.8]);
+    });
+
+    test('asks for one row, not the whole matrix', () async {
+      late Uri captured;
+      final service = _serviceReturning((request) {
+        captured = request.url;
+        return http.Response(tableBody([100, 200]), 200);
+      });
+
+      await service.roadDistancesKm(_plaza, [driverA, driverB]);
+
+      // sources=0 is what keeps this O(n) instead of O(n²). Without it OSRM
+      // computes every driver-to-driver pair, which nothing here reads.
+      expect(captured.queryParameters['sources'], '0');
+      expect(captured.queryParameters['annotations'], 'distance');
+      expect(captured.path, contains('/table/v1/driving/'));
+      // Longitude first, origin leading, same as the route endpoint.
+      expect(captured.path, contains('120.9842,14.5995;120.985,14.6001'));
+    });
+
+    test('a driver with no road connection comes back null, not infinity',
+        () async {
+      // OSRM emits null for an unroutable pair. Coercing it to a huge number
+      // would rank that driver last but still offerable, and an offer to
+      // someone who cannot reach the pickup wastes a full timeout.
+      final service = _serviceReturning(
+        (_) => http.Response(tableBody([null, 900]), 200),
+      );
+
+      expect(await service.roadDistancesKm(_plaza, [driverA, driverB]),
+          [null, 0.9]);
+    });
+
+    test('an empty destination list costs no request', () async {
+      var called = false;
+      final service = _serviceReturning((_) {
+        called = true;
+        return http.Response(tableBody([]), 200);
+      });
+
+      expect(await service.roadDistancesKm(_plaza, const []), isEmpty);
+      expect(called, isFalse);
+    });
+
+    group('degrades to null so the caller keeps its straight-line order', () {
+      test('on an HTTP error', () async {
+        final service =
+            _serviceReturning((_) => http.Response('rate limited', 429));
+        expect(await service.roadDistancesKm(_plaza, [driverA]), isNull);
+      });
+
+      test('when OSRM reports a non-Ok code', () async {
+        final service = _serviceReturning(
+          (_) => http.Response(jsonEncode({'code': 'NoTable'}), 200),
+        );
+        expect(await service.roadDistancesKm(_plaza, [driverA]), isNull);
+      });
+
+      test('on a server built without distance annotations', () async {
+        // Durations would still be present. Ranking by a different metric
+        // than the one asked for, silently, is worse than not ranking.
+        final service = _serviceReturning(
+          (_) => http.Response(
+            jsonEncode({
+              'code': 'Ok',
+              'durations': [
+                [0, 120]
+              ],
+            }),
+            200,
+          ),
+        );
+        expect(await service.roadDistancesKm(_plaza, [driverA]), isNull);
+      });
+
+      test('when the row length does not match the destinations', () async {
+        // A mismatched row would misalign every driver with someone else's
+        // distance — the worst possible failure, because it looks like data.
+        final service = _serviceReturning(
+          (_) => http.Response(tableBody([100]), 200),
+        );
+        expect(
+            await service.roadDistancesKm(_plaza, [driverA, driverB]), isNull);
+      });
+
+      test('on a malformed body', () async {
+        final service = _serviceReturning((_) => http.Response('<html>', 200));
+        expect(await service.roadDistancesKm(_plaza, [driverA]), isNull);
+      });
+
+      test('when the network is unreachable', () async {
+        final service = RouteService(
+          baseUrl: 'https://example.test',
+          client: MockClient((_) async => throw const SocketExceptionStub()),
+        );
+        expect(await service.roadDistancesKm(_plaza, [driverA]), isNull);
+      });
+    });
+  });
+
   group('straight-line fallback', () {
     test('never under-reads the crow-flies distance', () {
       final fallback = TripRoute.straightLine(_plaza, _palengke);

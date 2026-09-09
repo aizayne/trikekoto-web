@@ -55,6 +55,15 @@ service cloud.firestore {
         : '';
     }
 
+    // Every commuter verifies a phone number. This is the control that
+    // makes the requirement real: the client screens can be bypassed, a
+    // token claim cannot. Anonymous sessions have no phone_number and are
+    // refused here even if the provider is left enabled in the console.
+    function hasVerifiedPhone() {
+      return isSignedIn()
+        && request.auth.token.get('phone_number', '') != '';
+    }
+
     function emailVerified() {
       return isSignedIn() && request.auth.token.get('email_verified', false) == true;
     }
@@ -92,12 +101,6 @@ service cloud.firestore {
 
     function onlyChanged(keys) {
       return changedKeys().hasOnly(keys);
-    }
-
-    // Absent or a non-negative number. Used for the fare fields, which are
-    // optional but must never be negative.
-    function nullOrPositive(value) {
-      return value == null || (value is number && value >= 0);
     }
 
     // ═══════════════════════════════════════════════════════
@@ -153,37 +156,34 @@ service cloud.firestore {
           && d.createdAt == request.time;
       }
 
-      // Rating aggregates are the one field pair a third party may
-      // touch, because a commuter posts their star rating directly.
-      // The arithmetic is verified here: exactly one vote, worth 1..5.
+      // ── RATING AGGREGATES ARE SERVER-ONLY (roadmap step 68) ──
       //
-      // ── PREPARED CHANGE (roadmap step 68) ────────────────
-      // This clause is what lets any signed-in user inflate a driver's
-      // rating without taking a ride. The rules can check the arithmetic
-      // but cannot tie it to a completed ride, because each document in a
-      // transaction is authorised independently.
+      // No client may touch `ratingSum` or `ratingCount`. The
+      // `onRideRated` Cloud Function owns them, writing through the
+      // Admin SDK, which bypasses these rules entirely.
       //
-      // The `onRideRated` Cloud Function already does this correctly and
-      // idempotently. Once it is DEPLOYED, close the gap by replacing the
-      // `(isSignedIn() && validRatingIncrement())` line in `allow update`
-      // below with nothing — the function writes via the Admin SDK and is
-      // not subject to these rules.
+      // What used to be here was a `validRatingIncrement()` clause that
+      // let any signed-in user post an increment. It verified the
+      // arithmetic — exactly one vote, worth 1..5 — but arithmetic was
+      // all it could verify: each document in a transaction is
+      // authorised independently, so the rules could never tie the
+      // increment to a completed ride. Anyone signed in could inflate
+      // any driver's reputation without ever taking a trip.
       //
-      // Order matters: deploy the function FIRST. Tightening this before
-      // the function exists means no rating is ever counted. The client's
-      // own increment is already best-effort and fails quietly, so no app
-      // release is needed to make the cutover safe.
+      // The function closes that because it derives the rating from the
+      // ride document itself and guards on `ratingCounted`.
       //
-      // Then update the two tripwire tests in test_rules/attacks.test.mjs
-      // that currently assert this gap is open.
-      function validRatingIncrement() {
-        let before = resource.data;
-        let after  = request.resource.data;
-        return onlyChanged(['ratingSum', 'ratingCount', 'updatedAt'])
-          && after.ratingCount == before.ratingCount + 1
-          && after.ratingSum >= before.ratingSum + 1
-          && after.ratingSum <= before.ratingSum + 5;
-      }
+      // Cutover order was: deploy the function, THEN delete this. Doing
+      // it the other way round means no rating is counted at all, and
+      // leaving both in place means every rating counts TWICE — the
+      // function cannot see a client increment, so its idempotency
+      // guard does not protect against one.
+      //
+      // No app release was needed. The client's own increment in
+      // commuter_booking_screen.dart is best-effort inside a try/catch
+      // that records a non-fatal and stays silent, so an installed APK
+      // now fails this write invisibly while its rating still lands via
+      // the ride document.
 
       allow get: if isSelf(driverEmail) || isAdmin();
       allow list: if isAdmin();
@@ -196,9 +196,6 @@ service cloud.firestore {
         (isSelf(driverEmail)
           && onlyChanged(['firstName', 'lastName', 'phone',
                           'plateNumber', 'todaChapter', 'updatedAt']))
-        ||
-        // Any signed-in commuter may post one star rating.
-        (isSignedIn() && validRatingIncrement())
         ||
         isAdmin();
 
@@ -278,6 +275,18 @@ service cloud.firestore {
           && d.rating == null
           && d.commuterName is string  && d.commuterName.size() >= 1 && d.commuterName.size() <= 60
           && d.commuterPhone is string && d.commuterPhone.size() >= 7 && d.commuterPhone.size() <= 20
+          // Copied from the rider's profile so the driver can recognise who
+          // they are collecting. Null for the anonymous commuters who never
+          // made an account, which is most of them. Bounded for the same
+          // reason as on the rider document: an unvalidated string field is
+          // somewhere to park data that is not a photo.
+          // `.get(field, default)` rather than direct access: a missing
+          // field is an *error* in rules, not null, so requiring it
+          // directly would refuse every booking from a client that
+          // simply has no photo to send.
+          && (d.get('commuterPhotoUrl', null) == null
+              || (d.get('commuterPhotoUrl', null) is string
+                  && d.get('commuterPhotoUrl', '').size() <= 500))
           && d.pickup.label is string  && d.pickup.label.size() >= 1  && d.pickup.label.size() <= 200
           && d.dropoff.label is string && d.dropoff.label.size() >= 1 && d.dropoff.label.size() <= 200
           && d.pickup.geopoint is latlng
@@ -322,7 +331,7 @@ service cloud.firestore {
       //
       // Two document reads per ride created, and none on any other path. At
       // pilot volume that is ~100 reads a day against a 50,000 allowance.
-      allow create: if isSignedIn() && ridesAreOpen() && validNewRide();
+      allow create: if hasVerifiedPhone() && ridesAreOpen() && validNewRide();
 
       allow update: if
         // ── 1. Commuter widens the greedy search ──────────────
@@ -388,17 +397,13 @@ service cloud.firestore {
             && request.resource.data.status == 'in_transit'
             && onlyChanged(['status', 'startedAt']))
           ||
-          // On completion the driver also records the trip distance and
-          // the fare it implies. Both are optional — a driver whose GPS
-          // never produced a fix still has to be able to close the ride —
-          // but neither may be negative, and the commuter cannot alter
-          // them afterwards, since no commuter clause admits these keys.
+          // Completion records nothing but the transition. The app does not
+          // quote or store fares — TODA tariffs are set by ordinance and
+          // posted at the terminal — so there is no money field for anyone
+          // to dispute, forge, or leak.
           (resource.data.status == 'in_transit'
             && request.resource.data.status == 'completed'
-            && onlyChanged(['status', 'completedAt',
-                            'distanceKm', 'fareEstimate'])
-            && nullOrPositive(request.resource.data.get('distanceKm', null))
-            && nullOrPositive(request.resource.data.get('fareEstimate', null)))
+            && onlyChanged(['status', 'completedAt']))
           ||
           (resource.data.status in ['accepted', 'in_transit']
             && request.resource.data.status == 'cancelled'
@@ -417,6 +422,84 @@ service cloud.firestore {
 
       // Rides are the audit trail for analytics; nobody deletes them.
       allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  riders/{uid}
+    // ═══════════════════════════════════════════════════════
+    // Optional commuter accounts. Booking still works with no account
+    // at all, so most commuters never have one of these.
+    //
+    // Keyed by uid, not by phone number. A driver's email is their
+    // working identity within the chapter; a rider's phone number is
+    // personal data, and making it the document ID would let anyone
+    // who can guess a number probe for its owner.
+    //
+    // Nothing here grants any read of drivers/, admins/ or the dispatch
+    // index — a rider is a commuter with a name, not a new privilege
+    // level. Their power over rides is unchanged and comes entirely
+    // from `rides.commuterUid == uid()`.
+    match /riders/{riderUid} {
+
+      function isSelfRider() {
+        return isSignedIn() && riderUid == uid();
+      }
+
+      // Phone comes from the verified token, never from the form. A
+      // rider cannot claim a number they did not prove they hold.
+      function phoneMatchesToken() {
+        return request.resource.data.phone ==
+               request.auth.token.get('phone_number', '');
+      }
+
+      function validNewRider() {
+        let d = request.resource.data;
+        return phoneMatchesToken()
+          && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+          && (d.profilePhotoUrl == null || d.profilePhotoUrl is string)
+          && d.savedAddresses is list && d.savedAddresses.size() == 0
+          // Starts unrated. Seeding a rating at sign-up would let someone
+          // arrive with a reputation they never earned.
+          && d.ratingSum == 0
+          && d.ratingCount == 0
+          && d.createdAt == request.time;
+      }
+
+      // Own document only. No list clause at all, so the collection
+      // cannot be enumerated even by an admin — there is no operational
+      // reason to read a stranger's rider profile, and it holds a name
+      // and phone number.
+      allow get: if isSelfRider();
+      allow list: if false;
+
+      allow create: if isSelfRider() && validNewRider();
+
+      // Editing a profile. `phone` is absent from this list on purpose:
+      // it is proven by the token at creation and re-proving it means
+      // signing in again. The rating counters are absent too — a rider
+      // must not be able to improve their own standing.
+      allow update: if isSelfRider()
+        && onlyChanged(['name', 'profilePhotoUrl', 'savedAddresses',
+                        'updatedAt'])
+        && (!('name' in changedKeys())
+            || (request.resource.data.name is string
+                && request.resource.data.name.size() >= 1
+                && request.resource.data.name.size() <= 60))
+        && (!('savedAddresses' in changedKeys())
+            || (request.resource.data.savedAddresses is list
+                && request.resource.data.savedAddresses.size() <= 20))
+        // Null clears the photo. Otherwise it must be a string, and a
+        // bounded one — an unvalidated field is somewhere to park data
+        // that has nothing to do with a photo.
+        && (!('profilePhotoUrl' in changedKeys())
+            || request.resource.data.profilePhotoUrl == null
+            || (request.resource.data.profilePhotoUrl is string
+                && request.resource.data.profilePhotoUrl.size() <= 500));
+
+      // Deleting the profile is how a rider leaves. Their past rides
+      // stay — those are the audit trail, and they carry a uid rather
+      // than a name.
+      allow delete: if isSelfRider();
     }
 
     // ═══════════════════════════════════════════════════════

@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
+import '../../rides/data/ride.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/driver_controllers.dart';
 import '../data/driver.dart';
@@ -27,6 +29,7 @@ class DriverDashboardScreen extends ConsumerWidget {
             onPressed: () =>
                 showFeedbackSheet(context, role: FeedbackRole.driver),
           ),
+          const ThemeToggleButton(),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
@@ -215,6 +218,8 @@ class _ActiveRideSection extends ConsumerWidget {
 
                 Row(
                   children: [
+                    _CommuterAvatar(ride: ride, radius: 22),
+                    const Gap(AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,9 +324,15 @@ class _OffersSection extends ConsumerWidget {
                       const Gap(AppSpacing.md),
                       Text('${ride.pickup.label}  →  ${ride.dropoff.label}'),
                       const Gap(AppSpacing.xs),
-                      Text(
-                        ride.commuterName,
-                        style: Theme.of(context).textTheme.bodySmall,
+                      Row(
+                        children: [
+                          _CommuterAvatar(ride: ride, radius: 14),
+                          const Gap(AppSpacing.sm),
+                          Text(
+                            ride.commuterName,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ),
                       const Gap(AppSpacing.lg),
                       Row(
@@ -361,5 +372,45 @@ Future<void> _run(BuildContext context, Future<void> Function() action) async {
     if (context.mounted) showSnack(context, e.message, error: true);
   } catch (e) {
     if (context.mounted) showSnack(context, describeError(e), error: true);
+  }
+}
+
+
+/// The commuter's face, where the driver already sees their name.
+///
+/// Most commuters book anonymously and have no photo, so this falls back to an
+/// initial rather than leaving a hole in the layout — and the fallback is the
+/// common case, not the exception.
+class _CommuterAvatar extends StatelessWidget {
+  const _CommuterAvatar({required this.ride, required this.radius});
+
+  final Ride ride;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = ride.commuterPhotoUrl;
+    final initial = ride.commuterName.trim().isEmpty
+        ? '?'
+        : ride.commuterName.trim()[0].toUpperCase();
+
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: context.scheme.secondaryContainer,
+      // A failed fetch shows the initial rather than a broken-image glyph:
+      // the photo is a convenience, and a driver on a weak signal should not
+      // be looking at an error where a face should be.
+      foregroundImage: (url != null && url.isNotEmpty)
+          ? NetworkImage(url)
+          : null,
+      onForegroundImageError: (url != null && url.isNotEmpty)
+          ? (_, _) {}
+          : null,
+      child: Text(
+        initial,
+        style: context.text.titleSmall
+            ?.copyWith(color: context.scheme.onSecondaryContainer),
+      ),
+    );
   }
 }

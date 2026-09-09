@@ -117,6 +117,74 @@ class RouteService {
       return TripRoute.straightLine(from, to);
     }
   }
+
+  /// Road distance in kilometres from [origin] to each of [destinations],
+  /// returned in the same order.
+  ///
+  /// One request for the whole set, via OSRM's table service. Asking
+  /// `/route` per driver would multiply the request rate by the number of
+  /// candidates and get the app throttled long before it got accurate.
+  ///
+  /// Returns `null` when the whole lookup is unusable — no network, a rate
+  /// limit, a server without distance annotations. An individual entry is
+  /// null when that one driver cannot be reached by road from the pickup,
+  /// which is a real answer rather than a failure: an unreachable driver
+  /// should not be offered the ride at all.
+  ///
+  /// The caller must be able to proceed without this. Dispatch is not
+  /// allowed to stall because a routing server is down.
+  Future<List<double?>?> roadDistancesKm(
+    GeoPoint origin,
+    List<GeoPoint> destinations,
+  ) async {
+    if (destinations.isEmpty) return const [];
+
+    final coords = [origin, ...destinations]
+        .map((p) => '${p.longitude},${p.latitude}')
+        .join(';');
+
+    // sources=0 asks for one row — origin to everything — instead of the
+    // full N×N matrix nothing here would read.
+    final uri = Uri.parse(
+      '$baseUrl/table/v1/driving/$coords?sources=0&annotations=distance',
+    );
+
+    try {
+      final response = await _client
+          .get(uri, headers: const {'User-Agent': _userAgent})
+          .timeout(_timeout);
+
+      if (response.statusCode != 200) {
+        debugPrint('Table HTTP ${response.statusCode}; ranking by straight line');
+        return null;
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (body['code'] != 'Ok') {
+        debugPrint('Table returned ${body['code']}; ranking by straight line');
+        return null;
+      }
+
+      // `distances` is absent on an OSRM built without the distance
+      // annotation. Durations would still be present, but silently ranking
+      // by a different metric than the one asked for is worse than falling
+      // back to something the caller already understands.
+      final matrix = body['distances'] as List?;
+      if (matrix == null || matrix.isEmpty) return null;
+
+      final row = matrix.first as List?;
+      // Row is origin→[origin, ...destinations], so it is one longer.
+      if (row == null || row.length != destinations.length + 1) return null;
+
+      return [
+        for (var i = 1; i < row.length; i++)
+          row[i] == null ? null : (row[i] as num).toDouble() / 1000,
+      ];
+    } catch (e) {
+      debugPrint('Table unavailable ($e); ranking by straight line');
+      return null;
+    }
+  }
 }
 
 /// Decodes Google's encoded-polyline format, which OSRM emits at precision 5.

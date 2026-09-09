@@ -15,7 +15,8 @@ import { normalizeEmail } from "../utils/email";
 import {
   ArrowLeft, BarChart3, Users, Car, Clock,
   CheckCircle, XCircle, Loader, TrendingUp,
-  Activity, MapPin,
+  Activity, MapPin, Star, MessageCircle, AlertTriangle,
+  Lightbulb, HelpCircle,
 } from "lucide-react";
 
 const S = {
@@ -127,6 +128,7 @@ export default function AdminDashboard({ onBack }) {
   const [rides, setRides] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [activeDrivers, setActiveDrivers] = useState([]);
+  const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Admin check
@@ -183,6 +185,23 @@ export default function AdminDashboard({ onBack }) {
     return unsub;
   }, [isAdmin]);
 
+  // Load feedback (issue/suggestion/question submissions)
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsub = onSnapshot(collection(db, "feedback"), (snap) => {
+      const list = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      // Newest first
+      list.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() ?? 0;
+        const tb = b.createdAt?.toMillis?.() ?? 0;
+        return tb - ta;
+      });
+      setFeedback(list);
+    });
+    return unsub;
+  }, [isAdmin]);
+
   // ── Derived stats ──────────────────────────────────────────
   const rideStats = useMemo(() => {
     const s = { total: rides.length, searching: 0, accepted: 0, completed: 0, cancelled: 0 };
@@ -228,6 +247,47 @@ export default function AdminDashboard({ onBack }) {
   }, [rides]);
 
   const maxDaily = Math.max(1, ...dailyRides.map((d) => d.count));
+
+  // Rating aggregation — thesis objective #4: satisfaction analysis
+  const ratingStats = useMemo(() => {
+    const rated = rides.filter((r) => typeof r.rating === "number");
+    if (rated.length === 0) {
+      return { total: 0, avg: 0, dist: [0, 0, 0, 0, 0] };
+    }
+    const dist = [0, 0, 0, 0, 0]; // index 0 == 1-star ... index 4 == 5-star
+    let sum = 0;
+    for (const r of rated) {
+      const n = Math.min(5, Math.max(1, Math.round(r.rating)));
+      dist[n - 1]++;
+      sum += n;
+    }
+    return {
+      total: rated.length,
+      avg: sum / rated.length,
+      dist,
+    };
+  }, [rides]);
+
+  const recentFeedbackFromRides = useMemo(() => {
+    return rides
+      .filter((r) => r.feedback && typeof r.rating === "number")
+      .sort((a, b) => {
+        const ta = a.ratedAt?.toMillis?.() ?? 0;
+        const tb = b.ratedAt?.toMillis?.() ?? 0;
+        return tb - ta;
+      })
+      .slice(0, 6);
+  }, [rides]);
+
+  // Feedback stats by category
+  const feedbackStats = useMemo(() => {
+    const s = { total: feedback.length, issue: 0, suggestion: 0, question: 0, other: 0, unresolved: 0 };
+    for (const f of feedback) {
+      if (s[f.category] !== undefined) s[f.category]++;
+      if (!f.resolved) s.unresolved++;
+    }
+    return s;
+  }, [feedback]);
 
   // Top drivers by completed rides
   const topDrivers = useMemo(() => {
@@ -356,6 +416,191 @@ export default function AdminDashboard({ onBack }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* ── Commuter satisfaction (ratings) ─────────────────── */}
+      <div style={S.section}>
+        <p style={S.sectionTitle}><Star size={15} /> Commuter Satisfaction</p>
+        {ratingStats.total === 0 ? (
+          <div style={{ ...S.barChartWrap, color: "#475569", fontSize: "0.85rem" }}>
+            No ratings submitted yet.
+          </div>
+        ) : (
+          <div style={S.barChartWrap}>
+            <div style={{
+              display: "flex", alignItems: "baseline", gap: "0.6rem",
+              marginBottom: "1rem", flexWrap: "wrap",
+            }}>
+              <span style={{ fontSize: "2.4rem", fontWeight: 800, color: "#f59e0b" }}>
+                {ratingStats.avg.toFixed(2)}
+              </span>
+              <span style={{ fontSize: "1rem", color: "#94a3b8" }}>/ 5.00</span>
+              <span style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#64748b" }}>
+                from {ratingStats.total} rating{ratingStats.total === 1 ? "" : "s"}
+              </span>
+            </div>
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = ratingStats.dist[star - 1];
+              const pct = ratingStats.total > 0 ? (count / ratingStats.total) * 100 : 0;
+              const color = star >= 4 ? "#22c55e" : star === 3 ? "#f59e0b" : "#ef4444";
+              return (
+                <div key={star} style={S.barRow}>
+                  <span style={{ ...S.barLabel, display: "flex", alignItems: "center", gap: "0.2rem", justifyContent: "flex-end" }}>
+                    {star}<Star size={10} fill={color} color={color} />
+                  </span>
+                  <div style={S.barTrack}>
+                    <div style={S.barFill(pct, color)} />
+                  </div>
+                  <span style={S.barCount}>{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Recent commuter comments (from rated rides) ─────── */}
+      {recentFeedbackFromRides.length > 0 && (
+        <div style={S.section}>
+          <p style={S.sectionTitle}><MessageCircle size={15} /> Recent Commuter Comments</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            {recentFeedbackFromRides.map((r) => (
+              <div key={r.id} style={{
+                backgroundColor: "#1e293b",
+                borderRadius: "0.875rem",
+                padding: "0.85rem 1rem",
+                borderLeft: `3px solid ${r.rating >= 4 ? "#22c55e" : r.rating === 3 ? "#f59e0b" : "#ef4444"}`,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.3rem" }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={12}
+                      fill={n <= r.rating ? "#f59e0b" : "none"}
+                      color={n <= r.rating ? "#f59e0b" : "#334155"}
+                    />
+                  ))}
+                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginLeft: "0.4rem" }}>
+                    {r.commuter ?? "Commuter"}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "#cbd5e1", lineHeight: 1.5 }}>
+                  {r.feedback}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Feedback / issue reports ────────────────────────── */}
+      <div style={S.section}>
+        <p style={S.sectionTitle}><AlertTriangle size={15} /> Feedback & Issue Reports</p>
+        <div style={{ ...S.grid, marginBottom: "0.75rem" }}>
+          <div style={S.statCard("#64748b")}>
+            <p style={{ ...S.statNum, color: "#e2e8f0" }}>{feedbackStats.total}</p>
+            <p style={S.statLabel}>Total</p>
+          </div>
+          <div style={S.statCard("#ef4444")}>
+            <p style={{ ...S.statNum, color: "#fca5a5" }}>{feedbackStats.issue}</p>
+            <p style={S.statLabel}>Issues</p>
+          </div>
+          <div style={S.statCard("#f59e0b")}>
+            <p style={{ ...S.statNum, color: "#fde68a" }}>{feedbackStats.suggestion}</p>
+            <p style={S.statLabel}>Suggestions</p>
+          </div>
+          <div style={S.statCard("#3b82f6")}>
+            <p style={{ ...S.statNum, color: "#93c5fd" }}>{feedbackStats.question}</p>
+            <p style={S.statLabel}>Questions</p>
+          </div>
+          <div style={S.statCard("#8b5cf6")}>
+            <p style={{ ...S.statNum, color: "#c4b5fd" }}>{feedbackStats.unresolved}</p>
+            <p style={S.statLabel}>Unresolved</p>
+          </div>
+        </div>
+        {feedback.length === 0 ? (
+          <p style={{ color: "#475569", fontSize: "0.85rem" }}>
+            No feedback submissions yet.
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            {feedback.slice(0, 10).map((f) => {
+              const CategoryIcon =
+                f.category === "issue"      ? AlertTriangle :
+                f.category === "suggestion" ? Lightbulb     :
+                f.category === "question"   ? HelpCircle    : MessageCircle;
+              const catColor =
+                f.category === "issue"      ? "#ef4444" :
+                f.category === "suggestion" ? "#f59e0b" :
+                f.category === "question"   ? "#3b82f6" : "#8b5cf6";
+              const when = f.createdAt?.toDate?.();
+              return (
+                <div key={f.id} style={{
+                  backgroundColor: "#1e293b",
+                  borderRadius: "0.875rem",
+                  padding: "0.85rem 1rem",
+                  borderLeft: `3px solid ${catColor}`,
+                  opacity: f.resolved ? 0.55 : 1,
+                }}>
+                  <div style={{
+                    display: "flex", alignItems: "center",
+                    justifyContent: "space-between", gap: "0.5rem",
+                    marginBottom: "0.4rem", flexWrap: "wrap",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <CategoryIcon size={13} color={catColor} />
+                      <span style={{
+                        fontSize: "0.72rem", fontWeight: 700,
+                        color: catColor, textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                      }}>
+                        {f.category}
+                      </span>
+                      {f.role && (
+                        <span style={{
+                          fontSize: "0.68rem", fontWeight: 600,
+                          color: "#64748b", marginLeft: "0.35rem",
+                        }}>
+                          · {f.role}
+                        </span>
+                      )}
+                      {f.resolved && (
+                        <span style={{
+                          fontSize: "0.68rem", fontWeight: 700, color: "#4ade80",
+                          marginLeft: "0.35rem",
+                        }}>
+                          ✓ resolved
+                        </span>
+                      )}
+                    </div>
+                    {when && (
+                      <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
+                        {when.toLocaleString("en-PH", {
+                          month: "short", day: "numeric",
+                          hour: "2-digit", minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{
+                    margin: 0, fontSize: "0.82rem",
+                    color: "#cbd5e1", lineHeight: 1.55,
+                  }}>
+                    {f.message}
+                  </p>
+                  {f.contact && (
+                    <p style={{
+                      margin: "0.4rem 0 0", fontSize: "0.72rem",
+                      color: "#64748b",
+                    }}>
+                      Contact: <span style={{ color: "#94a3b8" }}>{f.contact}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Top drivers ─────────────────────────────────────── */}

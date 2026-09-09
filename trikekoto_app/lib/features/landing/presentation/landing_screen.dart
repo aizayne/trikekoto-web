@@ -1,30 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/trike_icon.dart';
 
-class LandingScreen extends ConsumerStatefulWidget {
+/// Both buttons only navigate, so this holds no state.
+///
+/// It was stateful for the anonymous sign-in, which happened here and needed a
+/// spinner. That path is gone: every commuter now verifies a phone number, and
+/// the waiting happens on the sign-in screen where the code arrives.
+class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
-
-  @override
-  ConsumerState<LandingScreen> createState() => _LandingScreenState();
-}
-
-class _LandingScreenState extends ConsumerState<LandingScreen> {
-  bool _busy = false;
-
-  Future<void> _continueAsCommuter() async {
-    setState(() => _busy = true);
-    try {
-      await ref.read(sessionProvider.notifier).continueAsCommuter();
-    } catch (e) {
-      if (mounted) showSnack(context, describeError(e), error: true);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +37,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       color: scheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     ),
-                    child: Icon(
-                      Icons.electric_rickshaw,
-                      size: 48,
+                    child: TrikeIcon(
+                      size: 52,
                       color: scheme.onSecondaryContainer,
                     ),
                   ),
@@ -72,31 +57,24 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                   ),
                   const Gap(AppSpacing.xxxl),
 
-                  // The commuter path is the primary action, so it is the
-                  // only element carrying the accent.
+                  // Every commuter verifies a phone number. There is no
+                  // anonymous path any more: a ride is a stranger getting
+                  // into a stranger's vehicle, and both ends being
+                  // identifiable is the point.
                   FilledButton.icon(
-                    onPressed: _busy ? null : _continueAsCommuter,
-                    icon: _busy
-                        ? const SizedBox(
-                            width: AppSpacing.iconSm,
-                            height: AppSpacing.iconSm,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.onAccent,
-                            ),
-                          )
-                        : const Icon(Icons.person_outline),
-                    label: Text(_busy ? 'Getting ready…' : 'Book a ride'),
+                    onPressed: () => context.go('/rider-signin'),
+                    icon: const Icon(Icons.phone_iphone_outlined),
+                    label: const Text('Book a ride'),
                   ),
                   const Gap(AppSpacing.md),
                   OutlinedButton.icon(
-                    onPressed: _busy ? null : () => context.go('/login'),
+                    onPressed: () => context.go('/login'),
                     icon: const Icon(Icons.badge_outlined),
                     label: const Text('Driver / Admin sign in'),
                   ),
                   const Gap(AppSpacing.xxl),
                   Text(
-                    'Booking a ride does not need an account.',
+                    'Kailangan ng number para makapag-book.',
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall,
                   ),

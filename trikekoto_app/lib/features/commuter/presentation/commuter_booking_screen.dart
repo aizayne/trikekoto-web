@@ -2,12 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
-import '../../../core/fare/fare_calculator.dart';
-import '../../../core/config/app_config.dart';
 import '../../../core/diagnostics/crash_reporter.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/firestore/collection_paths.dart';
@@ -15,10 +14,13 @@ import '../../../core/geo/geo_utils.dart';
 import '../../../core/map/location_picker_screen.dart';
 import '../../../core/map/osm_map.dart';
 import '../../../core/providers.dart';
+import '../../../core/routing/geocoding_service.dart';
 import '../../../core/routing/route_service.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
+import '../application/commuter_location.dart';
 import '../application/dispatch_controller.dart';
 
 class CommuterBookingScreen extends ConsumerStatefulWidget {
@@ -36,12 +38,73 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   bool _busy = false;
 
   /// Chosen on the map rather than typed. Coordinates are what dispatch and
-  /// the fare need; a free-text label alone gave neither.
+  /// dispatch needs; a free-text label alone gave neither.
   PickedLocation? _pickup;
   PickedLocation? _dropoff;
 
   /// Manila as a last resort, only until the first GPS fix lands.
   static const _fallbackCenter = LatLng(14.5995, 120.9842);
+
+  /// True while the opening GPS fix and its address lookup are in flight, so
+  /// the pickup field can say it is working rather than looking empty.
+  bool _locating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fire and forget. Nothing on this screen waits for it — the commuter can
+    // set both points by hand while it is still running, and if they do, the
+    // result is discarded rather than overwriting them.
+    _seedPickupFromGps();
+  }
+
+  /// Sets the pickup to wherever the commuter is standing.
+  ///
+  /// Most trike rides start where the passenger already is, so an empty
+  /// pickup field asks them to state something the phone already knows. This
+  /// fills it in and lets them change it, rather than making the common case
+  /// the manual one.
+  ///
+  /// Every step is allowed to fail. A denied permission, disabled location
+  /// services, or an unreachable Nominatim all leave the screen exactly as it
+  /// was before this existed: an empty pickup field the commuter taps to set
+  /// on the map. This is a convenience, and a convenience that blocks booking
+  /// is a defect.
+  Future<void> _seedPickupFromGps() async {
+    setState(() => _locating = true);
+    try {
+      final point = await _currentPoint();
+      // Bail out on every await, not just the first. The commuter may have
+      // tapped Pickup and chosen a point while the fix was in flight, and
+      // overwriting their explicit choice with a guess is the one behaviour
+      // this must never have.
+      if (!mounted || point == null || _pickup != null) return;
+
+      final latLng = point.latLng;
+      setState(() {
+        _pickup = PickedLocation(
+          point: latLng,
+          // Stands in until the address arrives, and stays if it never does.
+          // The point is what dispatch uses; the label only has to be
+          // something the driver can read, and this is honest about what it
+          // is. `_confirm()` in the picker refuses an empty label, so the
+          // pickup can never end up nameless.
+          label: 'Kasalukuyang lokasyon',
+        );
+      });
+
+      final address =
+          await ref.read(geocodingServiceProvider).reverseLabel(latLng);
+      if (!mounted || address == null) return;
+      // Re-check: the commuter may have replaced the pickup during the
+      // lookup, in which case this label belongs to a point they discarded.
+      if (_pickup?.point != latLng) return;
+
+      setState(() => _pickup = PickedLocation(point: latLng, label: address));
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -53,13 +116,11 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
   /// The road route between the two chosen points, once both exist.
   ///
-  /// Fetched rather than computed: a straight line under-reads against the
-  /// road a trike actually travels, and a fare quoted low becomes an argument
-  /// at the drop-off.
+  /// Fetched rather than computed: a straight line under-reads badly against
+  /// the road a trike actually travels, so the distance shown would be wrong
+  /// in the direction that matters.
   TripRoute? _route;
   bool _routing = false;
-
-  double? get _distanceKm => _route?.distanceKm;
 
   /// Re-routes whenever both endpoints are known. Failure is silent by
   /// design — [RouteService] degrades to a straight-line estimate and flags
@@ -139,11 +200,6 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
     setState(() => _busy = true);
     try {
-      final km = _distanceKm;
-      final quote = km == null
-          ? null
-          : estimateFare(distanceKm: km, config: ref.read(fareConfigProvider));
-
       final uid = ref.read(firebaseAuthProvider).currentUser!.uid;
       final doc = await ref
           .read(firestoreProvider)
@@ -160,10 +216,12 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
               label: _dropoff!.label,
               geopoint: _dropoff!.point.geoPoint,
             ),
-            distanceKm: km,
-            // Quoted before booking now that both endpoints are known. The
-            // driver still records the actual distance on completion.
-            fareEstimate: quote?.total,
+            // Copied across so the driver can recognise who they are
+            // collecting. A driver cannot read `riders/{uid}` — and should
+            // not be able to — so this is the only way it reaches them.
+            // Null for anonymous commuters, which is most of them.
+            commuterPhotoUrl:
+                ref.read(myRiderProfileProvider).value?.profilePhotoUrl,
             commuterFcmToken: await ref.read(fcmTokenProvider.future)
                 .catchError((_) => null),
           ));
@@ -231,6 +289,26 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
       appBar: AppBar(
         title: const Text('Book a ride'),
         actions: [
+          const ThemeToggleButton(),
+          // Shows the rider's own photo once they have one, so the way to
+          // change it is the thing it changes.
+          IconButton(
+            tooltip: 'Profile',
+            icon: Builder(builder: (context) {
+              final url =
+                  ref.watch(myRiderProfileProvider).value?.profilePhotoUrl;
+              if (url == null) return const Icon(Icons.person_outline);
+              return CircleAvatar(
+                radius: AppSpacing.iconSm / 2 + 3,
+                foregroundImage: NetworkImage(url),
+                backgroundColor: context.scheme.secondaryContainer,
+                child: Icon(Icons.person_outline,
+                    size: AppSpacing.iconSm,
+                    color: context.scheme.onSecondaryContainer),
+              );
+            }),
+            onPressed: () => context.push('/commuter/profile'),
+          ),
           IconButton(
             tooltip: 'Report a problem',
             icon: const Icon(Icons.flag_outlined),
@@ -305,7 +383,13 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                     color: context.semantic.success,
                     label: 'Pickup',
                     value: _pickup?.label,
-                    placeholder: 'Set on map',
+                    // Says what is happening while the opening fix runs.
+                    // "Set on map" during those seconds reads as though
+                    // nothing is coming, and the commuter taps away from a
+                    // field that was about to fill itself in.
+                    placeholder: _locating && _pickup == null
+                        ? 'Hinahanap ang lokasyon mo…'
+                        : 'Set on map',
                     onTap: () => _pick(isPickup: true),
                   ),
                   Padding(
@@ -335,20 +419,14 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
             ),
           ),
 
-          // The fare appears as soon as both ends are known, so nobody is
-          // asked to commit to a trip without knowing the price.
+          // Distance and time appear as soon as both ends are known, so
+          // nobody commits to a trip without knowing how far it is.
           if (_routing) ...[
             const Gap(AppSpacing.md),
             const _RoutingPlaceholder(),
           ] else if (_route != null) ...[
             const Gap(AppSpacing.md),
-            _FareQuoteRow(
-              route: _route!,
-              quote: estimateFare(
-                distanceKm: _route!.distanceKm,
-                config: ref.read(fareConfigProvider),
-              ),
-            ),
+            _TripSummaryRow(route: _route!),
           ],
           const Gap(AppSpacing.lg),
 
@@ -401,12 +479,13 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 /// Deliberately non-interactive: it sits inside a scrolling column, and a
 /// pannable map there would swallow the scroll gesture. Tapping opens a
 /// full-screen interactive view instead, which keeps one gesture per region.
-class _TrackingMap extends StatelessWidget {
+class _TrackingMap extends ConsumerWidget {
   const _TrackingMap({required this.ride});
   final Ride ride;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(commuterPositionProvider).value;
     final driver = ride.driverLocation!.latLng;
     final pickup = ride.pickup.geopoint!.latLng;
     final away = distanceKmBetween(ride.driverLocation!, ride.pickup.geopoint!);
@@ -429,6 +508,9 @@ class _TrackingMap extends StatelessWidget {
                     MapMarkers.driver(context, driver),
                     if (ride.dropoff.geopoint != null)
                       MapMarkers.dropoff(context, ride.dropoff.geopoint!.latLng),
+                    // Last, so the dot sits above the pins rather than
+                    // disappearing under one when the trike arrives.
+                    if (me != null) MapMarkers.you(context, me),
                   ],
                 ),
                 Positioned.fill(
@@ -459,12 +541,13 @@ class _TrackingMap extends StatelessWidget {
   }
 }
 
-class _FullScreenTracking extends StatelessWidget {
+class _FullScreenTracking extends ConsumerWidget {
   const _FullScreenTracking({required this.ride});
   final Ride ride;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(commuterPositionProvider).value;
     return Scaffold(
       appBar: AppBar(title: const Text('Live tracking')),
       body: OsmMap(
@@ -476,6 +559,7 @@ class _FullScreenTracking extends StatelessWidget {
           MapMarkers.driver(context, ride.driverLocation!.latLng),
           if (ride.dropoff.geopoint != null)
             MapMarkers.dropoff(context, ride.dropoff.geopoint!.latLng),
+          if (me != null) MapMarkers.you(context, me),
         ],
       ),
     );
@@ -546,7 +630,7 @@ class _RouteRow extends StatelessWidget {
 
 /// Placeholder while the route is being fetched.
 ///
-/// Reserves the same height as the quote so the button below it does not jump
+/// Reserves the same height as the summary so the button below does not jump
 /// under the thumb the moment the answer arrives.
 class _RoutingPlaceholder extends StatelessWidget {
   const _RoutingPlaceholder();
@@ -575,12 +659,16 @@ class _RoutingPlaceholder extends StatelessWidget {
   }
 }
 
-/// The estimate, shown before booking.
-class _FareQuoteRow extends StatelessWidget {
-  const _FareQuoteRow({required this.route, required this.quote});
+/// How far and how long, shown before booking.
+///
+/// Deliberately carries no price. TODA tariffs are set by ordinance and
+/// posted at the terminal; a second figure on a phone could only ever
+/// disagree with the official one, and the disagreement would surface at the
+/// drop-off with the driver, not with us.
+class _TripSummaryRow extends StatelessWidget {
+  const _TripSummaryRow({required this.route});
 
   final TripRoute route;
-  final FareQuote quote;
 
   @override
   Widget build(BuildContext context) {
@@ -593,7 +681,7 @@ class _FareQuoteRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.payments_outlined,
+          Icon(Icons.route_outlined,
               size: AppSpacing.iconMd,
               color: context.scheme.onSecondaryContainer),
           const Gap(AppSpacing.md),
@@ -602,14 +690,14 @@ class _FareQuoteRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Estimated fare',
+                  'Trip',
                   style: context.text.bodySmall
                       ?.copyWith(color: context.scheme.onSecondaryContainer),
                 ),
                 Text(
                   '${route.distanceKm.toStringAsFixed(1)} km'
                   '${minutes > 0 ? ' · about $minutes min' : ''}',
-                  style: context.text.bodySmall
+                  style: context.text.titleMedium
                       ?.copyWith(color: context.scheme.onSecondaryContainer),
                 ),
                 // Says plainly when routing was unavailable, rather than
@@ -625,11 +713,6 @@ class _FareQuoteRow extends StatelessWidget {
                   ),
               ],
             ),
-          ),
-          Text(
-            quote.formattedTotal,
-            style: context.text.headlineSmall
-                ?.copyWith(color: context.scheme.onSecondaryContainer),
           ),
         ],
       ),
@@ -841,33 +924,14 @@ class _RateCard extends StatelessWidget {
               ride.driverSnapshot?.firstName ?? '',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            if (ride.fareEstimate != null) ...[
-              const Gap(AppSpacing.lg),
-              Text(
-                '₱${ride.fareEstimate!.toStringAsFixed(0)}',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                ride.distanceKm == null
-                    ? 'Estimated fare'
-                    : 'Estimated fare • ${ride.distanceKm!.toStringAsFixed(1)} km',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-              const Gap(AppSpacing.xs / 2),
-              Text(
-                'Straight-line estimate. Pay the posted TODA fare.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                      fontSize: 11,
-                    ),
-              ),
-            ],
+            const Gap(AppSpacing.md),
+            Text(
+              'Pay the posted TODA fare in cash.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
             const Gap(AppSpacing.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

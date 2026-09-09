@@ -48,6 +48,15 @@ kailangang mag-logout at mag-login ulit — kusa itong magpapalit.
 > Kapag **Offline** ka, sasabihin ng app na "You are offline" — ibig sabihin
 > hindi ka bibigyan ng biyahe.
 
+> **MAHALAGA: Huwag i-close ang app.**
+>
+> Sa bersyong ito, dapat **bukas** ang app para makatanggap ka ng biyahe.
+> Kapag ni-lock mo ang telepono o inilipat mo sa ibang app, hindi darating
+> ang alok kahit Online ka.
+>
+> *Keep the app open and on screen. Offers do not arrive in the background
+> yet — a phone in your pocket receives nothing.*
+
 ---
 
 ## 4. Tumanggap ng biyahe / Accept a ride
@@ -77,7 +86,12 @@ Mga hakbang:
 1. **Start trip** — pindutin kapag nakasakay na ang pasahero.
 2. **Complete ride** — pindutin kapag nakababa na sila.
 
-Awtomatikong itatala ng app ang layo at ang tinatayang pamasahe.
+> **Walang pamasahe sa app.** Hindi nagko-kompute at hindi nagtatala ng
+> presyo ang app. Ang bayad ay ang opisyal na tarifa ng TODA, cash, gaya ng
+> dati.
+>
+> *The app does not compute or record any fare. Payment is the posted TODA
+> tariff, in cash, as before.*
 
 ---
 
@@ -97,10 +111,20 @@ hindi ka na bibigyan ng biyahe.
 |---|---|
 | "Pending verification" pa rin | Hindi ka pa aprubado. Kausapin ang TODA admin. |
 | "Your account is suspended" | Sinuspinde ka ng admin. Kausapin sila. |
-| Walang dumarating na biyahe | Tignan kung **Online** ka. Tignan din ang signal. |
+| Walang dumarating na biyahe | Tignan kung **Online** ka, at kung **bukas** ang app sa screen. Tignan din ang signal. |
+| Naka-Online ako pero wala pa rin | Malamang naka-close o naka-background ang app. Buksan ulit at hayaang nakabukas. |
 | "The server refused that action" | Baka hindi ka pa aprubado, o nasuspinde. |
 | Hindi bumubukas ang mapa | Walang internet. Gagana pa rin ang biyahe. |
 | Nag-close ang app | I-report ito — awtomatikong naitatala ang error. |
+
+---
+
+## Maliwanag o madilim / Light or dark
+
+May **buwan** (🌙) o **araw** (☀️) sa itaas. Pindutin para palitan. Maaalala
+ito sa susunod mong pagbukas. Walang ibang binabago kundi kulay.
+
+*Tap the moon or sun in the top bar to switch. It is remembered.*
 
 ---
 

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trikekoto_app/core/firestore/collection_paths.dart';
 import 'package:trikekoto_app/core/ui/app_theme.dart';
+import 'package:trikekoto_app/core/ui/theme_controller.dart';
+import 'package:trikekoto_app/core/auth/session_controller.dart';
 import 'package:trikekoto_app/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:trikekoto_app/features/admin/data/ride_analytics.dart';
@@ -29,8 +31,8 @@ Driver _driver(String email, String status) => Driver.fromMap({
 
 final _now = DateTime(2026, 8, 26, 14, 30);
 
-Ride _ride(RideStatus status, {num? fare, int? rating, String? driver}) => Ride(
-      id: 'r${identityHashCode(status)}${fare}_$rating',
+Ride _ride(RideStatus status, {int? rating, String? driver}) => Ride(
+      id: 'r${identityHashCode(status)}_$rating${driver ?? ''}',
       commuterUid: 'uid',
       commuterName: 'Commuter',
       commuterPhone: '09171234567',
@@ -39,7 +41,6 @@ Ride _ride(RideStatus status, {num? fare, int? rating, String? driver}) => Ride(
       dispatch: const RideDispatch(),
       status: status,
       assignedDriver: driver,
-      fareEstimate: fare,
       rating: rating,
       createdAt: Timestamp.fromDate(_now),
     );
@@ -50,13 +51,36 @@ RideAnalytics _analytics(List<Ride> rides) => RideAnalytics.from(
       now: _now,
     );
 
+/// Theme pinned to light, so widget tests never touch SharedPreferences.
+class _FixedTheme extends ThemeController {
+  @override
+  ThemeMode build() => ThemeMode.light;
+}
+
+/// A session fixed at build time, so widget tests never reach for Firebase.
+class _FixedSession extends SessionController {
+  _FixedSession(this._state);
+  final SessionState _state;
+
+  @override
+  SessionState build() => _state;
+}
+
 Widget _harness({
   required List<Driver> drivers,
   List<Ride>? rides,
   int openFeedback = 0,
+  bool emailVerified = true,
 }) {
   return ProviderScope(
     overrides: [
+      themeModeProvider.overrideWith(_FixedTheme.new),
+      sessionProvider.overrideWith(() => _FixedSession(SessionState(
+            user: null,
+            role: AppRole.admin,
+            loading: false,
+            emailVerified: emailVerified,
+          ))),
       allDriversProvider.overrideWith((ref) => Stream.value(drivers)),
       rideAnalyticsProvider
           .overrideWith((ref) async => _analytics(rides ?? const [])),
@@ -155,9 +179,9 @@ void main() {
       await pumpTall(tester, _harness(
         drivers: const [],
         rides: [
-          _ride(RideStatus.completed, fare: 40, rating: 5),
-          _ride(RideStatus.completed, fare: 60, rating: 3),
-          _ride(RideStatus.completed, fare: 50),
+          _ride(RideStatus.completed, rating: 5),
+          _ride(RideStatus.completed, rating: 3),
+          _ride(RideStatus.completed),
           _ride(RideStatus.cancelled),
           // Still in flight, so it must not drag the completion rate down.
           _ride(RideStatus.inTransit),
@@ -167,24 +191,7 @@ void main() {
       expect(find.text('Rides'), findsOneWidget);
       expect(find.text('3'), findsOneWidget); // completed
       expect(find.text('75%'), findsOneWidget); // 3 of 4 concluded
-      expect(find.text('₱150'), findsOneWidget);
       expect(find.text('4.00'), findsOneWidget); // avg of 5 and 3
-    });
-
-    testWidgets('fares are labelled as estimates, not collected revenue',
-        (tester) async {
-      await pumpTall(tester, _harness(
-        drivers: const [],
-        rides: [_ride(RideStatus.completed, fare: 40)],
-      ));
-
-      // The app never handles payment. A figure presented as revenue would
-      // be a number that looks like accounting and is not.
-      expect(find.text('fares quoted'), findsOneWidget);
-      expect(
-        find.textContaining('not collected revenue'),
-        findsOneWidget,
-      );
     });
 
     testWidgets('an empty window says so rather than showing zeroes',
@@ -209,8 +216,8 @@ void main() {
       await pumpTall(tester, _harness(
         drivers: const [],
         rides: [
-          _ride(RideStatus.completed, fare: 40, driver: 'ana@x.ph'),
-          _ride(RideStatus.completed, fare: 60, driver: 'ana@x.ph'),
+          _ride(RideStatus.completed, driver: 'ana@x.ph'),
+          _ride(RideStatus.completed, driver: 'ana@x.ph'),
         ],
       ));
 
@@ -231,7 +238,7 @@ void main() {
           drivers: const [],
           rides: [
             for (var i = 0; i < 5; i++)
-              _ride(RideStatus.completed, fare: 20 + i, rating: 4),
+              _ride(RideStatus.completed, rating: 4),
             _ride(RideStatus.cancelled),
             _ride(RideStatus.expired),
           ],
@@ -250,7 +257,7 @@ void main() {
           drivers: const [],
           rides: [
             for (var i = 0; i < 5; i++)
-              _ride(RideStatus.completed, fare: 20 + i, rating: 4),
+              _ride(RideStatus.completed, rating: 4),
             _ride(RideStatus.cancelled),
             _ride(RideStatus.expired),
           ],
@@ -265,7 +272,45 @@ void main() {
       await pumpTall(tester, _harness(drivers: const []));
 
       expect(find.text('Feedback'), findsOneWidget);
-      expect(find.text('Dispatch & fares'), findsOneWidget);
+      expect(find.text('Dispatch'), findsOneWidget);
+    });
+  });
+
+  group('admin dashboard — email verification gate', () {
+    testWidgets('an unverified admin sees the confirm screen, not the panel',
+        (tester) async {
+      await pumpTall(tester, _harness(
+        drivers: [_driver('juan@toda.ph', DriverStatus.pending)],
+        emailVerified: false,
+      ));
+
+      // The rules require email_verified for admin reads, but the router only
+      // checks the admins document — so without this gate the panel renders
+      // and every query fails with an unexplained permission error.
+      expect(find.text('Confirm your email to open the admin panel'),
+          findsOneWidget);
+      expect(find.text('Send verification email'), findsOneWidget);
+      expect(find.text('Pending verification'), findsNothing);
+    });
+
+    testWidgets('a verified admin sees the panel', (tester) async {
+      await pumpTall(tester, _harness(
+        drivers: [_driver('juan@toda.ph', DriverStatus.pending)],
+        emailVerified: true,
+      ));
+
+      expect(find.text('Pending verification'), findsOneWidget);
+      expect(find.textContaining('Confirm your email'), findsNothing);
+    });
+
+    testWidgets('the resend button is offered before anything is sent',
+        (tester) async {
+      await pumpTall(tester, _harness(drivers: const [], emailVerified: false));
+
+      // "I have confirmed it" must be reachable without sending first — the
+      // console can create a verified user by other means, and a returning
+      // admin should not have to send a fresh mail to re-check.
+      expect(find.text('I have confirmed it'), findsOneWidget);
     });
   });
 }

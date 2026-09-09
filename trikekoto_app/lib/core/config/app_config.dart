@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../fare/fare_calculator.dart';
 import '../firestore/collection_paths.dart';
 import '../providers.dart';
 
@@ -81,10 +80,6 @@ final dispatchConfigProvider = Provider<DispatchConfig>((ref) {
   return DispatchConfig.fromMap(ref.watch(appConfigProvider).value);
 });
 
-final fareConfigProvider = Provider<FareConfig>((ref) {
-  return FareConfig.fromMap(ref.watch(appConfigProvider).value);
-});
-
 /// Where road routing is fetched from.
 ///
 /// Defaults to the public OSRM demo server, which is rate-limited and whose
@@ -102,8 +97,9 @@ final routingBaseUrlProvider = Provider<String>((ref) {
 });
 
 /// The full document as an admin edits it, defaults included.
-Map<String, dynamic> configDocumentFrom(
-  DispatchConfig dispatch,
-  FareConfig fare,
-) =>
-    {...dispatch.toMap(), ...fare.toMap()};
+///
+/// Fares were removed from the app: TODA tariffs are set by ordinance and
+/// posted at the terminal, and a second number on a phone could only ever
+/// disagree with the official one.
+Map<String, dynamic> configDocumentFrom(DispatchConfig dispatch) =>
+    dispatch.toMap();

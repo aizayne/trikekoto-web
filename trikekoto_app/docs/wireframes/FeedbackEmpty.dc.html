@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;gap:4px;
+      padding:0 4px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M19 12H5M11 6l-6 6 6 6" stroke="#1C1917" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+  <h1>Feedback</h1>
+</div>
+
+<div style="height:calc(844px - 56px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 5.5h16v11H9l-5 4v-15Z" stroke="#A8A29E" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+  <h2 class="disp" style="font-size:20px">Walang report</h2>
+  <p style="margin:0;color:#57534E;font-size:15px;max-width:270px">
+    Kapag may nag-report ang isang pasahero o driver, lilitaw ito dito.
+  </p>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:24px;display:flex;flex-direction:column;gap:16px}
+    .card{background:#fff;border:1px solid #E7E5E4;border-radius:12px;padding:16px}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Dashboard</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" stroke="#1C1917" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 12H4M8 8l-4 4 4 4M10 4.5h8a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-8"
+        stroke="#1C1917" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+
+<div class="body">
+  <!-- warningContainer #DBEAFE. Every non-approved state hides the online
+       switch AND the offer list — a driver is never shown offers they
+       cannot legally take. -->
+  <div style="background:#DBEAFE;border-radius:12px;padding:20px;display:flex;gap:14px">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="flex:none" aria-hidden="true">
+      <path d="M7 3.5h10M7 20.5h10M8 3.5v3.2c0 1.6 4 3.6 4 5.3 0 1.7-4 3.7-4 5.3v3.2M16 3.5v3.2c0 1.6-4 3.6-4 5.3 0 1.7 4 3.7 4 5.3v3.2"
+        stroke="#1D4ED8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <div>
+      <div class="disp" style="font-size:17px;color:#1D4ED8">Hinihintay ang pag-apruba</div>
+      <p style="margin:6px 0 0;font-size:15px;color:#1D4ED8;line-height:1.45">
+        Iri-review ng opisyal ng TODA chapter mo ang rehistro. Aabisuhan ka
+        dito pagkatapos — hindi mo kailangang mag-sign in ulit.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="disp" style="font-size:17px">Juan Dela Cruz</div>
+    <div style="font-size:13px;color:#57534E;margin-top:2px">juan@example.com</div>
+    <div style="height:1px;background:#E7E5E4;margin:14px 0"></div>
+    <div style="display:flex;justify-content:space-between;font-size:15px">
+      <span style="color:#57534E">Plate</span><span>ABC 1234</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:8px">
+      <span style="color:#57534E">Chapter</span><span>Barangay Uno TODA</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:8px">
+      <span style="color:#57534E">Katayuan</span>
+      <span style="color:#1D4ED8;font-weight:600">Pending</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#57534E;font-size:13px;padding:0 16px">
+    Walang online switch at walang offer hangga&#39;t hindi ka aprubado.
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

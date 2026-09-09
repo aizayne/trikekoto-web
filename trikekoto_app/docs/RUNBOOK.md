@@ -56,6 +56,27 @@ wrong and you need the answer, not a tour of the architecture.
 
 Each entry is: what you'll be told → what it actually means → what to do.
 
+### "I can't get a code" / "billing not enabled"
+
+Every commuter signs in with a phone number, and **phone verification requires
+the Blaze plan**. On the free plan it fails outright with *billing not
+enabled*.
+
+Nothing in the app can work around this — it is a Firebase platform
+requirement, not a setting. Enable billing on the project. It is the same
+wall as Cloud Functions and Cloud Storage, and one upgrade clears all three.
+
+**How to recognise it:** the error carries `billing` or shows a code in
+brackets on the sign-in screen. Every commuter is affected at once, on both
+Android and web, while drivers and admins sign in normally — they use email.
+
+Until billing is on, the commuter half of the service does not run.
+
+> **Blaze is enabled on `trikekoto`,** so this should not occur. Kept because
+> it can come back without any code changing: a card expiring, a payment
+> failing, or billing being detached from the project. The symptom is
+> identical, so check the billing account before looking anywhere else.
+
 ### "Nobody can book a ride"
 
 Commuters tap **Book a ride** and nothing happens.
@@ -118,14 +139,14 @@ Work through in order:
 1. Is the driver **Approved**? A pending or suspended driver receives nothing.
 2. Is their toggle **Online**? The empty state tells them, but people miss it.
 3. Is any commuter **within the search radius**? Default is 5 km. Raise it
-   temporarily in **Dispatch & fares** to test.
+   temporarily in **Dispatch** to test.
 4. Is the commuter's app in the **foreground**? Until the Cloud Functions are
    deployed, the dispatch sweep stops when the commuter locks their screen.
    This is the single most likely cause of "I booked and nothing happened".
 
 ### "Fares look wrong"
 
-If the fare card says **"Approximate — could not reach the route service"**,
+If the trip card says **"Approximate — could not reach the route service"**,
 OSRM is unreachable or rate-limiting.
 
 The public demo server at `router.project-osrm.org` is **development-only** and
@@ -190,7 +211,7 @@ TEMP='C:\Temp' TMP='C:\Temp' npm test
 | What | How | Speed |
 |---|---|---|
 | Security rules | Console → Firestore → Rules → History → Restore | Seconds |
-| Dispatch/fare config | Admin panel → Dispatch & fares, re-enter previous values | Seconds |
+| Dispatch config | Admin panel → Dispatch, re-enter previous values | Seconds |
 | App version | Redistribute the previous APK. **Android will refuse a lower `versionCode`** — users must uninstall first. | Slow |
 | Cloud Functions | `firebase deploy --only functions` from the previous commit | Minutes |
 
@@ -222,7 +243,7 @@ you can never update an installed app. Keep an offline copy.
 
 **Every release**
 
-- CI green: analyze, 95 Dart tests, 102 emulator tests, functions typecheck
+- CI green: analyze, 95 Dart tests, 125 emulator tests, functions typecheck
 - Bump the semantic version in `pubspec.yaml`; CI supplies the build number
 - Rebuild and redistribute the APK
 
@@ -252,4 +273,4 @@ you can never update an installed app. Keep an offline copy.
 | Suspended drivers still publish presence | They cannot accept; re-checking costs a read per GPS ping |
 | Rules near the expression ceiling | Every allowed path is tested; only denial paths hit the limit |
 | Debug-signed APK | Fine for sideloading; must change before wider distribution |
-| Straight-line fallback fares | Flagged in the UI when it happens |
+| Straight-line fallback distance | Flagged in the UI when it happens |

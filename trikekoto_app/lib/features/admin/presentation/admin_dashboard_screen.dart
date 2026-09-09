@@ -7,8 +7,10 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
 import '../../drivers/data/driver.dart';
 import 'ride_analytics_panel.dart';
+import 'verify_email_screen.dart';
 
 /// All drivers, so the panel can show the verification queue and the roster in
 /// one stream. `list` on `drivers` is admin-only, so this query simply fails
@@ -26,12 +28,21 @@ class AdminDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Gate before any query runs. The router sends an admin here on the
+    // strength of the `admins/{email}` document alone, but the rules also
+    // require a confirmed address — so without this the panel would load and
+    // every read below would fail with a permission error explaining nothing.
+    if (ref.watch(sessionProvider).isUnverifiedAdmin) {
+      return const VerifyEmailScreen();
+    }
+
     final driversAsync = ref.watch(allDriversProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin'),
         actions: [
+          const ThemeToggleButton(),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
@@ -67,7 +78,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: _AdminLink(
                       icon: Icons.tune,
-                      label: 'Dispatch & fares',
+                      label: 'Dispatch',
                       onTap: () => context.go('/admin/config'),
                     ),
                   ),

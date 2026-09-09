@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../ui/app_theme.dart';
+import '../ui/trike_icon.dart';
 
 /// OpenStreetMap tile layer, configured once.
 ///
@@ -165,25 +166,56 @@ class MapMarkers {
   static Marker pickup(BuildContext context, LatLng point) => _pin(
         point: point,
         color: context.semantic.success,
-        icon: Icons.my_location,
+        child: const Icon(Icons.my_location,
+            color: Colors.white, size: AppSpacing.iconSm),
       );
 
   static Marker dropoff(BuildContext context, LatLng point) => _pin(
         point: point,
         color: context.scheme.error,
-        icon: Icons.place,
+        child: const Icon(Icons.place,
+            color: Colors.white, size: AppSpacing.iconSm),
       );
 
   static Marker driver(BuildContext context, LatLng point) => _pin(
         point: point,
         color: AppColors.accent,
-        icon: Icons.electric_rickshaw,
+        // Slightly larger than the Material glyphs above: this one is drawn
+        // in strokes rather than solid, so it needs the extra room to stay
+        // legible inside the pin.
+        child: const TrikeIcon(size: 21, color: Colors.white),
+      );
+
+  /// The viewer's own position.
+  ///
+  /// Deliberately not a pin. Pins mark places someone chose — a pickup, a
+  /// drop-off, a trike heading somewhere. This is just where you happen to be
+  /// standing, and the conventional dot says that without competing with them
+  /// for attention.
+  static Marker you(BuildContext context, LatLng point) => Marker(
+        point: point,
+        width: 22,
+        height: 22,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.scheme.primary,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
       );
 
   static Marker _pin({
     required LatLng point,
     required Color color,
-    required IconData icon,
+    required Widget child,
   }) {
     return Marker(
       point: point,
@@ -202,7 +234,7 @@ class MapMarkers {
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.white, size: AppSpacing.iconSm),
+        child: Center(child: child),
       ),
     );
   }

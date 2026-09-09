@@ -40,7 +40,14 @@ const COMMUTER_UID = 'commuter-uid-1';
 
 let testEnv;
 
-const commuter = (uid = COMMUTER_UID) =>
+/** A commuter: phone-verified, which every commuter now is. */
+const commuter = (uid = COMMUTER_UID, phone = '+639171234567') =>
+  testEnv
+    .authenticatedContext(uid, { phone_number: phone, provider_id: 'phone' })
+    .firestore();
+
+/** A leftover anonymous session, from before accounts were required. */
+const anonCommuter = (uid = COMMUTER_UID) =>
   testEnv.authenticatedContext(uid, { provider_id: 'anonymous' }).firestore();
 
 const driver = (email = DRIVER, uid = DRIVER_UID) =>
@@ -91,8 +98,6 @@ const newRide = (overrides = {}) => ({
   driverLocation: null,
   driverLocationAt: null,
   scheduledFor: null,
-  fareEstimate: 20,
-  distanceKm: 0.62,
   rating: null,
   feedback: null,
   createdAt: serverTimestamp(),
@@ -205,29 +210,40 @@ describe('the whole ride, start to finish', () => {
       startedAt: serverTimestamp(),
     });
 
-    // 6. Complete, recording distance and fare.
+    // 6. Complete. Nothing about money is recorded — TODA tariffs are set by
+    //    ordinance and paid in cash.
     await updateDoc(doc(juan, 'rides', rideId), {
       status: 'completed',
       completedAt: serverTimestamp(),
-      distanceKm: 4.2,
-      fareEstimate: 25,
     });
 
     ride = (await getDoc(doc(rider, 'rides', rideId))).data();
     assert.equal(ride.status, 'completed');
-    assert.equal(ride.fareEstimate, 25);
 
-    // 7. The commuter rates, and the driver's aggregate moves.
+    // 7. The commuter rates. This single write is the whole client-side
+    //    story now — the driver's aggregate is moved by the `onRideRated`
+    //    Cloud Function, which reads this field and writes through the
+    //    Admin SDK. The emulator here runs rules only, with no functions
+    //    attached, so the aggregate deliberately stays at zero below.
     await updateDoc(doc(rider, 'rides', rideId), {
       rating: 5,
       feedback: 'Mabilis at ligtas',
       ratedAt: serverTimestamp(),
     });
-    await updateDoc(doc(rider, 'drivers', DRIVER), {
-      ratingSum: 5,
-      ratingCount: 1,
-      updatedAt: serverTimestamp(),
-    });
+
+    ride = (await getDoc(doc(rider, 'rides', rideId))).data();
+    assert.equal(ride.rating, 5, 'the rating the function will read');
+
+    // The commuter must NOT be able to move the aggregate themselves. Before
+    // step 68 this write succeeded, and with the function now deployed that
+    // would count every rating twice.
+    await assertFails(
+      updateDoc(doc(rider, 'drivers', DRIVER), {
+        ratingSum: 5,
+        ratingCount: 1,
+        updatedAt: serverTimestamp(),
+      }),
+    );
 
     // withSecurityRulesDisabled resolves to void, so the value has to come
     // out through a closure rather than a return.
@@ -235,8 +251,8 @@ describe('the whole ride, start to finish', () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       after = (await getDoc(doc(ctx.firestore(), 'drivers', DRIVER))).data();
     });
-    assert.equal(after.ratingSum, 5);
-    assert.equal(after.ratingCount, 1);
+    assert.equal(after.ratingSum, 0, 'untouched by the client');
+    assert.equal(after.ratingCount, 0);
   });
 
   it('lets the commuter walk away mid-search and re-book', async () => {

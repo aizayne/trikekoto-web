@@ -3,7 +3,7 @@
   "description": "Dispatch reliability and push notifications for TrikeKoTo.",
   "private": true,
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "lib/index.js",
   "scripts": {

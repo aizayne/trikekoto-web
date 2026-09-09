@@ -1,0 +1,230 @@
+import 'package:flutter/foundation.dart' show Uint8List;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/auth/session_controller.dart';
+import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
+import '../application/commuter_location.dart';
+import 'profile_photo_picker.dart';
+
+/// The rider's own profile — the only place a photo can be changed after
+/// sign-up.
+///
+/// Onboarding used to be the sole entry point for the picker, and it invites
+/// people to skip the photo. That left anyone who skipped unable to ever add
+/// one, and anyone who added one unable to replace it — while
+/// `setRiderPhoto()` sat in the session controller with no caller. This screen
+/// is what that method was written for.
+///
+/// Name and photo are saved independently, because they finish at different
+/// moments: the name the instant Save is pressed, the photo only once an
+/// upload returns. Bundling them would mean a failed upload discarding a
+/// perfectly good rename.
+class RiderProfileScreen extends ConsumerStatefulWidget {
+  const RiderProfileScreen({super.key});
+
+  @override
+  ConsumerState<RiderProfileScreen> createState() => _RiderProfileScreenState();
+}
+
+class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+
+  /// Set once from the loaded profile, so a rebuild mid-edit does not wipe
+  /// what the rider is typing.
+  bool _nameSeeded = false;
+
+  /// Null means "no change". Distinguishing that from an explicit removal is
+  /// the whole reason this is not just a `Uint8List?`.
+  bool _photoTouched = false;
+  Uint8List? _photoBytes;
+
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _busy = true);
+
+    final session = ref.read(sessionProvider.notifier);
+    var renamed = false;
+
+    try {
+      await session.updateRiderName(_name.text);
+      renamed = true;
+
+      if (_photoTouched) {
+        await session.setRiderPhoto(_photoBytes);
+      }
+
+      if (!mounted) return;
+      setState(() => _photoTouched = false);
+      showSnack(context, 'Na-save ang profile mo.');
+    } catch (e) {
+      if (!mounted) return;
+      // Says which half landed. "Save failed" after a successful rename would
+      // send the rider back to retype a name that is already stored.
+      showSnack(
+        context,
+        renamed
+            ? 'Na-save ang pangalan, pero hindi ang litrato. ${describeError(e)}'
+            : describeError(e),
+        error: true,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(myRiderProfileProvider);
+    final phone = ref.watch(sessionProvider).user?.phoneNumber ?? '';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/commuter'),
+        ),
+        actions: [
+          const ThemeToggleButton(),
+          IconButton(
+            tooltip: 'Sign out',
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+          ),
+        ],
+      ),
+      body: profileAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        // A read failure here is not fatal — the rider is signed in either
+        // way — but editing a profile you cannot see would write over fields
+        // blind, so this offers a retry instead of a form.
+        error: (_, _) => AppEmptyState(
+          icon: Icons.cloud_off,
+          title: 'Hindi mabuksan ang profile',
+          body: 'Tingnan ang signal mo, tapos subukang muli.',
+          action: FilledButton(
+            onPressed: () => ref.invalidate(myRiderProfileProvider),
+            child: const Text('Subukang muli'),
+          ),
+        ),
+        data: (rider) {
+          if (rider == null) {
+            return const AppEmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'Walang profile',
+              body: 'Mag-sign in muli para makagawa ng account.',
+            );
+          }
+
+          if (!_nameSeeded) {
+            _name.text = rider.name;
+            _nameSeeded = true;
+          }
+
+          return SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Center(
+                          child: ProfilePhotoPicker(
+                            enabled: !_busy,
+                            // Shows what is stored until a new one is chosen.
+                            existingUrl: rider.profilePhotoUrl,
+                            onChanged: (bytes) => setState(() {
+                              _photoTouched = true;
+                              _photoBytes = bytes;
+                            }),
+                          ),
+                        ),
+                        const Gap(AppSpacing.sm),
+                        Text(
+                          _photoTouched
+                              ? 'Ise-save ang litrato pagpindot mo ng Save'
+                              : 'Pindutin ang litrato para palitan',
+                          textAlign: TextAlign.center,
+                          style: context.text.bodySmall?.copyWith(
+                              color: context.scheme.onSurfaceVariant),
+                        ),
+                        const Gap(AppSpacing.xxl),
+
+                        TextFormField(
+                          controller: _name,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: const InputDecoration(
+                            labelText: 'Pangalan',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                            helperText: 'Ito ang makikita ng driver',
+                          ),
+                          validator: (v) => (v ?? '').trim().isEmpty
+                              ? 'Ilagay ang pangalan mo'
+                              : (v!.trim().length > 60
+                                  ? 'Masyadong mahaba'
+                                  : null),
+                        ),
+                        const Gap(AppSpacing.lg),
+
+                        // Shown, never editable. Changing it means proving a
+                        // new number, which means signing in again — the rules
+                        // refuse a phone change on this document outright.
+                        if (phone.isNotEmpty)
+                          Row(
+                            children: [
+                              Icon(Icons.verified_outlined,
+                                  size: AppSpacing.iconSm,
+                                  color: context.semantic.success),
+                              const Gap(AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  '$phone — nakumpirma na',
+                                  style: context.text.bodySmall?.copyWith(
+                                      color: context.scheme.onSurfaceVariant),
+                                ),
+                              ),
+                            ],
+                          ),
+                        const Gap(AppSpacing.xxl),
+
+                        FilledButton(
+                          onPressed: _busy ? null : _save,
+                          child: _busy
+                              ? const SizedBox(
+                                  width: AppSpacing.iconSm,
+                                  height: AppSpacing.iconSm,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.onAccent),
+                                )
+                              : const Text('Save'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

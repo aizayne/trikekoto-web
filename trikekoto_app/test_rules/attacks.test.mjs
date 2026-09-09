@@ -42,7 +42,14 @@ const OTHER_COMMUTER = 'commuter-uid-2';
 let testEnv;
 
 const anon = () => testEnv.unauthenticatedContext().firestore();
-const commuter = (uid = COMMUTER_UID) =>
+/** A commuter: phone-verified, which every commuter now is. */
+const commuter = (uid = COMMUTER_UID, phone = '+639171234567') =>
+  testEnv
+    .authenticatedContext(uid, { phone_number: phone, provider_id: 'phone' })
+    .firestore();
+
+/** A leftover anonymous session, from before accounts were required. */
+const anonCommuter = (uid = COMMUTER_UID) =>
   testEnv.authenticatedContext(uid, { provider_id: 'anonymous' }).firestore();
 const driver = (email = ATTACKER, uid = ATTACKER_UID, verified = true) =>
   testEnv
@@ -229,16 +236,56 @@ describe('hijacking a ride', () => {
     );
   });
 
-  it('a commuter cannot rewrite the fare they were charged', async () => {
+  it('a commuter cannot attach a fare to a completed ride', async () => {
+    // Fares were removed from the app entirely. No clause admits the key, so
+    // writing one is refused rather than validated — which is what stops a
+    // modified client from inventing a charge after the fact.
     await seed(async (db) => {
       await updateDoc(doc(db, 'rides', 'victim-ride'), {
         status: 'completed',
         assignedDriver: VICTIM,
-        fareEstimate: 45,
       });
     });
     await assertFails(
       updateDoc(doc(commuter(), 'rides', 'victim-ride'), { fareEstimate: 5 }),
+    );
+  });
+
+  it('a signed-in user cannot inflate a driver rating', async () => {
+    // This was a documented, accepted gap until step 68. The rules could
+    // verify the arithmetic of an increment — one vote, worth 1 to 5 — but
+    // never tie it to a completed ride, because each document in a
+    // transaction is authorised independently. Anyone signed in could
+    // manufacture a reputation for any driver without taking a trip.
+    //
+    // `onRideRated` now owns the aggregate and derives the value from the
+    // ride, so no client write of these fields is admitted at all. Both
+    // shapes below were the attack; the first one used to succeed.
+    await assertFails(
+      updateDoc(doc(commuter(), 'drivers', VICTIM), {
+        ratingSum: 5,
+        ratingCount: 1,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(commuter(), 'drivers', VICTIM), {
+        ratingSum: 5000,
+        ratingCount: 1,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it('a driver cannot inflate their own rating either', async () => {
+    // The self-edit clause lists contact fields only, so the aggregate is
+    // out of reach from the one context that most wants to reach it.
+    await assertFails(
+      updateDoc(doc(driver(), 'drivers', ATTACKER), {
+        ratingSum: 5,
+        ratingCount: 1,
+        updatedAt: serverTimestamp(),
+      }),
     );
   });
 
@@ -256,28 +303,6 @@ describe('hijacking a ride', () => {
 // Tripwires on documented, accepted gaps.
 // ════════════════════════════════════════════════════════════
 describe('known gaps — asserted so they cannot change unnoticed', () => {
-  it('GAP: any signed-in user can inflate a driver rating', async () => {
-    // The rules verify the arithmetic of the increment but cannot tie it to a
-    // completed ride, because each document in a transaction is authorised
-    // independently. Closing this needs a Cloud Function (step 68).
-    await assertSucceeds(
-      updateDoc(doc(commuter(), 'drivers', VICTIM), {
-        ratingSum: 5,
-        ratingCount: 1,
-        updatedAt: serverTimestamp(),
-      }),
-    );
-
-    // The damage is bounded: one vote per write, worth 1 to 5.
-    await assertFails(
-      updateDoc(doc(commuter(), 'drivers', VICTIM), {
-        ratingSum: 5000,
-        ratingCount: 1,
-        updatedAt: serverTimestamp(),
-      }),
-    );
-  });
-
   it('GAP: a suspended driver can still publish presence', async () => {
     // Approval is checked at ride acceptance, not on every GPS ping — one
     // document read per ping, per driver, every few seconds is a real cost.

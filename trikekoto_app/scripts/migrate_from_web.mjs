@@ -28,7 +28,8 @@
 //                    converted — a presence doc is worthless once cold.
 // ============================================================
 
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { pathToFileURL } from 'node:url';
+import { initializeApp, applicationDefault, deleteApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import {
   FieldValue,
@@ -37,18 +38,18 @@ import {
   getFirestore,
 } from 'firebase-admin/firestore';
 
-const COMMIT = process.argv.includes('--commit');
-if (!COMMIT && !process.argv.includes('--dry-run')) {
-  console.error('Pass --dry-run to preview, or --commit to write.');
-  process.exit(1);
-}
-
-initializeApp({ credential: applicationDefault() });
-const db = getFirestore();
-
+// The web build's three states are 'Pending Verification', 'Active' and
+// 'Suspended' — see FILTER_OPTIONS in src/pages/AdminPanel.jsx. 'Active' is
+// the one a working driver holds.
+//
+// It was missing here, and its absence was worse than a no-op: an unmapped
+// status falls through to 'pending' below, so a migration run would have
+// silently demoted every working driver in the chapter and required each to
+// be re-verified by hand.
 const STATUS_MAP = {
   'Pending Verification': 'pending',
   Pending: 'pending',
+  Active: 'approved',
   Approved: 'approved',
   Verified: 'approved',
   Suspended: 'suspended',
@@ -95,7 +96,27 @@ function encodeGeohash(lat, lng, precision = 9) {
   return hash;
 }
 
-async function migrateDrivers() {
+/**
+ * A Firestore handle built from *this* module's copy of firebase-admin.
+ *
+ * Callers must not bring their own. `GeoPoint` and `FieldValue` are checked by
+ * identity, so a value created here is rejected by a Firestore that came from
+ * a different copy of the SDK — and this repository has three, one each under
+ * scripts/, test_rules/ and the web project. The failure is an opaque
+ * "doesn't match the expected instance" at write time.
+ *
+ * Pass `projectId` to talk to the emulator (FIRESTORE_EMULATOR_HOST is honoured
+ * automatically); pass nothing to use the ambient service-account credentials.
+ */
+export function connect({ projectId } = {}) {
+  const app = initializeApp(
+    projectId ? { projectId } : { credential: applicationDefault() },
+    `migrate-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  return { app, db: getFirestore(app), close: () => deleteApp(app) };
+}
+
+export async function migrateDrivers(db, { commit = false, lookupUid } = {}) {
   const snap = await db.collection('drivers').get();
   let touched = 0;
 
@@ -118,8 +139,9 @@ async function migrateDrivers() {
     // Firestore; look it up in Auth so the field is honest rather than blank.
     if (typeof d.uid !== 'string') {
       try {
-        const user = await getAuth().getUserByEmail(docSnap.id);
-        patch.uid = user.uid;
+        const resolve = lookupUid ??
+            (async (email) => (await getAuth().getUserByEmail(email)).uid);
+        patch.uid = await resolve(docSnap.id);
       } catch {
         console.warn(`  ! no Auth account for ${docSnap.id} — uid left unset`);
       }
@@ -128,13 +150,14 @@ async function migrateDrivers() {
     if (Object.keys(patch).length === 0) continue;
     touched++;
     console.log(`  drivers/${docSnap.id}`, patch);
-    if (COMMIT) await docSnap.ref.update(patch);
+    if (commit) await docSnap.ref.update(patch);
   }
 
   console.log(`drivers: ${touched}/${snap.size} updated\n`);
+  return touched;
 }
 
-async function migrateActiveDrivers() {
+export async function migrateActiveDrivers(db, { commit = false } = {}) {
   const snap = await db.collection('active_drivers').get();
   const cutoff = Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
   let converted = 0;
@@ -146,7 +169,7 @@ async function migrateActiveDrivers() {
     if (d.updatedAt && d.updatedAt.toMillis() < cutoff.toMillis()) {
       dropped++;
       console.log(`  drop active_drivers/${docSnap.id} (stale)`);
-      if (COMMIT) await docSnap.ref.delete();
+      if (commit) await docSnap.ref.delete();
       continue;
     }
 
@@ -157,7 +180,7 @@ async function migrateActiveDrivers() {
     if (typeof lat !== 'number' || typeof lng !== 'number') {
       dropped++;
       console.log(`  drop active_drivers/${docSnap.id} (no coordinates)`);
-      if (COMMIT) await docSnap.ref.delete();
+      if (commit) await docSnap.ref.delete();
       continue;
     }
 
@@ -170,13 +193,14 @@ async function migrateActiveDrivers() {
 
     converted++;
     console.log(`  active_drivers/${docSnap.id} → position{${patch.position.geohash}}`);
-    if (COMMIT) await docSnap.ref.update(patch);
+    if (commit) await docSnap.ref.update(patch);
   }
 
   console.log(`active_drivers: ${converted} converted, ${dropped} dropped\n`);
+  return { converted, dropped };
 }
 
-async function reportRides() {
+export async function reportRides(db) {
   const snap = await db.collection('rides').count().get();
   const orphaned = await db
     .collection('rides')
@@ -189,8 +213,24 @@ async function reportRides() {
   );
 }
 
-console.log(COMMIT ? '── COMMITTING ──\n' : '── DRY RUN ──\n');
-await migrateDrivers();
-await migrateActiveDrivers();
-await reportRides();
-console.log(COMMIT ? '\nDone.' : '\nDry run complete. Re-run with --commit to apply.');
+// CLI entry. Guarded so the functions above can be imported by tests without
+// connecting to a real project or writing anything — this is the one script
+// here that rewrites production data, and it had no tests at all.
+const isMain = process.argv[1] &&
+    import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMain) {
+  const commit = process.argv.includes('--commit');
+  if (!commit && !process.argv.includes('--dry-run')) {
+    console.error('Pass --dry-run to preview, or --commit to write.');
+    process.exit(1);
+  }
+
+  const { db } = connect();
+
+  console.log(commit ? '── COMMITTING ──\n' : '── DRY RUN ──\n');
+  await migrateDrivers(db, { commit });
+  await migrateActiveDrivers(db, { commit });
+  await reportRides(db);
+  console.log(commit ? '\nDone.' : '\nDry run complete. Re-run with --commit to apply.');
+}

@@ -48,7 +48,14 @@ let testEnv;
 // ── Contexts ────────────────────────────────────────────────
 
 /** A commuter: anonymous auth, so a uid and no email claim at all. */
-const commuter = (uid = COMMUTER_UID) =>
+/** A commuter: phone-verified, which every commuter now is. */
+const commuter = (uid = COMMUTER_UID, phone = '+639171234567') =>
+  testEnv
+    .authenticatedContext(uid, { phone_number: phone, provider_id: 'phone' })
+    .firestore();
+
+/** A leftover anonymous session, from before accounts were required. */
+const anonCommuter = (uid = COMMUTER_UID) =>
   testEnv.authenticatedContext(uid, { provider_id: 'anonymous' }).firestore();
 
 const driver = (email = DRIVER_EMAIL, uid = DRIVER_UID, verified = true) =>
@@ -91,6 +98,7 @@ const rideDoc = (overrides = {}) => ({
   commuterUid: COMMUTER_UID,
   commuterName: 'Maria',
   commuterPhone: '09181234567',
+  commuterPhotoUrl: null,
   pickup: { label: 'Plaza', geopoint: new GeoPoint(14.5995, 120.9842) },
   dropoff: { label: 'Palengke', geopoint: new GeoPoint(14.6, 120.99) },
   notes: null,
@@ -107,8 +115,6 @@ const rideDoc = (overrides = {}) => ({
   driverLocation: null,
   driverLocationAt: null,
   scheduledFor: null,
-  fareEstimate: null,
-  distanceKm: null,
   rating: null,
   feedback: null,
   createdAt: new Date(),
@@ -477,13 +483,11 @@ describe('rides — lifecycle and tracking', () => {
       updateDoc(doc(driver(), 'rides', 'r1'), {
         status: 'completed',
         completedAt: serverTimestamp(),
-        distanceKm: 4.2,
-        fareEstimate: 25,
       }),
     );
   });
 
-  it('completes without a fare when the driver had no GPS fix', async () => {
+  it('completes with nothing but the transition', async () => {
     await seedDriver(DRIVER_EMAIL);
     await seedRide('r1', assigned('in_transit'));
     await assertSucceeds(
@@ -494,15 +498,17 @@ describe('rides — lifecycle and tracking', () => {
     );
   });
 
-  it('rejects a negative fare', async () => {
+  it('refuses a completion that smuggles in a fare field', async () => {
+    // The app no longer quotes or stores fares. The rules must refuse the
+    // field outright rather than merely validate it, or a modified client
+    // could reintroduce a number nobody agreed to.
     await seedDriver(DRIVER_EMAIL);
     await seedRide('r1', assigned('in_transit'));
     await assertFails(
       updateDoc(doc(driver(), 'rides', 'r1'), {
         status: 'completed',
         completedAt: serverTimestamp(),
-        distanceKm: 4.2,
-        fareEstimate: -50,
+        fareEstimate: 50,
       }),
     );
   });
@@ -649,9 +655,22 @@ describe('ratings', () => {
     );
   });
 
-  it('allows a single, correctly-sized aggregate increment on the driver', async () => {
+  // ── The aggregate is server-only (step 68) ────────────────
+  //
+  // These three used to assert that a commuter could post a correctly-
+  // sized increment themselves. `onRideRated` now owns the aggregate and
+  // writes through the Admin SDK, which is not subject to these rules —
+  // so every client write of these fields is refused, well-formed or not.
+  //
+  // Leaving the old permission in place alongside the deployed function
+  // would have counted every rating twice: the function's `ratingCounted`
+  // guard stops it re-running, but it cannot see a client's increment.
+
+  it('refuses a commuter increment even when the arithmetic is correct', async () => {
+    // The exact write the pre-cutover rules allowed. This is the assertion
+    // that would break if the clause were ever restored.
     await seedDriver(DRIVER_EMAIL);
-    await assertSucceeds(
+    await assertFails(
       updateDoc(doc(commuter(), 'drivers', DRIVER_EMAIL), {
         ratingSum: 5,
         ratingCount: 1,
@@ -660,7 +679,7 @@ describe('ratings', () => {
     );
   });
 
-  it('rejects an inflated aggregate increment', async () => {
+  it('refuses an inflated increment', async () => {
     await seedDriver(DRIVER_EMAIL);
     await assertFails(
       updateDoc(doc(commuter(), 'drivers', DRIVER_EMAIL), {
@@ -671,10 +690,9 @@ describe('ratings', () => {
     );
   });
 
-  it('rejects a rating write that also touches other fields', async () => {
-    // Seeded as pending so the status write is a real change. Writing the
-    // value it already holds would not appear in diff().affectedKeys() at
-    // all, and the rule would — correctly — see a plain rating increment.
+  it('refuses an increment bundled with a status change', async () => {
+    // Seeded as pending so the status write is a real change rather than a
+    // no-op that diff().affectedKeys() would not report.
     await seedDriver(DRIVER_EMAIL, 'pending');
     await assertFails(
       updateDoc(doc(commuter(), 'drivers', DRIVER_EMAIL), {
@@ -682,6 +700,19 @@ describe('ratings', () => {
         ratingCount: 1,
         status: 'approved',
         updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it('still records the rating on the ride, which is what the function reads', async () => {
+    // The cutover must not have broken the commuter's half. The function
+    // derives its increment from `rides/{id}.rating`, so if this write were
+    // refused no rating would be counted at all.
+    await seedRide('r1', completed());
+    await assertSucceeds(
+      updateDoc(doc(commuter(), 'rides', 'r1'), {
+        rating: 4,
+        ratedAt: serverTimestamp(),
       }),
     );
   });
@@ -1007,6 +1038,112 @@ describe('admin analytics query', () => {
     await assertFails(getDocs(analyticsQuery(anon())));
   });
 });
+// ════════════════════════════════════════════════════════════
+// The rider's photo travels on the ride so the driver can recognise them —
+// a driver cannot read riders/{uid}, and should not be able to.
+describe('commuter photo on a ride', () => {
+  it('a ride may carry a photo URL', async () => {
+    await assertSucceeds(
+      setDoc(doc(commuter(), 'rides', 'r-photo'), rideDoc({
+        createdAt: serverTimestamp(),
+        commuterPhotoUrl: 'https://firebasestorage.example/riders/u/profile',
+      })),
+    );
+  });
+
+  it('a ride without one is still valid — most commuters are anonymous',
+    async () => {
+      // Rules treat a *missing* field as an error rather than null, so an
+      // absent photo must be tolerated explicitly or every anonymous
+      // booking is refused.
+      const d = rideDoc({ createdAt: serverTimestamp() });
+      delete d.commuterPhotoUrl;
+      await assertSucceeds(setDoc(doc(commuter(), 'rides', 'r-nophoto'), d));
+    });
+
+  it('rejects an over-long value in the photo field', async () => {
+    await assertFails(
+      setDoc(doc(commuter(), 'rides', 'r-bad'), rideDoc({
+        createdAt: serverTimestamp(),
+        commuterPhotoUrl: 'x'.repeat(501),
+      })),
+    );
+  });
+
+  it('rejects a non-string in the photo field', async () => {
+    await assertFails(
+      setDoc(doc(commuter(), 'rides', 'r-bad2'),
+        rideDoc({ createdAt: serverTimestamp(), commuterPhotoUrl: 42 })),
+    );
+  });
+
+  it('the assigned driver can read it', async () => {
+    await seedDriver(DRIVER_EMAIL);
+    await seedRide('r-assigned', {
+      status: 'accepted',
+      assignedDriver: DRIVER_EMAIL,
+      driverSnapshot: snapshotFor(DRIVER_EMAIL),
+      commuterPhotoUrl: 'https://firebasestorage.example/riders/u/profile',
+    });
+    const snap = await assertSucceeds(
+      getDoc(doc(driver(), 'rides', 'r-assigned')),
+    );
+    assert.ok(snap.data().commuterPhotoUrl);
+  });
+
+  it('an unrelated driver still cannot', async () => {
+    await seedDriver(OTHER_DRIVER_EMAIL);
+    await seedRide('r-assigned', {
+      status: 'accepted',
+      assignedDriver: DRIVER_EMAIL,
+      commuterPhotoUrl: 'https://firebasestorage.example/riders/u/profile',
+    });
+    await assertFails(
+      getDoc(doc(driver(OTHER_DRIVER_EMAIL, OTHER_DRIVER_UID),
+        'rides', 'r-assigned')),
+    );
+  });
+});
+// ════════════════════════════════════════════════════════════
+// Accounts are required. The client screens can be bypassed; this is the
+// control that actually holds, and it holds whether or not anonymous
+// sign-in is still enabled in the Firebase console.
+describe('booking requires a verified phone', () => {
+  it('a phone-verified commuter can book', async () => {
+    await assertSucceeds(
+      setDoc(doc(commuter(), 'rides', 'r-ok'),
+        rideDoc({ createdAt: serverTimestamp() })),
+    );
+  });
+
+  it('an anonymous session cannot', async () => {
+    // A leftover session from before the change, or a modified client
+    // calling signInAnonymously against a provider left enabled.
+    await assertFails(
+      setDoc(doc(anonCommuter(), 'rides', 'r-anon'),
+        rideDoc({ createdAt: serverTimestamp() })),
+    );
+  });
+
+  it('an unauthenticated client cannot', async () => {
+    await assertFails(
+      setDoc(doc(anon(), 'rides', 'r-none'),
+        rideDoc({ createdAt: serverTimestamp() })),
+    );
+  });
+
+  it('a driver signed in by email cannot book as a commuter', async () => {
+    // No phone_number claim, so the same gate refuses them.
+    await assertFails(
+      setDoc(doc(driver(), 'rides', 'r-driver'),
+        rideDoc({ createdAt: serverTimestamp() })),
+    );
+  });
+});
+
+
+
+
 
 // ════════════════════════════════════════════════════════════
 // The pilot stop button. This is the only rollback available once the APK is
@@ -1062,10 +1199,6 @@ describe('acceptingRides kill switch', () => {
       updateDoc(doc(driver(), 'rides', 'r-inflight'), {
         status: 'completed',
         completedAt: serverTimestamp(),
-        distanceKm: 2.4,
-        fareEstimate: 25,
-        driverLocation: null,
-        driverLocationAt: null,
       }),
     );
   });

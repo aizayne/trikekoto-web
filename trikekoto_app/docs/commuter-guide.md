@@ -27,17 +27,16 @@ can read your name or number.*
 
 ---
 
-## 2. Tignan ang pamasahe / Check the fare
+## 2. Tignan ang layo / Check the distance
 
-Kapag naitakda mo na ang dalawa, lalabas ang **tinatayang pamasahe** at ang
-layo — bago ka pa mag-book.
+Makikita mo kung **gaano kalayo** at **gaano katagal** ang biyahe.
 
-> Kung may nakasulat na **"Approximate — could not reach the route service"**,
-> hindi nakuha ng app ang tunay na ruta at tinaya lang ito. Maaaring mag-iba
-> ang aktwal na pamasahe.
+> **Walang presyo sa app.** Ang pamasahe ay nakabase sa opisyal na tarifa ng
+> TODA na nakapaskil sa terminal, at cash ang bayad sa driver. Hindi
+> nagko-kolekta ng bayad ang app.
 >
-> **Ang app ay nagbibigay ng tantiya lamang.** Ang bayad ay ang nakatakdang
-> pamasahe ng TODA chapter.
+> *The app shows no price. Fares follow the posted TODA tariff and are paid
+> to the driver in cash.*
 
 ---
 
@@ -59,6 +58,14 @@ Makikita mo: **"Asked 3 of 10 nearby drivers"** — ilan na ang natanong.
 
 > Kung maubos ang sampu at walang tumanggap, titigil ang paghahanap. Subukan
 > ulit maya-maya.
+
+> **Huwag munang i-close ang app habang naghahanap.**
+>
+> Ang paghahanap ng driver ay tumatakbo sa telepono mo. Kapag ni-close mo ang
+> app, hihinto ito at maiiwang naghihintay ang booking mo.
+>
+> *The search runs on your phone. Closing the app stops it, and the booking
+> is left waiting.*
 
 ---
 
@@ -97,7 +104,15 @@ Pagkatapos ng biyahe, pumili ng **1 hanggang 5 bituin**.
 | Walang driver na tumanggap | Walang naka-online na malapit. Subukan ulit mamaya. |
 | Mali ang lugar sa mapa | Kanselahin at mag-book ulit gamit ang tamang pin. |
 | Hindi lumalabas ang mapa | Mahinang signal. Gumagana pa rin ang booking. |
-| Iba ang sinisingil kaysa sa app | Tantiya lang ang app. Ang TODA ang may takda ng pamasahe. |
+| Hindi ako sigurado sa bayad | Walang presyo sa app. Sundin ang nakapaskil na tarifa ng TODA. |
+
+---
+
+## Maliwanag o madilim / Light or dark
+
+May **buwan** (🌙) o **araw** (☀️) sa itaas. Pindutin para palitan.
+
+*Tap the moon or sun in the top bar to switch.*
 
 ---
 

@@ -28,6 +28,7 @@ import { normalizeEmail } from "../utils/email";
 import {
   MapPin, Navigation, X, Loader,
   CheckCircle, User, Car, AlertTriangle,
+  Star, Clock, Calendar, Send,
 } from "lucide-react";
 
 // Leaflet map imports
@@ -218,9 +219,12 @@ function getPositionAsync() {
 }
 
 // ─── Component ───────────────────────────────────────────────
-export default function CommuterBooking({ onBack }) {
+export default function CommuterBooking({ onBack, onFeedback }) {
   const [phase, setPhase]           = useState("form");
-  const [form, setForm]             = useState({ pickup: "", dropoff: "", notes: "", name: "", phone: "" });
+  const [form, setForm]             = useState({
+    pickup: "", dropoff: "", notes: "", name: "", phone: "",
+    scheduleEnabled: false, scheduleDate: "", scheduleTime: "",
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
   const [activeRide, setActiveRide] = useState(null);
@@ -229,6 +233,12 @@ export default function CommuterBooking({ onBack }) {
 
   // Live driver position for the map
   const [driverMapCoords, setDriverMapCoords] = useState(null); // { lat, lng }
+
+  // Rating state
+  const [rating, setRating]             = useState(0);        // 1-5
+  const [ratingComment, setRatingComment] = useState("");
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted]   = useState(false);
 
   const rideListenerRef   = useRef(null);
   const driverLocRef      = useRef(null); // listener for active_drivers doc
@@ -290,6 +300,31 @@ export default function CommuterBooking({ onBack }) {
       setError("Please enter both a pickup and dropoff location.");
       return;
     }
+
+    // Parse scheduled time if enabled
+    let scheduledFor = null;
+    if (form.scheduleEnabled) {
+      if (!form.scheduleDate || !form.scheduleTime) {
+        setError("Please pick a date and time for your scheduled ride.");
+        return;
+      }
+      const dt = new Date(`${form.scheduleDate}T${form.scheduleTime}`);
+      if (Number.isNaN(dt.getTime())) {
+        setError("Invalid date/time. Please check and try again.");
+        return;
+      }
+      const now = Date.now();
+      if (dt.getTime() - now < 5 * 60 * 1000) {
+        setError("Please schedule at least 5 minutes from now.");
+        return;
+      }
+      if (dt.getTime() - now > 7 * 24 * 60 * 60 * 1000) {
+        setError("Please schedule within the next 7 days.");
+        return;
+      }
+      scheduledFor = dt;
+    }
+
     setSubmitting(true);
     try {
       // Silently try to get the commuter's GPS position.
@@ -309,11 +344,19 @@ export default function CommuterBooking({ onBack }) {
         driverLocation: null,
         acceptedAt:     null,
         pickupCoords,
+        scheduledFor,  // null = immediate, Date = scheduled
+        rating:         null,
+        feedback:       null,
         createdAt:      serverTimestamp(),
       });
       startRideListener(rideRef.id);
-      setActiveRide({ id: rideRef.id, pickup: form.pickup, dropoff: form.dropoff });
-      setPhase("searching");
+      setActiveRide({
+        id: rideRef.id,
+        pickup: form.pickup,
+        dropoff: form.dropoff,
+        scheduledFor,
+      });
+      setPhase(scheduledFor ? "scheduled" : "searching");
     } catch (err) {
       console.error("Booking error:", err);
       setError("Failed to book a ride. Please check your connection and try again.");
@@ -323,6 +366,10 @@ export default function CommuterBooking({ onBack }) {
   };
 
   // ── Listen to the ride doc for status changes ──────────────
+  // The listener stays active across all phases so we can detect:
+  //   - searching → accepted (driver accepted)
+  //   - accepted  → completed (driver completed; show rating)
+  //   - *        → cancelled (reset to form)
   const startRideListener = (rideId) => {
     if (rideListenerRef.current) rideListenerRef.current();
 
@@ -333,30 +380,34 @@ export default function CommuterBooking({ onBack }) {
         const data = snap.data();
 
         if (data.status === "accepted" && data.assignedDriver) {
-          // Stop listening to the ride doc now — we have what we need
-          if (rideListenerRef.current) { rideListenerRef.current(); rideListenerRef.current = null; }
-
           const driverId = normalizeEmail(data.assignedDriver);
 
-          // Fetch driver profile
-          try {
-            const driverSnap = await getDoc(doc(db, "drivers", driverId));
-            setDriverInfo(
-              driverSnap.exists()
-                ? driverSnap.data()
-                : { email: driverId, firstName: "Your Driver", lastName: "" }
-            );
-          } catch {
-            setDriverInfo({ email: driverId, firstName: "Your Driver", lastName: "" });
+          // Fetch driver profile (only once, on transition)
+          if (!driverInfo) {
+            try {
+              const driverSnap = await getDoc(doc(db, "drivers", driverId));
+              setDriverInfo(
+                driverSnap.exists()
+                  ? driverSnap.data()
+                  : { email: driverId, firstName: "Your Driver", lastName: "" }
+              );
+            } catch {
+              setDriverInfo({ email: driverId, firstName: "Your Driver", lastName: "" });
+            }
           }
 
           // Seed the map with the location snapshot stored at accept time
-          if (data.driverLocation?.lat && data.driverLocation?.lng) {
+          if (data.driverLocation?.lat && data.driverLocation?.lng && !driverMapCoords) {
             setDriverMapCoords({ lat: data.driverLocation.lat, lng: data.driverLocation.lng });
           }
 
           setActiveRide((prev) => ({ ...prev, ...data, id: rideId }));
-          setPhase("accepted");
+          setPhase((prev) => prev === "rating" ? prev : "accepted");
+        }
+
+        if (data.status === "completed") {
+          setActiveRide((prev) => ({ ...prev, ...data, id: rideId }));
+          setPhase("rating");
         }
 
         if (data.status === "cancelled") {
@@ -389,8 +440,38 @@ export default function CommuterBooking({ onBack }) {
     setDriverInfo(null);
     setDriverMapCoords(null);
     setPhase("form");
-    setForm({ pickup: "", dropoff: "", notes: "", name: "", phone: "" });
+    setForm({
+      pickup: "", dropoff: "", notes: "", name: "", phone: "",
+      scheduleEnabled: false, scheduleDate: "", scheduleTime: "",
+    });
     setError(null);
+    setRating(0);
+    setRatingComment("");
+    setRatingSubmitted(false);
+  };
+
+  // ── Submit rating ──────────────────────────────────────────
+  const handleSubmitRating = async () => {
+    if (!activeRide?.id || rating < 1 || rating > 5) return;
+    setSubmittingRating(true);
+    try {
+      await updateDoc(doc(db, "rides", activeRide.id), {
+        rating,
+        feedback: ratingComment.trim() || null,
+        ratedAt: serverTimestamp(),
+      });
+      setRatingSubmitted(true);
+    } catch (err) {
+      console.error("Rating submit error:", err);
+      setError("Failed to submit rating. Please try again.");
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
+  // ── Skip rating (close without rating) ─────────────────────
+  const handleSkipRating = () => {
+    resetToForm();
   };
 
   const fmt = (s) => {
@@ -467,6 +548,52 @@ export default function CommuterBooking({ onBack }) {
                 onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               />
             </div>
+
+            {/* Schedule for later */}
+            <div style={{
+              backgroundColor: "#0f172a",
+              borderRadius: "0.75rem",
+              padding: "0.9rem",
+              border: `1px solid ${form.scheduleEnabled ? "#f59e0b55" : "#334155"}`,
+            }}>
+              <label style={{
+                display: "flex", alignItems: "center", gap: "0.5rem",
+                cursor: "pointer", fontSize: "0.85rem", color: "#e2e8f0",
+              }}>
+                <input
+                  type="checkbox"
+                  checked={form.scheduleEnabled}
+                  onChange={(e) => setForm((f) => ({ ...f, scheduleEnabled: e.target.checked }))}
+                  style={{ cursor: "pointer", accentColor: "#f59e0b" }}
+                />
+                <Clock size={14} />
+                <span style={{ fontWeight: 600 }}>Schedule for later</span>
+              </label>
+              {form.scheduleEnabled && (
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...S.label, fontSize: "0.72rem" }}>Date</label>
+                    <input
+                      type="date"
+                      style={S.input}
+                      value={form.scheduleDate}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setForm((f) => ({ ...f, scheduleDate: e.target.value }))}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...S.label, fontSize: "0.72rem" }}>Time</label>
+                    <input
+                      type="time"
+                      style={S.input}
+                      value={form.scheduleTime}
+                      onChange={(e) => setForm((f) => ({ ...f, scheduleTime: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {error && (
               <div style={S.error}>
                 <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 2 }} />
@@ -474,12 +601,170 @@ export default function CommuterBooking({ onBack }) {
               </div>
             )}
             <button type="submit" style={S.btn("primary", submitting)} disabled={submitting}>
-              {submitting ? <Loader size={17} /> : <Navigation size={17} />}
-              {submitting ? "Booking…" : "Find a Trike"}
+              {submitting ? <Loader size={17} /> : form.scheduleEnabled ? <Calendar size={17} /> : <Navigation size={17} />}
+              {submitting ? "Booking…" : form.scheduleEnabled ? "Schedule Ride" : "Find a Trike"}
             </button>
           </form>
           <hr style={S.divider} />
-          <button style={S.backLink} onClick={onBack}>← Back to home</button>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "space-between" }}>
+            <button style={S.backLink} onClick={onBack}>← Back to home</button>
+            {onFeedback && (
+              <button style={S.backLink} onClick={onFeedback}>
+                Send feedback
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── PHASE: scheduled (ride booked for later) ───────────────
+  if (phase === "scheduled") {
+    const scheduleDisplay = activeRide?.scheduledFor
+      ? (activeRide.scheduledFor instanceof Date
+          ? activeRide.scheduledFor
+          : activeRide.scheduledFor?.toDate?.() ?? null)
+      : null;
+    return (
+      <div style={S.page}>
+        <div style={S.card}>
+          <div style={S.searchingWrap}>
+            <div style={{ ...S.pulse, backgroundColor: "#1c1917" }}>
+              <Calendar size={28} color="#fde68a" />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem" }}>Ride Scheduled</p>
+              <p style={{ margin: "0.3rem 0 0", fontSize: "0.82rem", color: "#fde68a" }}>
+                {scheduleDisplay
+                  ? scheduleDisplay.toLocaleString("en-PH", {
+                      weekday: "short", month: "short", day: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })
+                  : "—"}
+              </p>
+            </div>
+          </div>
+          <div style={S.routeBox}>
+            <div>
+              <span style={{ color: "#64748b", fontSize: "0.72rem" }}>Pickup&nbsp;&nbsp;</span>
+              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>{activeRide?.pickup}</span>
+            </div>
+            <div>
+              <span style={{ color: "#64748b", fontSize: "0.72rem" }}>Dropoff&nbsp;</span>
+              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>{activeRide?.dropoff}</span>
+            </div>
+          </div>
+          <p style={{ fontSize: "0.78rem", color: "#64748b", textAlign: "center", margin: 0, lineHeight: 1.6 }}>
+            A driver will be matched to your ride close to your scheduled time.
+            You can cancel anytime before pickup.
+          </p>
+          <button style={S.btn("danger", false)} onClick={handleCancel}>
+            <X size={16} /> Cancel Scheduled Ride
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── PHASE: rating (after ride completion) ──────────────────
+  if (phase === "rating") {
+    if (ratingSubmitted) {
+      return (
+        <div style={S.page}>
+          <div style={S.card}>
+            <div style={S.searchingWrap}>
+              <div style={{ ...S.pulse, backgroundColor: "#052e16" }}>
+                <CheckCircle size={32} color="#4ade80" />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: "1.2rem", color: "#86efac" }}>
+                  Thank you!
+                </p>
+                <p style={{ margin: "0.3rem 0 0", fontSize: "0.85rem", color: "#64748b" }}>
+                  Your feedback helps improve TrikeKoTo.
+                </p>
+              </div>
+            </div>
+            <button style={S.btn("primary", false)} onClick={resetToForm}>
+              Book Another Ride
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div style={S.page}>
+        <div style={S.card}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ ...S.pulse, margin: "0 auto 1rem", backgroundColor: "#1e3a5f" }}>
+              <CheckCircle size={32} color="#60a5fa" />
+            </div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: "1.2rem" }}>Ride Complete!</p>
+            <p style={{ margin: "0.3rem 0 0", fontSize: "0.85rem", color: "#64748b" }}>
+              How was your ride with{" "}
+              {driverInfo
+                ? `${driverInfo.firstName ?? "your driver"}`
+                : "your driver"}?
+            </p>
+          </div>
+
+          {/* Star rating */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: "0.25rem", color: n <= rating ? "#f59e0b" : "#334155",
+                  transition: "transform 0.15s, color 0.15s",
+                }}
+                aria-label={`${n} star${n === 1 ? "" : "s"}`}
+              >
+                <Star size={36} fill={n <= rating ? "#f59e0b" : "none"} />
+              </button>
+            ))}
+          </div>
+          {rating > 0 && (
+            <p style={{
+              textAlign: "center", margin: 0,
+              fontSize: "0.85rem", color: "#94a3b8",
+            }}>
+              {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
+            </p>
+          )}
+
+          <div>
+            <label style={S.label}>Comments (optional)</label>
+            <textarea
+              style={S.textarea}
+              placeholder="Tell us about your experience..."
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              maxLength={500}
+            />
+          </div>
+
+          {error && (
+            <div style={S.error}>
+              <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 2 }} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button
+            style={S.btn("primary", rating < 1 || submittingRating)}
+            onClick={handleSubmitRating}
+            disabled={rating < 1 || submittingRating}
+          >
+            {submittingRating ? <Loader size={17} /> : <Send size={17} />}
+            {submittingRating ? "Submitting..." : "Submit Rating"}
+          </button>
+          <button style={S.backLink} onClick={handleSkipRating}>
+            Skip for now
+          </button>
         </div>
       </div>
     );

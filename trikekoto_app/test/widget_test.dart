@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trikekoto_app/core/config/app_config.dart';
-import 'package:trikekoto_app/core/fare/fare_calculator.dart';
 import 'package:trikekoto_app/core/firestore/collection_paths.dart';
 import 'package:trikekoto_app/core/geo/geo_utils.dart';
 import 'package:trikekoto_app/features/drivers/data/active_driver.dart';
@@ -374,100 +373,6 @@ void main() {
     });
   });
 
-  // ── Fare calculation ─────────────────────────────────────────
-  //
-  // Tricycle tariffs are set per chapter by local ordinance, so the rules
-  // are configuration. What must hold regardless: fares are whole pesos,
-  // never below the minimum, and the statutory 20% discount is applied
-  // exactly once.
-  group('fare calculation', () {
-    const config = FareConfig(); // ₱15 flag-down covering 2 km, then ₱5/km
-
-    test('a trip inside the base distance costs the flag-down', () {
-      for (final km in [0.0, 0.5, 1.0, 2.0]) {
-        final quote = estimateFare(distanceKm: km, config: config);
-        expect(quote.total, 15, reason: '$km km should be flag-down only');
-        expect(quote.chargeableKm, 0);
-      }
-    });
-
-    test('charges per started kilometre beyond the base', () {
-      expect(estimateFare(distanceKm: 2.1, config: config).total, 20);
-      expect(estimateFare(distanceKm: 3.0, config: config).total, 20);
-      expect(estimateFare(distanceKm: 3.01, config: config).total, 25);
-      expect(estimateFare(distanceKm: 5.0, config: config).total, 30);
-    });
-
-    test('floating-point error does not bill a phantom kilometre', () {
-      // Haversine over real coordinates rarely lands on a whole number.
-      final quote = estimateFare(distanceKm: 2.0000000001, config: config);
-      expect(quote.chargeableKm, 0);
-      expect(quote.total, 15);
-    });
-
-    test('applies the statutory 20% discount', () {
-      final regular = estimateFare(distanceKm: 5, config: config);
-      expect(regular.total, 30);
-
-      for (final type in [
-        FarePassengerType.senior,
-        FarePassengerType.pwd,
-        FarePassengerType.student,
-      ]) {
-        final quote =
-            estimateFare(distanceKm: 5, config: config, passengerType: type);
-        expect(quote.discount, 6);
-        expect(quote.total, 24, reason: '$type is entitled to 20% off');
-      }
-    });
-
-    test('a regular passenger receives no discount', () {
-      final quote = estimateFare(distanceKm: 5, config: config);
-      expect(quote.discount, 0);
-      expect(quote.total, quote.subtotal);
-    });
-
-    test('never quotes below the minimum fare', () {
-      const cheap = FareConfig(baseFare: 5, minimumFare: 12);
-      expect(estimateFare(distanceKm: 0.5, config: cheap).total, 12);
-    });
-
-    test('quotes are whole pesos', () {
-      const odd = FareConfig(baseFare: 13, baseDistanceKm: 1, perKm: 7);
-      for (final km in [0.4, 1.7, 3.3, 9.9]) {
-        final total = estimateFare(
-          distanceKm: km,
-          config: odd,
-          passengerType: FarePassengerType.senior,
-        ).total;
-        expect(total, total.roundToDouble(),
-            reason: 'a driver cannot make change for centavos');
-      }
-    });
-
-    test('a bad GPS fix yields the flag-down instead of crashing', () {
-      for (final bad in [-5.0, double.nan, double.infinity]) {
-        final quote = estimateFare(distanceKm: bad, config: config);
-        expect(quote.total, 15);
-        expect(quote.distanceKm, 0);
-      }
-    });
-
-    test('the itemised breakdown adds up', () {
-      final quote = estimateFare(
-        distanceKm: 7.5,
-        config: config,
-        passengerType: FarePassengerType.senior,
-      );
-
-      expect(quote.chargeableKm, 6); // 5.5 km beyond base, rounded up
-      expect(quote.distanceCharge, 30);
-      expect(quote.subtotal, quote.baseFare + quote.distanceCharge);
-      expect(quote.total, quote.subtotal - quote.discount);
-      expect(quote.formattedTotal, '₱36');
-    });
-
-  });
 
   // ── Runtime configuration ────────────────────────────────────
   //
@@ -518,35 +423,14 @@ void main() {
         offerTimeout: Duration(seconds: 20),
         maxDriversToTry: 6,
       );
-      const fare = FareConfig(baseFare: 20, perKm: 8);
 
-      final document = configDocumentFrom(dispatch, fare);
+      final document = configDocumentFrom(dispatch);
       final back = DispatchConfig.fromMap(document);
-      final fareBack = FareConfig.fromMap(document);
 
       expect(back.searchRadiusKm, dispatch.searchRadiusKm);
       expect(back.offerTimeout, dispatch.offerTimeout);
       expect(back.maxDriversToTry, dispatch.maxDriversToTry);
-      expect(fareBack.baseFare, fare.baseFare);
-      expect(fareBack.perKm, fare.perKm);
     });
 
-    test('reads a chapter tariff from config, falling back per field', () {
-      final partial = FareConfig.fromMap(const {'baseFare': 20});
-      expect(partial.baseFare, 20);
-      expect(partial.perKm, const FareConfig().perKm); // untouched default
-
-      final empty = FareConfig.fromMap(null);
-      expect(empty.baseFare, const FareConfig().baseFare);
-
-      final full = FareConfig.fromMap(const {
-        'baseFare': 25,
-        'baseDistanceKm': 3,
-        'farePerKm': 8,
-        'minimumFare': 25,
-        'discountRate': 0.20,
-      });
-      expect(estimateFare(distanceKm: 6, config: full).total, 49);
-    });
   });
 }

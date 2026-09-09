@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;
+      padding:0 4px 0 16px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif;flex:1}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:16px;display:flex;flex-direction:column;gap:12px}
+    .card{background:#fff;border:1px solid #E7E5E4;border-radius:12px;padding:16px}
+    .btn{height:44px;border-radius:12px;background:#15803D;color:#fff;flex:1;
+      font-family:Poppins,system-ui,sans-serif;font-weight:600;font-size:15px;
+      display:flex;align-items:center;justify-content:center;border:0}
+    .btn.no{background:transparent;color:#B91C1C;border:1px solid #D6D3D1}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <h1>Verification</h1>
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" stroke="#1C1917" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+</div>
+
+<div class="body">
+  <div class="disp" style="font-size:17px;padding:4px 2px">Naghihintay ng review (2)</div>
+
+  <!-- The only path in the app that writes `status`. A driver cannot approve
+       themselves — the rules keep the field admin-only. -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#DBEAFE;flex:none;
+        display:flex;align-items:center;justify-content:center">
+        <span class="disp" style="font-size:16px;color:#1D4ED8">PR</span>
+      </div>
+      <div style="flex:1">
+        <div class="disp" style="font-size:17px">Pedro Ramos</div>
+        <div style="font-size:13px;color:#57534E">pedro@example.com</div>
+      </div>
+    </div>
+    <div style="height:1px;background:#E7E5E4;margin:14px 0"></div>
+    <div style="display:flex;justify-content:space-between;font-size:15px">
+      <span style="color:#57534E">Plate</span><span>XYZ 5678</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:6px">
+      <span style="color:#57534E">Body no.</span><span>14</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:6px">
+      <span style="color:#57534E">Chapter</span><span>Barangay Uno TODA</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:6px">
+      <span style="color:#57534E">Mobile</span><span>0918 555 0142</span>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <div class="btn no">Reject</div>
+      <div class="btn">Approve</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#DBEAFE;flex:none;
+        display:flex;align-items:center;justify-content:center">
+        <span class="disp" style="font-size:16px;color:#1D4ED8">MC</span>
+      </div>
+      <div style="flex:1">
+        <div class="disp" style="font-size:17px">Mario Cruz</div>
+        <div style="font-size:13px;color:#57534E">mario@example.com</div>
+      </div>
+    </div>
+    <div style="height:1px;background:#E7E5E4;margin:14px 0"></div>
+    <div style="display:flex;justify-content:space-between;font-size:15px">
+      <span style="color:#57534E">Plate</span><span>LMN 2244</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:15px;margin-top:6px">
+      <span style="color:#57534E">Chapter</span><span>Barangay Uno TODA</span>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <div class="btn no">Reject</div>
+      <div class="btn">Approve</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

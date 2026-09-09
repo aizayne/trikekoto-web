@@ -1,0 +1,66 @@
+// ============================================================
+// Cloud Storage Security Rules — TrikeKoTo
+// ============================================================
+// Deploy with:  firebase deploy --only storage
+//
+// One thing is stored: a rider's profile photo. Everything else is
+// denied, including paths nobody has thought of yet — the default
+// at the bottom is closed, the same way firestore.rules ends.
+//
+// The `read` rule below grants only the rider themselves, but that
+// is NOT the whole access story, and reading this file alone would
+// give the wrong impression.
+//
+// The driver who picks someone up does see their photo. It reaches
+// them as a download URL denormalised onto the ride document at
+// booking time (`commuterPhotoUrl`), the same way the driver's own
+// name and plate are denormalised for the commuter. A Firebase
+// download URL carries a token that bypasses these rules entirely —
+// anyone holding the URL can fetch the object.
+//
+// So the real access control for a passenger's face is the Firestore
+// rule on `rides/{rideId}`: who may read that document decides who
+// can obtain the URL. See the ride read clause in firestore.rules.
+// Tightening this file would not narrow that, and loosening the ride
+// rule would widen it regardless of what is written here.
+// ============================================================
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSelf(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // One fixed path per rider, not a filename they choose.
+    //
+    // A rider-supplied name would let someone write `../` games, and
+    // an unbounded set of objects per uid is an unbounded bill. One
+    // object means uploading again replaces the old photo rather than
+    // accumulating orphans nobody deletes.
+    match /riders/{uid}/profile {
+      allow read: if isSelf(uid);
+
+      allow write: if isSelf(uid)
+        // 1 MB. The client resizes to 512px before upload, which lands
+        // well under this; the cap is what stops a modified client
+        // parking a video in the bucket.
+        && request.resource.size < 1 * 1024 * 1024
+        // Content type is asserted by the uploader, so this is a guard
+        // rather than a guarantee — the size limit is what actually
+        // bounds the damage.
+        && request.resource.contentType.matches('image/.*');
+
+      allow delete: if isSelf(uid);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Default deny — anything not matched above is refused.
+    // ═══════════════════════════════════════════════════════
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

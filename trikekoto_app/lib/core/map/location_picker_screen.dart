@@ -84,9 +84,13 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     });
 
     if (results.isEmpty) {
+      // Not "no such place" — the search is deliberately bounded to about
+      // 55 km around the map centre, so a real place further out comes back
+      // empty. Saying it was not found would be a lie the commuter cannot
+      // check, and would read as the app not knowing their own province.
       showSnack(context,
-          'No place found for "$query". Try a nearby landmark, or place the '
-          'pin by hand.');
+          'Walang nakitang "$query" malapit dito. Kung malayo ito, i-drag '
+          'muna ang mapa papunta roon — o ilagay ang pin nang manu-mano.');
     }
   }
 

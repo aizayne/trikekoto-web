@@ -26,9 +26,10 @@ import AdminPanel       from "./pages/AdminPanel";
 import AdminDashboard   from "./pages/AdminDashboard";
 import RideHistory      from "./pages/RideHistory";
 import DriverProfile    from "./pages/DriverProfile";
+import FeedbackForm     from "./pages/FeedbackForm";
 
 // ─── Landing / role-selector screen ──────────────────────────
-function LandingScreen({ onSelectDriver, onSelectCommuter }) {
+function LandingScreen({ onSelectDriver, onSelectCommuter, onFeedback }) {
   return (
     <div
       style={{
@@ -94,6 +95,20 @@ function LandingScreen({ onSelectDriver, onSelectCommuter }) {
           </div>
         </button>
       </div>
+
+      {/* Footer — feedback link */}
+      {onFeedback && (
+        <button
+          onClick={onFeedback}
+          style={{
+            background: "none", border: "none", color: "#475569",
+            cursor: "pointer", fontSize: "0.8rem", marginTop: "0.5rem",
+            textDecoration: "underline",
+          }}
+        >
+          Send feedback or report an issue
+        </button>
+      )}
     </div>
   );
 }
@@ -190,12 +205,21 @@ export default function App() {
         <LandingScreen
           onSelectDriver={() => setScreen("driver-login")}
           onSelectCommuter={() => setScreen("commuter")}
+          onFeedback={() => setScreen("feedback")}
         />
       );
 
     case "commuter":
       return (
-        <CommuterBooking onBack={() => setScreen("landing")} />
+        <CommuterBooking
+          onBack={() => setScreen("landing")}
+          onFeedback={() => setScreen("feedback")}
+        />
+      );
+
+    case "feedback":
+      return (
+        <FeedbackForm onBack={() => setScreen("landing")} />
       );
 
     case "driver-login":

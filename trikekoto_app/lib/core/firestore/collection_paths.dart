@@ -21,6 +21,10 @@ class FsCollections {
   const FsCollections._();
 
   static const drivers = 'drivers';
+
+  /// Rider profiles, keyed by uid rather than phone number — a phone number
+  /// is personal data and should not be a key anyone can enumerate.
+  static const riders = 'riders';
   static const activeDrivers = 'active_drivers';
   static const rides = 'rides';
   static const admins = 'admins';
@@ -123,4 +127,17 @@ class DispatchDefaults {
   static const searchRadiusKm = 5.0;
   static const offerTimeout = Duration(seconds: 15);
   static const maxDriversToTry = 10;
+
+  /// How many straight-line-nearest drivers get re-ranked by road distance.
+  ///
+  /// Road ranking costs one OSRM request per sweep, and the request carries
+  /// every shortlisted coordinate in its URL. Eight is enough that the true
+  /// nearest is essentially always inside it — a driver ranked ninth by
+  /// crow-flies is not going to be first by road — while keeping the URL
+  /// short and the matrix cheap.
+  ///
+  /// Not exposed in `config/app`: raising it would widen the query the
+  /// security rules validate, and the value that actually matters
+  /// operationally is `searchRadiusKm`, which is already editable.
+  static const roadRankLimit = 8;
 }

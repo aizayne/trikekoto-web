@@ -33,3 +33,11 @@ service-account.json
 *.njsproj
 *.sln
 *.sw?
+
+# Installed tooling, not project source
+.claude/skills/
+
+# Seeded design canvas: ~2.6 MB, almost all of it the bundled editor payload.
+# Regenerable from the .dc.html artboards + canvas.json — see
+# trikekoto_app/docs/wireframes/README.md
+trikekoto_app/docs/wireframes/*-screen-plates.html

@@ -4,17 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
-import '../../../core/fare/fare_calculator.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 
-/// Edits `config/app` — the dispatch and fare settings every client reads.
+/// Edits `config/app` — the dispatch settings every client reads.
 ///
 /// This exists because the APK reaches drivers as a file over Wi-Fi, not
-/// through an update channel. Without it, re-tariffing a chapter or widening
-/// the search radius would mean rebuilding and redistributing to every
-/// driver; here it takes effect on running clients within seconds.
+/// through an update channel. Without it, widening the search radius or
+/// lengthening the offer timeout would mean rebuilding and redistributing to
+/// every driver; here it takes effect on running clients within seconds.
 class ConfigEditorScreen extends ConsumerStatefulWidget {
   const ConfigEditorScreen({super.key});
 
@@ -39,10 +38,10 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
   /// Seeds the form once, from whatever the document holds — or from the
   /// compiled defaults when it does not exist yet, which is the normal state
   /// on a fresh project.
-  void _seed(DispatchConfig dispatch, FareConfig fare) {
+  void _seed(DispatchConfig dispatch) {
     if (_loaded) return;
     _loaded = true;
-    final values = configDocumentFrom(dispatch, fare);
+    final values = configDocumentFrom(dispatch);
     for (final entry in values.entries) {
       _fields[entry.key] = TextEditingController(text: '${entry.value}');
     }
@@ -76,10 +75,10 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _seed(ref.watch(dispatchConfigProvider), ref.watch(fareConfigProvider));
+    _seed(ref.watch(dispatchConfigProvider));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dispatch & fares')),
+      appBar: AppBar(title: const Text('Dispatch')),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -122,34 +121,6 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
                 min: 1,
                 max: DispatchDefaults.maxDriversToTry.toDouble(),
                 integer: true,
-              ),
-
-              const Gap(AppSpacing.xxl),
-              Text('Fare table', style: context.text.titleMedium),
-              const Gap(AppSpacing.md),
-              _numberField('baseFare', 'Flag-down fare (₱)',
-                  'Covers everything up to the base distance.',
-                  min: 0, max: 500),
-              const Gap(AppSpacing.md),
-              _numberField('baseDistanceKm', 'Base distance (km)',
-                  'Distance included in the flag-down.',
-                  min: 0, max: 20),
-              const Gap(AppSpacing.md),
-              _numberField('farePerKm', 'Per succeeding km (₱)',
-                  'Charged per started kilometre beyond the base.',
-                  min: 0, max: 500),
-              const Gap(AppSpacing.md),
-              _numberField('minimumFare', 'Minimum fare (₱)',
-                  'No quote falls below this.',
-                  min: 0, max: 500),
-              const Gap(AppSpacing.md),
-              _numberField(
-                'discountRate',
-                'Statutory discount (0–1)',
-                '0.20 is the legal rate for seniors (RA 9994) and PWDs '
-                    '(RA 10754). Lowering it below 0.20 is unlawful.',
-                min: 0,
-                max: 1,
               ),
 
               const Gap(AppSpacing.xxl),

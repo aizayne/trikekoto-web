@@ -7,12 +7,13 @@ import '../../../core/config/app_config.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/geo/geo_utils.dart';
 import '../../../core/providers.dart';
+import '../../../core/routing/route_service.dart';
 import '../../drivers/data/active_driver.dart';
 import '../../rides/data/ride.dart';
 
 /// The greedy nearest-driver search.
 ///
-/// Runs on the commuter's device: fetch every available driver, sort by true
+/// Runs on the commuter's device: fetch every available driver, rank by road
 /// distance from the pickup point, and ping them one at a time. Each ping gets
 /// [DispatchDefaults.offerTimeout]; if it lapses the search moves one step
 /// deeper, up to [DispatchDefaults.maxDriversToTry] candidates, after which
@@ -105,6 +106,24 @@ class DispatchController {
         .update(RideWrites.offerTo(ride.dispatch.offerTo(candidate.email)));
   }
 
+  /// The nearest driver by **road distance**, not crow-flies.
+  ///
+  /// Two stages, because each fixes a different problem.
+  ///
+  /// Straight-line distance first, to filter by radius and cut the field to a
+  /// shortlist. It is free, and it is a good enough ordering to decide who is
+  /// worth asking a routing server about.
+  ///
+  /// Road distance second, over that shortlist only, to decide who is
+  /// actually closest. Crow-flies gets this wrong wherever geography does not
+  /// match the street layout — the driver 400 m away across a river outranks
+  /// the one 900 m away on the same road, and the offer goes to whoever has
+  /// the longer drive. In a town on a river with few crossings, that is not
+  /// an edge case.
+  ///
+  /// If routing is unavailable the straight-line order stands. A worse
+  /// ordering is a far better outcome than a dispatch loop that stalls
+  /// because a routing server is down.
   Future<ActiveDriver?> _nearestUntried({
     required GeoPoint pickup,
     required List<String> excluded,
@@ -125,7 +144,31 @@ class DispatchController {
         .toList()
       ..sort((a, b) => a.km.compareTo(b.km));
 
-    return candidates.isEmpty ? null : candidates.first.driver;
+    if (candidates.isEmpty) return null;
+
+    final shortlist =
+        candidates.take(DispatchDefaults.roadRankLimit).toList();
+    // Nothing to re-rank, and no reason to spend a request finding that out.
+    if (shortlist.length == 1) return shortlist.first.driver;
+
+    final roadKm = await _ref.read(routeServiceProvider).roadDistancesKm(
+          pickup,
+          [for (final c in shortlist) c.driver.geopoint],
+        );
+    if (roadKm == null) return shortlist.first.driver;
+
+    // A null entry is a driver with no road connection to the pickup. Drop
+    // them rather than sorting them to the end — offering a ride to someone
+    // who cannot drive to it wastes a whole offer timeout.
+    final routed = <({ActiveDriver driver, double km})>[];
+    for (var i = 0; i < shortlist.length; i++) {
+      final km = roadKm[i];
+      if (km != null) routed.add((driver: shortlist[i].driver, km: km));
+    }
+    if (routed.isEmpty) return shortlist.first.driver;
+
+    routed.sort((a, b) => a.km.compareTo(b.km));
+    return routed.first.driver;
   }
 }
 

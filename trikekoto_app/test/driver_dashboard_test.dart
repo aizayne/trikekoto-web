@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trikekoto_app/core/firestore/collection_paths.dart';
 import 'package:trikekoto_app/core/ui/app_theme.dart';
+import 'package:trikekoto_app/core/ui/theme_controller.dart';
 import 'package:trikekoto_app/features/drivers/application/driver_controllers.dart';
 import 'package:trikekoto_app/features/drivers/data/driver.dart';
 import 'package:trikekoto_app/features/drivers/presentation/driver_dashboard_screen.dart';
@@ -38,6 +39,12 @@ Driver _driver(String status) => Driver.fromMap({
       'ratingCount': 5,
     }, 'juan@toda.ph');
 
+/// Theme pinned to light, so widget tests never touch SharedPreferences.
+class _FixedTheme extends ThemeController {
+  @override
+  ThemeMode build() => ThemeMode.light;
+}
+
 Widget _harness({
   required Driver? driver,
   bool online = false,
@@ -46,6 +53,7 @@ Widget _harness({
 }) {
   return ProviderScope(
     overrides: [
+      themeModeProvider.overrideWith(_FixedTheme.new),
       myDriverProfileProvider.overrideWith((ref) => Stream.value(driver)),
       myOffersProvider.overrideWith((ref) => Stream.value(offers)),
       myActiveRideProvider.overrideWith((ref) => Stream.value(activeRide)),

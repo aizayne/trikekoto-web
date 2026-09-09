@@ -42,13 +42,11 @@ class DailyPoint {
     required this.day,
     required this.completed,
     required this.cancelled,
-    required this.fares,
   });
 
   final DateTime day;
   final int completed;
   final int cancelled;
-  final double fares;
 
   int get total => completed + cancelled;
 }
@@ -59,8 +57,6 @@ class DriverPerformance {
     required this.email,
     required this.completed,
     required this.cancelled,
-    required this.fares,
-    required this.distanceKm,
     required this.ratingSum,
     required this.ratingCount,
   });
@@ -68,8 +64,6 @@ class DriverPerformance {
   final String email;
   final int completed;
   final int cancelled;
-  final double fares;
-  final double distanceKm;
   final int ratingSum;
   final int ratingCount;
 
@@ -88,8 +82,6 @@ class RideAnalytics {
     required this.byStatus,
     required this.daily,
     required this.drivers,
-    required this.fares,
-    required this.distanceKm,
     required this.ratingSum,
     required this.ratingCount,
     required this.truncated,
@@ -104,8 +96,6 @@ class RideAnalytics {
   /// Highest contribution first.
   final List<DriverPerformance> drivers;
 
-  final double fares;
-  final double distanceKm;
   final int ratingSum;
   final int ratingCount;
 
@@ -133,11 +123,6 @@ class RideAnalytics {
   /// during a pilot.
   double? get expiryRate => concluded == 0 ? null : expired / concluded;
 
-  double? get averageFare => completed == 0 ? null : fares / completed;
-
-  double? get averageDistanceKm =>
-      completed == 0 ? null : distanceKm / completed;
-
   double? get averageRating =>
       ratingCount == 0 ? null : ratingSum / ratingCount;
 
@@ -161,8 +146,6 @@ class RideAnalytics {
     final buckets = <DateTime, _DayAccumulator>{};
     final perDriver = <String, _DriverAccumulator>{};
 
-    var fares = 0.0;
-    var distance = 0.0;
     var ratingSum = 0;
     var ratingCount = 0;
 
@@ -186,17 +169,8 @@ class RideAnalytics {
       final isCompleted = ride.status == RideStatus.completed;
       final isCancelled = ride.status == RideStatus.cancelled;
 
-      // Fare and distance are only meaningful once a trip finished. A
-      // cancelled ride carries the estimate it was quoted at, and adding
-      // those in would inflate the day's takings with money nobody paid.
-      final fare = isCompleted ? (ride.fareEstimate?.toDouble() ?? 0) : 0.0;
-      final km = isCompleted ? (ride.distanceKm?.toDouble() ?? 0) : 0.0;
-
       if (isCompleted) {
         bucket.completed++;
-        bucket.fares += fare;
-        fares += fare;
-        distance += km;
       } else if (isCancelled) {
         bucket.cancelled++;
       }
@@ -213,8 +187,6 @@ class RideAnalytics {
         final acc = perDriver.putIfAbsent(email, _DriverAccumulator.new);
         if (isCompleted) {
           acc.completed++;
-          acc.fares += fare;
-          acc.distanceKm += km;
         } else if (isCancelled) {
           acc.cancelled++;
         }
@@ -230,7 +202,6 @@ class RideAnalytics {
               day: e.key,
               completed: e.value.completed,
               cancelled: e.value.cancelled,
-              fares: e.value.fares,
             ))
         .toList()
       ..sort((a, b) => a.day.compareTo(b.day));
@@ -240,18 +211,16 @@ class RideAnalytics {
               email: e.key,
               completed: e.value.completed,
               cancelled: e.value.cancelled,
-              fares: e.value.fares,
-              distanceKm: e.value.distanceKm,
               ratingSum: e.value.ratingSum,
               ratingCount: e.value.ratingCount,
             ))
         .toList()
-      // Completed rides first, then fares as the tie-break. Sorting by fares
-      // alone would rank a driver with one long trip above one with six short
-      // ones, which is the opposite of what a dispatcher wants to see.
+      // Completed rides first, then cancellations as the tie-break: between
+      // two drivers who finished the same number, the one who called off
+      // fewer is the one a dispatcher wants to see higher.
       ..sort((a, b) {
         final byCompleted = b.completed.compareTo(a.completed);
-        return byCompleted != 0 ? byCompleted : b.fares.compareTo(a.fares);
+        return byCompleted != 0 ? byCompleted : a.cancelled.compareTo(b.cancelled);
       });
 
     return RideAnalytics(
@@ -260,8 +229,6 @@ class RideAnalytics {
       byStatus: byStatus,
       daily: daily,
       drivers: drivers,
-      fares: fares,
-      distanceKm: distance,
       ratingSum: ratingSum,
       ratingCount: ratingCount,
       truncated: truncated,
@@ -272,14 +239,11 @@ class RideAnalytics {
 class _DayAccumulator {
   int completed = 0;
   int cancelled = 0;
-  double fares = 0;
 }
 
 class _DriverAccumulator {
   int completed = 0;
   int cancelled = 0;
-  double fares = 0;
-  double distanceKm = 0;
   int ratingSum = 0;
   int ratingCount = 0;
 }

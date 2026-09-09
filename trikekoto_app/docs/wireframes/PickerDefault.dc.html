@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;gap:4px;
+      padding:0 4px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .btn{height:48px;border-radius:12px;background:#F5A623;color:#101A2C;
+      font-family:Poppins,system-ui,sans-serif;font-weight:600;font-size:15px;
+      display:flex;align-items:center;justify-content:center;border:0}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M19 12H5M11 6l-6 6 6 6" stroke="#1C1917" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+  <h1>Set pickup</h1>
+</div>
+
+<div style="position:relative;height:calc(844px - 56px)">
+  <svg width="390" height="788" viewBox="0 0 390 788" style="display:block" aria-hidden="true">
+    <rect width="390" height="788" fill="#E9E5DD"></rect>
+    <path d="M0 210h390M0 470h390M0 660h390M108 0v788M276 0v788" stroke="#DAD4C8" stroke-width="12"></path>
+    <path d="M0 394h390M195 0v788" stroke="#F0EAE0" stroke-width="18"></path>
+    <rect x="24" y="240" width="66" height="46" fill="#DED8CC"></rect>
+    <rect x="300" y="500" width="70" height="52" fill="#DED8CC"></rect>
+    <rect x="128" y="560" width="52" height="44" fill="#DED8CC"></rect>
+  </svg>
+
+  <!-- Search overlays the map; results replace this area when they arrive -->
+  <div style="position:absolute;top:16px;left:16px;right:16px;height:52px;background:#fff;
+    border-radius:12px;box-shadow:0 2px 10px rgba(16,26,44,.12);display:flex;
+    align-items:center;gap:12px;padding:0 16px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM16.2 16.2 21 21"
+        stroke="#57534E" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+    <span style="color:#A8A29E;font-size:15px">Hanapin ang lugar</span>
+  </div>
+
+  <!-- Fixed crosshair: the map moves under it, so a thumb never covers the
+       point being chosen. -->
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-100%)">
+    <svg width="44" height="52" viewBox="0 0 44 52" fill="none" aria-hidden="true">
+      <path d="M22 51V30" stroke="#101A2C" stroke-width="2.5" stroke-linecap="round"></path>
+      <circle cx="22" cy="18" r="15" fill="#F5A623" stroke="#101A2C" stroke-width="3"></circle>
+      <circle cx="22" cy="18" r="4.5" fill="#101A2C"></circle>
+    </svg>
+  </div>
+
+  <div style="position:absolute;right:16px;bottom:200px;width:48px;height:48px;border-radius:12px;
+    background:#fff;box-shadow:0 2px 10px rgba(16,26,44,.14);display:flex;
+    align-items:center;justify-content:center">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 8.5v-4M12 19.5v-4M8.5 12h-4M19.5 12h-4M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        stroke="#B45309" stroke-width="1.7" stroke-linecap="round"></path>
+    </svg>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;
+    border-radius:16px 16px 0 0;padding:20px 16px 24px;display:flex;
+    flex-direction:column;gap:12px">
+    <div style="width:40px;height:4px;border-radius:2px;background:#D6D3D1;align-self:center"></div>
+    <div style="font-size:12px;color:#57534E">Anong tawag dito?</div>
+    <div style="height:56px;border:1px solid #A8A29E;border-radius:12px;padding:6px 14px;
+      display:flex;align-items:center">
+      <span style="font-size:16px;color:#A8A29E">Hal. Tapat ng bahay ni Aling Nena</span>
+    </div>
+    <div class="btn">Kumpirmahin ang pickup</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

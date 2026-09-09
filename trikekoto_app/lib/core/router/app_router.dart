@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +6,9 @@ import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/config_editor_screen.dart';
 import '../../features/admin/presentation/feedback_inbox_screen.dart';
 import '../../features/commuter/presentation/commuter_booking_screen.dart';
+import '../../features/commuter/presentation/rider_onboarding_screen.dart';
+import '../../features/commuter/presentation/rider_profile_screen.dart';
+import '../../features/commuter/presentation/rider_sign_in_screen.dart';
 import '../../features/drivers/presentation/driver_dashboard_screen.dart';
 import '../../features/drivers/presentation/driver_register_screen.dart';
 import '../../features/landing/presentation/landing_screen.dart';
@@ -33,12 +35,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (session.loading) return null;
 
       final signedIn = session.isSignedIn;
-      final onPublic = loc == '/' || loc == '/login' || loc == '/register';
+      // `/rider-signin` is public: a commuter reaches it before they have an
+      // account, and often before they are signed in at all.
+      final onPublic = loc == '/' ||
+          loc == '/login' ||
+          loc == '/register' ||
+          loc == '/rider-signin';
 
       if (!signedIn) return onPublic ? null : '/';
 
       switch (session.role) {
         case AppRole.commuter:
+          // Every commuter has an account. A session left over from before
+          // that change is anonymous and has no phone number, so it is sent
+          // to sign in rather than allowed to keep booking.
+          if (session.isAnonymous) {
+            return loc == '/rider-signin' ? null : '/rider-signin';
+          }
+          // A phone-verified commuter with no profile yet is signed in but
+          // cannot do anything useful: the booking screen would work, but
+          // they have no name for a driver to look for. Onboarding is the
+          // only write the rules allow them at this point.
+          if (session.needsRiderOnboarding) {
+            return loc == '/rider-onboarding' ? null : '/rider-onboarding';
+          }
+          // Sending a signed-in rider back to sign-in would trap them there.
+          if (loc == '/rider-signin') return '/commuter';
           return loc.startsWith('/commuter') ? null : '/commuter';
         case AppRole.driver:
           return loc.startsWith('/driver') ? null : '/driver';
@@ -56,8 +78,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const DriverRegisterScreen(),
       ),
       GoRoute(
+        path: '/rider-signin',
+        builder: (_, _) => const RiderSignInScreen(),
+      ),
+      GoRoute(
+        path: '/rider-onboarding',
+        builder: (_, _) => const RiderOnboardingScreen(),
+      ),
+      GoRoute(
         path: '/commuter',
         builder: (_, _) => const CommuterBookingScreen(),
+        routes: [
+          // Nested, so the redirect's `startsWith('/commuter')` test keeps
+          // covering it — the same construction that keeps the admin area
+          // admin-only.
+          GoRoute(
+            path: 'profile',
+            builder: (_, _) => const RiderProfileScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/driver',

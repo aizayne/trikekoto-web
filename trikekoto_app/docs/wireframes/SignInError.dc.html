@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;height:844px;background:#FAF8F5;color:#1C1917;
+      font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+    .disp{font-family:Poppins,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+    .bar{height:56px;background:#fff;display:flex;align-items:center;gap:4px;
+      padding:0 4px;border-bottom:1px solid #E7E5E4}
+    .bar h1{margin:0;font-size:20px;font-weight:600;font-family:Poppins,system-ui,sans-serif}
+    .icbtn{width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .body{padding:24px;display:flex;flex-direction:column;gap:8px}
+    .btn{height:48px;border-radius:12px;background:#F5A623;color:#101A2C;
+      font-family:Poppins,system-ui,sans-serif;font-weight:600;font-size:15px;
+      display:flex;align-items:center;justify-content:center;border:0}
+    a{color:#B45309}a:hover{color:#7C3D06}
+  </style>
+</helmet>
+<div class="bar">
+  <div class="icbtn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M19 12H5M11 6l-6 6 6 6" stroke="#1C1917" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+  <h1>Enter the code</h1>
+</div>
+
+<div class="body">
+  <h2 class="disp" style="font-size:24px;margin-bottom:8px">Ilagay ang code</h2>
+  <p style="margin:0 0 24px;font-size:15px;color:#57534E">
+    Anim na numero, ipinadala sa 0917 123 4567.
+  </p>
+
+  <div style="height:64px;border-bottom:1px solid #A8A29E;display:flex;
+    align-items:center;justify-content:center;background:#fff;border-radius:12px 12px 0 0">
+    <span class="disp" style="font-size:24px;letter-spacing:8px">4 8 2 9 1 5</span>
+  </div>
+
+  <div class="btn" style="margin-top:16px">Kumpirmahin</div>
+</div>
+
+<!-- Snackbar: inverseSurface navy900, onInverseSurface white, 15px -->
+<div style="position:absolute;left:16px;right:16px;bottom:24px;background:#0B1220;
+  border-radius:8px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px" aria-hidden="true">
+    <path d="M12 8v5M12 16.5v.5M12 3.5 2.5 20h19L12 3.5Z" stroke="#F87171"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+  <span style="color:#fff;font-size:15px;line-height:1.4">
+    Wrong code. Check the message again.
+  </span>
+</div>
+</x-dc>
+</body>
+</html>

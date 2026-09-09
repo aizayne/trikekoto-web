@@ -130,6 +130,87 @@ class GeocodingService {
     }
   }
 
+  /// Turns coordinates into something a driver would recognise.
+  ///
+  /// Used to label the pickup point derived from GPS. A commuter should not
+  /// have to name the place they are already standing in, but the driver has
+  /// to be told where to go — so the label has to come from somewhere, and a
+  /// bare pair of coordinates is not an address anyone can act on.
+  ///
+  /// Returns null on any failure. The caller keeps the coordinates and
+  /// supplies its own wording: the *point* is what dispatch uses, and losing
+  /// a nice label must never cost the fix that was already obtained.
+  ///
+  /// Zoom 18 is roughly building level. Higher returns house numbers that
+  /// are mostly absent in barangay addressing; lower returns the barangay
+  /// when the commuter is standing outside a named landmark.
+  Future<String?> reverseLabel(LatLng point) async {
+    await _respectRateLimit();
+
+    final params = <String, String>{
+      'lat': '${point.latitude}',
+      'lon': '${point.longitude}',
+      'format': 'jsonv2',
+      'zoom': '18',
+      'addressdetails': '1',
+    };
+
+    try {
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/reverse').replace(queryParameters: params),
+            headers: const {'User-Agent': _userAgent},
+          )
+          .timeout(_timeout);
+
+      if (response.statusCode != 200) {
+        debugPrint('Reverse geocoding HTTP ${response.statusCode}');
+        return null;
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) return null;
+
+      // Nominatim returns `error` with a 200 for a point in the sea.
+      if (decoded['error'] != null) return null;
+
+      final address = decoded['address'];
+      if (address is Map<String, dynamic>) {
+        // Built from parts rather than using `display_name`, which runs to
+        // "…, Zambales, Central Luzon, 2205, Philippines" — accurate, and
+        // useless in a one-line field on a driver's phone.
+        final near = _firstOf(address, const [
+          'amenity', 'shop', 'building', 'road', 'hamlet',
+        ]);
+        final area = _firstOf(address, const [
+          'village', 'suburb', 'neighbourhood', 'town', 'city_district',
+          'municipality', 'city',
+        ]);
+
+        final parts = [near, area].whereType<String>().toList();
+        if (parts.isNotEmpty) return parts.join(', ');
+      }
+
+      final display = decoded['display_name'];
+      if (display is String && display.trim().isNotEmpty) {
+        // Last resort: the first two components, which are the specific end.
+        return display.split(',').take(2).map((s) => s.trim()).join(', ');
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Reverse geocoding unavailable: $e');
+      return null;
+    }
+  }
+
+  static String? _firstOf(Map<String, dynamic> address, List<String> keys) {
+    for (final key in keys) {
+      final value = address[key];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+    return null;
+  }
+
   /// Holds each request at least a second apart, per the usage policy.
   Future<void> _respectRateLimit() async {
     final last = _lastRequest;
