@@ -250,11 +250,25 @@ be `pending` so a decision cannot be revisited, and requires a reason on
 rejection. Delete is the subject or an admin, which is how withdrawal and
 retention both work.
 
-**Retention.** 90 days after review, or immediately on withdrawal. Deleting
-the document alone is not enough — the image must go with it, which
-`IdVerificationService.withdraw` does in one call. There is no scheduled job
-enforcing the 90 days yet; it is a documented policy an admin performs, and
-that gap is deliberate rather than overlooked.
+**Retention.** 90 days from **submission**, enforced by `purgeExpiredIds` —
+a scheduled function running daily at 03:15 Manila time. Withdrawal by the
+subject is immediate and independent of it.
+
+Measured from `submittedAt` rather than `reviewedAt` on purpose. A submission
+nobody ever reviewed is the worst case, not an exempt one — the same sensitive
+data, held with no decision to show for it — and measuring from review would
+let it sit indefinitely. One clock is also auditable: *90 days after it
+arrived* is a sentence anyone can check.
+
+The image is deleted before the document. A document with no image is a
+harmless orphan; an image with no document is personal data no screen will
+show and nobody will think to look for. If the image delete fails the document
+stays, so tomorrow's run retries the pair rather than leaving it half-removed.
+
+The verification outcome goes too. Nothing gates on ID status, so keeping
+*"verified in September"* would retain a record of a check for a permission
+that does not exist. If gating is added later, a boolean on the subject's own
+document is what to keep — not the ID.
 
 **Not wired to anything.** Booking and going online do not currently check ID
 status. Gating them is a one-line rules change and a policy decision, not a

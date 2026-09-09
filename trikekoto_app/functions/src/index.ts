@@ -16,13 +16,15 @@
  *  3. **Expire stale offers.** An offer that lapses while nobody has the app
  *     open blocks the ride from being re-offered.
  *
- * Deploying requires the Blaze plan. Everything here typechecks and is ready
- * to ship the moment billing is enabled.
+ *  4. **Enforce retention on government IDs.** A deletion policy a human
+ *     performs by hand is a policy that will be forgotten, and the data it
+ *     governs is the most sensitive the system holds.
  */
 
 import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, GeoPoint, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getStorage } from 'firebase-admin/storage';
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
@@ -484,3 +486,92 @@ function emptyDispatch(): RideDispatch {
     depth: 0,
   };
 }
+
+
+// ════════════════════════════════════════════════════════════
+// 39a · ID retention — delete what there is no longer a reason to hold.
+// ════════════════════════════════════════════════════════════
+/**
+ * Deletes government ID submissions 90 days after they were submitted.
+ *
+ * This exists because the alternative was a line in a document asking an
+ * administrator to remember. Retention that depends on someone remembering is
+ * not retention; it is an intention. Under RA 10173 the obligation is to keep
+ * sensitive personal information no longer than the purpose requires, and the
+ * purpose here — confirming who somebody is, once — expires long before the
+ * data does.
+ *
+ * **Measured from submission, not review.** Two reasons. A submission nobody
+ * ever reviewed is the worst case, not an exempt one: it is the same
+ * sensitive data, held with no decision to show for it, and measuring from
+ * `reviewedAt` would let it sit forever. And a single clock is auditable —
+ * "90 days after it arrived" is a sentence anyone can check, where "90 days
+ * after review, unless unreviewed, in which case..." is a sentence nobody
+ * verifies.
+ *
+ * **Deletes the image with the document, image first.** A document with no
+ * image is a harmless orphan; an image with no document is personal data that
+ * no screen will ever show and no one will think to look for. If the image
+ * delete fails the document stays, so the pair is retried tomorrow rather
+ * than being silently half-removed.
+ *
+ * **The verification outcome is deleted too**, deliberately. Nothing in the
+ * app gates on ID status, so keeping "this person was verified in September"
+ * would mean retaining a record of a check for a permission that does not
+ * exist. If gating is ever added, a boolean on the subject's own document is
+ * the thing to keep — not the ID.
+ *
+ * Daily, not hourly: the deadline is 90 days, so a few hours of imprecision
+ * costs nothing and 24× fewer invocations do.
+ */
+const ID_RETENTION_DAYS = 90;
+
+export const purgeExpiredIds = onSchedule(
+  { schedule: 'every day 03:15', timeZone: 'Asia/Manila', region: REGION },
+  async () => {
+    const cutoff = new Date(Date.now() - ID_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+
+    const expired = await db
+      .collection('id_submissions')
+      .where('submittedAt', '<', cutoff)
+      // Bounded so one run cannot become an unbounded delete storm on a
+      // backlog. Whatever is left is picked up tomorrow.
+      .limit(200)
+      .get();
+
+    if (expired.empty) return;
+
+    const bucket = getStorage().bucket();
+    let removed = 0;
+    let imageFailures = 0;
+
+    for (const snap of expired.docs) {
+      const uid = snap.id;
+      const path = (snap.data().idPhotoPath as string | undefined)
+        ?? `ids/${uid}/card`;
+
+      try {
+        // ignoreNotFound: an already-absent object is the desired end state,
+        // not an error — a subject may have withdrawn the image already.
+        await bucket.file(path).delete({ ignoreNotFound: true });
+      } catch (e) {
+        // Leave the document. It is the only remaining pointer to the image,
+        // and tomorrow's run will try again.
+        imageFailures++;
+        logger.error(`Retention: could not delete ${path}, keeping document`, e);
+        continue;
+      }
+
+      await snap.ref.delete();
+      removed++;
+    }
+
+    // Counts only. Logging which uid had an ID deleted would recreate, in the
+    // log retention window, exactly the record this job exists to remove.
+    logger.info(
+      `Retention: removed ${removed} ID submissions older than ` +
+      `${ID_RETENTION_DAYS} days` +
+      (imageFailures > 0 ? `; ${imageFailures} image deletes deferred` : ''),
+    );
+  },
+);

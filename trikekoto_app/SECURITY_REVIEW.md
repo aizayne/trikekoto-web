@@ -224,12 +224,13 @@ all attach.
 | No self-approval | `status` forced to `pending` on create; only an admin may move it, only once, and never while altering the submission |
 | Withdrawal | The subject can delete their own document and image, without asking |
 | Coverage | 30 emulator tests and 18 unit tests, written before the UI existed |
+| Retention | `purgeExpiredIds`, daily, 90 days from submission — enforced, not documented |
 
 **What is not done, and should be before real collection begins.**
 
-- **No scheduled deletion.** The 90-day retention is a documented policy an
-  admin performs by hand. It will be forgotten. A scheduled function is the
-  honest fix.
+- ~~**No scheduled deletion.**~~ **Done.** `purgeExpiredIds` runs daily and
+  deletes submissions 90 days after they arrive, image first. Retention that
+  depends on someone remembering is not retention, it is an intention.
 - **No privacy notice outside the app.** The consent text is in the app; a
   thesis pilot collecting from real people should have one their adviser and
   the TODA chapter have seen.
