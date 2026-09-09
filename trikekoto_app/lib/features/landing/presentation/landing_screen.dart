@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../core/ui/trike_icon.dart';
 
@@ -21,7 +22,28 @@ class LandingScreen extends StatelessWidget {
       // SafeArea keeps the content clear of the status bar and the gesture
       // indicator — this screen has no app bar to do it for us.
       body: SafeArea(
-        child: Center(
+        child: Stack(
+          children: [
+            // The language switch belongs on the FIRST screen above all.
+            // Every other screen carries it in the app bar; this one has no
+            // app bar, and leaving it out meant someone who reads only
+            // English arrived at a Filipino page with no way off it. A
+            // language control the newcomer cannot find is the one place a
+            // language control actually has to be.
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    LanguageToggleButton(),
+                    ThemeToggleButton(),
+                  ],
+                ),
+              ),
+            ),
+            Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.xxl),
             child: ConstrainedBox(
@@ -82,7 +104,9 @@ class LandingScreen extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );

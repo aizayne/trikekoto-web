@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/theme_controller.dart';
 import '../../../core/ui/locale_controller.dart';
 
 /// One form for both drivers and admins. Which panel you land in is decided by
@@ -54,6 +55,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
+        actions: const [LanguageToggleButton(), ThemeToggleButton()],
       ),
       body: SafeArea(
         child: Center(
