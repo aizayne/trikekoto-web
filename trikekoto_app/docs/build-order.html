@@ -416,10 +416,10 @@
   <div class="sec-head"><span class="num">01</span><h2>Progress</h2></div>
 
   <div class="reality" style="margin-top:0">
-    <div><div class="n" style="color:var(--done)">95%</div><div class="k">By step count</div></div>
-    <div><div class="n" style="color:var(--partial)">94%</div><div class="k">Weighted</div></div>
-    <div><div class="n">94<span style="color:var(--ink-faint);font-size:1rem">/99</span></div><div class="k">Steps complete</div></div>
-    <div><div class="n">400</div><div class="k">Tests passing</div></div>
+    <div><div class="n" style="color:var(--done)">96%</div><div class="k">By step count</div></div>
+    <div><div class="n" style="color:var(--partial)">95%</div><div class="k">Weighted</div></div>
+    <div><div class="n">95<span style="color:var(--ink-faint);font-size:1rem">/99</span></div><div class="k">Steps complete</div></div>
+    <div><div class="n">402</div><div class="k">Tests passing</div></div>
   </div>
 
   <div class="note">
@@ -427,13 +427,13 @@
     a build far ahead of its evidence. A complete field test on real hardware closed the gap,
     and it closed from the evidence side, which is the only direction that counts.
     <br><br>
-    95% counts steps, and steps are not the same size. The six that remain are almost all <em>validation</em> — and
+    96% counts steps, and steps are not the same size. The four that remain are almost all <em>validation</em> — and
     for a capstone, testing is a chapter rather than a coda.
     <br><br>
     Weighted so that proving the system counts for as much as building it, the honest figure
-    is <strong>about 94%</strong> — the mean of the six areas below, and not worth pretending
+    is <strong>about 95%</strong> — the mean of the six areas below, and not worth pretending
     is more precise than that. The build is nearly finished; the
-    evidence is barely started. Quote 94% and a panel will ask what has actually been
+    evidence is barely started. Quote 95% and a panel will ask what has actually been
     demonstrated.
     <br><br>
     <strong>Worth noticing what did <em>not</em> move it.</strong> The security review went
@@ -482,19 +482,19 @@
         <td class="task">Backend &amp; security</td>
         <td class="pct">~100%</td>
         <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
-        <td class="desc">Rules deployed and cut over, <strong>six</strong> gen-2 functions live, Storage provisioned, budget alert and SMS region policy set. App Check <strong>enforced</strong> on both platforms and verified by a real sign-in after enforcement; API keys restricted. Zero High and zero Medium findings. This dropped to 95% when ID verification introduced sensitive data whose retention nothing enforced, and returned when <span class="mono">purgeExpiredIds</span> was deployed — the score moved down for a real reason and back up when the reason was fixed, which is the only way a score is worth anything.</td>
+        <td class="desc">Rules deployed and cut over, <strong>seven</strong> gen-2 functions live, Storage provisioned, budget alert and SMS region policy set. App Check <strong>enforced</strong> on both platforms and verified by a real sign-in after enforcement; API keys restricted. Zero High and zero Medium findings, and the last <em>accepted</em> one is now closed too — <span class="mono">active_drivers</span> was readable by every signed-in account until step 69 and is admin-only from today. This dropped to 95% when ID verification introduced sensitive data whose retention nothing enforced, and returned when <span class="mono">purgeExpiredIds</span> was deployed — the score moved down for a real reason and back up when the reason was fixed, which is the only way a score is worth anything.</td>
       </tr>
       <tr>
         <td class="task">Feature build, three roles</td>
-        <td class="pct">~98%</td>
-        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:98%;background:var(--done)"></i></div></td>
-        <td class="desc">Every journey works end to end in code. Step 69 is prepared rather than cut over, because the client sweep has to stop first.</td>
+        <td class="pct">~100%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
+        <td class="desc">Every journey works end to end in code, and step 69 is now cut over rather than prepared — the last feature-side caveat on this row is gone. Dispatch moved off the commuter's device into a callable, so the app no longer needs to read the fleet's live positions to book a ride.</td>
       </tr>
       <tr>
         <td class="task">Automated testing</td>
         <td class="pct">~100%</td>
         <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
-        <td class="desc">400 passing — 201 Dart, 199 against the emulator, including a whole ride through the deployed ruleset and four concurrency races.</td>
+        <td class="desc">402 passing — 201 Dart, 201 against the emulator, including a whole ride through the deployed ruleset, four concurrency races, and a second inverted tripwire: the case that used to assert commuters <em>could</em> enumerate online drivers now asserts they cannot.</td>
       </tr>
       <tr>
         <td class="task">Documentation</td>
@@ -624,7 +624,7 @@
       <tr><td class="step">66</td><td class="task">Functions project</td><td class="desc">TypeScript workspace, strict mode, wired into firebase.json with an emulator port. <span class="mono">tsc --noEmit</span> clean.</td><td class="deps">4</td><td class="deliv">functions/</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">67</td><td class="task">Server-side dispatch sweep</td><td class="desc">Written and typechecked: every minute, re-offers rides the client loop abandoned and expires them at the candidate cap. <strong>Deployed and firing</strong> — the Cloud Scheduler job was provisioned by <span class="mono">firebase deploy</span> itself, so no Pub/Sub topic was created by hand. Logs show clean minute-by-minute runs.</td><td class="deps">65, 66</td><td class="deliv">sweepStaleRides</td><td><span class="chip s-done">Deployed</span></td></tr>
       <tr><td class="step">68</td><td class="task">Rating aggregation function</td><td class="desc">Written and typechecked. Derives the increment from the ride, idempotent via a <span class="mono">ratingCounted</span> guard so a retried delivery cannot double-count. <strong>Deployed, and the rules cut over behind it.</strong> <span class="mono">validRatingIncrement()</span> is gone, so no client may write <span class="mono">ratingSum</span> or <span class="mono">ratingCount</span> at all — the function owns them via the Admin SDK. Order mattered in both directions: tightening first would have counted nothing, and leaving both in place counted <em>every rating twice</em>, because the function's <span class="mono">ratingCounted</span> guard cannot see a client increment. The tripwire that asserted the gap was open now asserts it is shut. No app release needed — the client's write fails silently by design.</td><td class="deps">65, 66</td><td class="deliv">onRideRated</td><td><span class="chip s-done">Deployed</span></td></tr>
-      <tr><td class="step">69</td><td class="task">Lock the driver index</td><td class="desc">The exact one-line change and its ordering are documented beside <span class="mono">canDiscoverDrivers()</span> in the rules. <strong>Now unblocked</strong> — <span class="mono">sweepStaleRides</span> is deployed, which was the prerequisite. But the client sweep must stop <em>first</em>: tightening while commuters still match means no ride is ever offered. That is a client change plus an APK release, so it is a bigger cutover than the rating one.</td><td class="deps">67</td><td class="deliv">Prepared in firestore.rules</td><td><span class="chip s-partial">Prepared</span></td></tr>
+      <tr><td class="step">69</td><td class="task">Lock the driver index</td><td class="desc"><strong>Cut over.</strong> The one-line rule change was the last move, not the first. Ahead of it: a <span class="mono">requestDispatch</span> callable that runs the match server-side and replies with a single word — never a driver, a distance, or a count; the client sweep reduced to a heartbeat that asks the server to advance the ride; both tripwires inverted; a clean rebuild and release of APK and web. Then <span class="mono">canDiscoverDrivers()</span> became <span class="mono">isAdmin()</span>. Sequenced that way because the reverse order would have left commuters unable to match at all.</td><td class="deps">67</td><td class="deliv">requestDispatch + firestore.rules</td><td><span class="chip s-done">Done</span></td></tr>
 
       <tr class="phase-start"><td class="phase" rowspan="9">11 · Testing</td><td class="step">70</td><td class="task">Unit tests</td><td class="desc">187 passing: normalisation, distance, geohash, dispatch, payloads, model parsing, runtime config, routing, reverse geocoding, the OSRM distance table, WCAG contrast, plus two widget suites. Caught two legacy-data crashes. The newest cases are mostly failure paths, including the one that would have hurt in the field: Nominatim returns its <span class="mono">error</span> body with HTTP 200.</td><td class="deps">28</td><td class="deliv">widget_test.dart</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">71</td><td class="task">Security-rules tests</td><td class="desc">169 passing against the emulator, including an admin-override regression guard and the inverted rating tripwire — the case that used to assert the inflation gap was open now asserts it is shut.</td><td class="deps">16</td><td class="deliv">Rules suite</td><td><span class="chip s-done">Done</span></td></tr>
@@ -681,6 +681,7 @@
     <div class="tl-row"><div class="tl-mark">J2 · done</div><div class="tl-body"><strong>Commuter accounts work</strong><span>A real number got a real code on the public web build, and again after the SMS region allowlist. Storage provisioned, budget alert set, Google sign-in disabled. The commuter half is no longer hypothetical.</span></div></div>
     <div class="tl-row"><div class="tl-mark">J3 · done</div><div class="tl-body"><strong>Screen plates &amp; flow re-trace</strong><span>Step 10. 38 plates on a design canvas, drawn from the real theme; screen-flows.md corrected where it described an app that no longer exists. Found and fixed two defects on the way.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K1 · done</div><div class="tl-body"><strong>App Check enforced on web</strong><span>reCAPTCHA Enterprise wired and enforced, verified by a real sign-in <em>after</em> enforcement went on — the only proof that tokens are actually accepted. The security review's HIGH finding is closed.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">K3 · done</div><div class="tl-body"><strong>Driver index locked</strong><span>Step 69. Dispatch moved into a <span class="mono">requestDispatch</span> callable, the client sweep became a heartbeat, both tripwires inverted, APK and web rebuilt clean and released, and only then did <span class="mono">canDiscoverDrivers()</span> become <span class="mono">isAdmin()</span>. The last accepted-by-design exposure in the security review is closed.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K2 · next</div><div class="tl-body"><strong>A whole ride on two handsets</strong><span>Steps 75, 78. Every piece is deployed and none of it has been run end to end by two people on two phones. This is the demo, and the only remaining unknown of consequence.</span></div></div>
     <div class="tl-row"><div class="tl-mark">J2</div><div class="tl-body"><strong>Remaining test depth</strong><span>Steps 76, 77. Security review, performance and cost at 50 drivers.</span></div></div>
     <div class="tl-row"><div class="tl-mark">K</div><div class="tl-body"><strong>Release engineering</strong><span>Steps 80–85. Done. Icon, keystore, signed build verified with apksigner, CI, crash reporting.</span></div></div>
@@ -829,7 +830,6 @@
     <div class="card med">
       <h3>Medium priority</h3>
       <ul>
-        <li>Lock the driver index (69) — prepared, but the client sweep must stop first, so it needs a code change and a release</li>
         <li>Legacy driver migration (88) — still wants a service-account key, and may not be worth running at all</li>
         <li>Delete the <span class="mono">com.example.trikekoto</span> placeholder apps — harmless, but the project looks half-configured with them there</li>
       </ul>

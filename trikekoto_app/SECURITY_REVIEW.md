@@ -244,17 +244,31 @@ all attach.
 
 ---
 
+## Closed
+
+**Online driver emails were enumerable by any signed-in user** until step 69.
+The greedy match ran on the commuter's device, so it had to query
+`active_drivers`, so `canDiscoverDrivers()` had to admit every signed-in
+account. The exposure was deliberately thin — an email and a coordinate, no
+name, phone, plate or rating — but it was a live fleet tracker available to
+anyone willing to verify a phone number, and it needed no booking to use.
+
+The match moved into the `requestDispatch` callable, which reads the index
+with admin credentials and replies with one word: `offered`, `waiting`,
+`held`, `expired` or `skipped`. No driver, no distance, no count. The rule is
+now `isAdmin()`, leaving the TODA officer's shift board as the only
+client-side reader.
+
+Two tests hold the line — one asserting a commuter is refused both the query
+and the single-document read, one asserting an admin still gets the board.
+The second matters as much as the first: closing a gap by blinding the person
+whose job needs the data is not a fix.
+
+---
+
 ## Accepted by design
 
 Each has a tripwire test that fails if the behaviour changes.
-
-**Online driver emails are enumerable by any signed-in user.** The greedy
-match runs on the commuter's device, so it must query `active_drivers`. That
-document deliberately carries *no* name, phone, plate, or rating — an email
-address and a coordinate is the entire exposure, and the test asserts those
-fields stay absent. Closing this means moving dispatch server-side (step 67),
-after which `canDiscoverDrivers()` becomes `isAdmin()` — a one-function change
-the schema was built to allow.
 
 **A suspended driver can still publish presence.** Approval is not re-checked
 on every GPS ping, because that would cost one document read per ping per

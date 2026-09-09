@@ -906,14 +906,29 @@ describe('active_drivers', () => {
     );
   });
 
-  it('lets a commuter run the nearest-driver search', async () => {
+  it('lets an admin watch the shift board', async () => {
+    // The dispatch index has exactly one client-side reader now, and this is
+    // it. The nearest-driver search used to read it from the commuter's
+    // device; it moved into the `requestDispatch` callable at roadmap step
+    // 69 so that this rule could close.
+    await seedAdmin();
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       await setDoc(doc(ctx.firestore(), 'active_drivers', DRIVER_EMAIL), {
         ...presence(DRIVER_EMAIL),
         updatedAt: new Date(),
       });
     });
-    await assertSucceeds(getDoc(doc(commuter(), 'active_drivers', DRIVER_EMAIL)));
+    await assertSucceeds(getDoc(doc(admin(), 'active_drivers', DRIVER_EMAIL)));
+  });
+
+  it('keeps the dispatch index closed to commuters', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'active_drivers', DRIVER_EMAIL), {
+        ...presence(DRIVER_EMAIL),
+        updatedAt: new Date(),
+      });
+    });
+    await assertFails(getDoc(doc(commuter(), 'active_drivers', DRIVER_EMAIL)));
   });
 
   it('keeps the dispatch index closed to the unauthenticated', async () => {

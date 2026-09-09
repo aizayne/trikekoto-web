@@ -26,6 +26,7 @@ import { FieldValue, GeoPoint, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
 import { onDocumentDeleted, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 
@@ -70,6 +71,7 @@ type RideDispatch = {
 
 type Ride = {
   status?: string;
+  commuterUid?: string | null;
   createdAt?: FirebaseFirestore.Timestamp;
   rating?: number | null;
   ratingCounted?: boolean;
@@ -378,17 +380,212 @@ export const onRideRated = onDocumentUpdated(
 );
 
 // ════════════════════════════════════════════════════════════
-// 67 · Dispatch sweep — the reason this file exists.
+// 67 · Dispatch — the reason this file exists.
 // ════════════════════════════════════════════════════════════
+/**
+ * What happens to one searching ride: expire it, offer it, or leave it.
+ *
+ * This is the whole match, and it lives here rather than on the commuter's
+ * device because of what it has to read. Ranking drivers means reading every
+ * online driver's live position, and a client that can do that is a client
+ * anyone can write — the same query that finds the nearest tricycle finds
+ * every tricycle, all day, for anyone who signs up. Moving it here is what
+ * lets `canDiscoverDrivers()` in the rules narrow to admins.
+ *
+ * `online` is passed in rather than queried, because the schedule reads it
+ * once for a batch of fifty rides and the callable reads it for one. Same
+ * routine, two access patterns.
+ *
+ * Returns what it did, for the caller's log and the callable's reply. The
+ * reply says only *that* — never who, never how far. A commuter learns a
+ * driver's identity when one accepts, not before.
+ */
+type DispatchOutcome =
+  | 'offered'   // an offer was written to the next candidate
+  | 'waiting'   // nobody free in radius; the ride stays searching
+  | 'held'      // an unexpired offer still belongs to its driver
+  | 'expired'   // budget or wall clock spent; the ride is closed
+  | 'skipped';  // not searching, or no pickup to rank against
+
+async function attemptDispatch(
+  ref: FirebaseFirestore.DocumentReference,
+  ride: Ride,
+  online: FirebaseFirestore.QueryDocumentSnapshot[],
+  config: Awaited<ReturnType<typeof readConfig>>,
+  now: Date,
+): Promise<DispatchOutcome> {
+  if (ride.status !== 'searching') return 'skipped';
+
+  const dispatch = ride.dispatch ?? {};
+  const expiresAt = dispatch.offerExpiresAt?.toDate();
+
+  // Someone still has a live claim on this ride.
+  if (expiresAt && expiresAt > now) return 'held';
+
+  const attempted = dispatch.attemptedDrivers ?? [];
+  const depth = dispatch.depth ?? 0;
+
+  // Wall clock first, because it catches the case the candidate budget
+  // structurally cannot: nobody was ever available, so no candidate was
+  // ever spent, so `depth` is still 0 and always will be.
+  const createdAt = ride.createdAt?.toDate();
+  const searchingFor = createdAt
+    ? (now.getTime() - createdAt.getTime()) / 60000
+    : 0;
+
+  if (searchingFor > SEARCH_TIMEOUT_MINUTES) {
+    await ref.update({
+      status: 'expired',
+      cancelledAt: FieldValue.serverTimestamp(),
+      cancelledBy: 'system',
+      dispatch: emptyDispatch(),
+    });
+    logger.info(
+      `Ride ${ref.id} expired after ${Math.round(searchingFor)} min ` +
+      `unmatched (${depth} candidates tried)`,
+    );
+    return 'expired';
+  }
+
+  if (depth >= config.maxDriversToTry) {
+    await ref.update({
+      status: 'expired',
+      cancelledAt: FieldValue.serverTimestamp(),
+      cancelledBy: 'system',
+      dispatch: emptyDispatch(),
+    });
+    logger.info(`Ride ${ref.id} expired after ${depth} candidates`);
+    return 'expired';
+  }
+
+  const pickup = ride.pickup?.geopoint;
+  if (!pickup) return 'skipped';
+
+  // Stage one: straight-line, to apply the radius and cut the field.
+  const shortlist = online
+    .map((d) => ({ email: d.id, data: d.data() }))
+    .filter((d) => !attempted.includes(d.email))
+    .map((d) => ({
+      email: d.email,
+      point: d.data.position?.geopoint as GeoPoint | undefined,
+      km: d.data.position?.geopoint
+        ? haversineKm(pickup, d.data.position.geopoint as GeoPoint)
+        : Number.POSITIVE_INFINITY,
+    }))
+    .filter((d) => d.point !== undefined && d.km <= config.searchRadiusKm)
+    .sort((a, b) => a.km - b.km)
+    .slice(0, ROAD_RANK_LIMIT);
+
+  // Nobody free right now. Leave the ride searching — a driver may come
+  // online before the budget runs out.
+  if (shortlist.length === 0) return 'waiting';
+
+  // Stage two: road distance over the shortlist decides the winner.
+  // Crow-flies is wrong wherever geography does not follow the streets.
+  let candidate = shortlist[0];
+  if (shortlist.length > 1) {
+    const roadKm = await roadDistancesKm(
+      config.routingBaseUrl,
+      pickup,
+      shortlist.map((d) => d.point as GeoPoint),
+    );
+    if (roadKm) {
+      // A null entry means no road connection to the pickup. Drop those
+      // rather than ranking them last — offering a ride to a driver who
+      // cannot reach it burns a whole offer timeout.
+      const routed = shortlist
+        .map((d, i) => ({ ...d, road: roadKm[i] }))
+        .filter((d): d is typeof d & { road: number } => d.road !== null)
+        .sort((a, b) => a.road - b.road);
+      if (routed.length > 0) candidate = routed[0];
+    }
+  }
+
+  await ref.update({
+    dispatch: {
+      offeredTo: candidate.email,
+      offerSeq: (dispatch.offerSeq ?? 0) + 1,
+      offerExpiresAt: new Date(
+        now.getTime() + config.offerTimeoutSeconds * 1000,
+      ),
+      attemptedDrivers: [...attempted, candidate.email],
+      depth: depth + 1,
+    },
+  });
+  logger.info(`Ride ${ref.id} offered to ${candidate.email}`);
+  return 'offered';
+}
+
+/** The online, idle drivers — the index a commuter can no longer read. */
+function onlineDrivers() {
+  return db
+    .collection('active_drivers')
+    .where('isOnline', '==', true)
+    .where('availability', '==', 'idle')
+    .get();
+}
+
+/**
+ * The commuter's app asking for its ride to be advanced, now.
+ *
+ * The schedule below would get there on its own, but a minute late. Someone
+ * who has just pressed *Mag-book* is watching a spinner, and a minute of it
+ * is long enough to press it again — so the foreground app calls this on the
+ * first tick and on every offer timeout, and the schedule stays as the net
+ * for the app that was closed or backgrounded.
+ *
+ * **It only ever advances the caller's own ride.** The ride id is the only
+ * input, and a ride whose `commuterUid` is not the caller's is refused as
+ * not-found — not as permission-denied, which would confirm the id exists.
+ *
+ * It returns an outcome word and nothing else. No driver, no distance, no
+ * count of who is nearby: a reply that carried any of those would hand back
+ * exactly the information moving this off the device was meant to withhold.
+ */
+export const requestDispatch = onCall(
+  { region: REGION },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Sign in first.');
+    }
+
+    const rideId = String((request.data ?? {}).rideId ?? '').trim();
+    // Guarded because an id with a slash in it addresses a different
+    // document path entirely.
+    if (!rideId || rideId.length > 128 || rideId.includes('/')) {
+      throw new HttpsError('invalid-argument', 'A ride id is required.');
+    }
+
+    const ref = db.collection('rides').doc(rideId);
+    const snap = await ref.get();
+    const ride = snap.data() as Ride | undefined;
+
+    if (!snap.exists || !ride || ride.commuterUid !== uid) {
+      throw new HttpsError('not-found', 'No such ride.');
+    }
+    if (ride.status !== 'searching') {
+      return { outcome: 'skipped' as DispatchOutcome };
+    }
+
+    const config = await readConfig();
+    const online = await onlineDrivers();
+    const outcome = await attemptDispatch(
+      ref, ride, online.docs, config, new Date(),
+    );
+    return { outcome };
+  },
+);
+
 /**
  * Advances every ride whose offer has lapsed.
  *
- * The client-side sweep only runs while the commuter's app is in the
- * foreground. This picks up the ones it abandoned: it re-offers to the next
- * nearest untried driver, and expires the ride once the candidate budget is
- * spent.
+ * [requestDispatch] only runs while the commuter's app is in the foreground.
+ * This picks up the ones it abandoned: it re-offers to the next nearest
+ * untried driver, and expires the ride once the candidate budget or the
+ * five-minute wall clock is spent.
  *
- * Runs every minute, which is coarser than the 15-second client cadence. A
+ * Runs every minute, which is coarser than the client's 15-second cadence. A
  * foregrounded commuter still gets the fast path; this is the safety net,
  * and a per-second schedule would cost far more than it buys.
  */
@@ -406,112 +603,13 @@ export const sweepStaleRides = onSchedule(
 
     if (stale.empty) return;
 
-    const online = await db
-      .collection('active_drivers')
-      .where('isOnline', '==', true)
-      .where('availability', '==', 'idle')
-      .get();
+    // One read for the whole batch, not one per ride.
+    const online = await onlineDrivers();
 
     for (const doc of stale.docs) {
-      const ride = doc.data() as Ride;
-      const dispatch = ride.dispatch ?? {};
-      const expiresAt = dispatch.offerExpiresAt?.toDate();
-
-      // Someone still has a live claim on this ride.
-      if (expiresAt && expiresAt > now) continue;
-
-      const attempted = dispatch.attemptedDrivers ?? [];
-      const depth = dispatch.depth ?? 0;
-
-      // Wall clock first, because it catches the case the candidate budget
-      // structurally cannot: nobody was ever available, so no candidate was
-      // ever spent, so `depth` is still 0 and always will be.
-      const createdAt = (ride as { createdAt?: FirebaseFirestore.Timestamp })
-        .createdAt?.toDate();
-      const searchingFor = createdAt
-        ? (now.getTime() - createdAt.getTime()) / 60000
-        : 0;
-
-      if (searchingFor > SEARCH_TIMEOUT_MINUTES) {
-        await doc.ref.update({
-          status: 'expired',
-          cancelledAt: FieldValue.serverTimestamp(),
-          cancelledBy: 'system',
-          dispatch: emptyDispatch(),
-        });
-        logger.info(
-          `Ride ${doc.id} expired after ${Math.round(searchingFor)} min ` +
-          `unmatched (${depth} candidates tried)`,
-        );
-        continue;
-      }
-
-      if (depth >= config.maxDriversToTry) {
-        await doc.ref.update({
-          status: 'expired',
-          cancelledAt: FieldValue.serverTimestamp(),
-          cancelledBy: 'system',
-          dispatch: emptyDispatch(),
-        });
-        logger.info(`Ride ${doc.id} expired after ${depth} candidates`);
-        continue;
-      }
-
-      const pickup = ride.pickup?.geopoint;
-      if (!pickup) continue;
-
-      // Stage one: straight-line, to apply the radius and cut the field.
-      const shortlist = online.docs
-        .map((d) => ({ email: d.id, data: d.data() }))
-        .filter((d) => !attempted.includes(d.email))
-        .map((d) => ({
-          email: d.email,
-          point: d.data.position?.geopoint as GeoPoint | undefined,
-          km: d.data.position?.geopoint
-            ? haversineKm(pickup, d.data.position.geopoint as GeoPoint)
-            : Number.POSITIVE_INFINITY,
-        }))
-        .filter((d) => d.point !== undefined && d.km <= config.searchRadiusKm)
-        .sort((a, b) => a.km - b.km)
-        .slice(0, ROAD_RANK_LIMIT);
-
-      // Nobody free right now. Leave the ride searching — a driver may come
-      // online before the budget runs out.
-      if (shortlist.length === 0) continue;
-
-      // Stage two: road distance over the shortlist decides the winner.
-      // Crow-flies is wrong wherever geography does not follow the streets.
-      let candidate = shortlist[0];
-      if (shortlist.length > 1) {
-        const roadKm = await roadDistancesKm(
-          config.routingBaseUrl,
-          pickup,
-          shortlist.map((d) => d.point as GeoPoint),
-        );
-        if (roadKm) {
-          // A null entry means no road connection to the pickup. Drop those
-          // rather than ranking them last — offering a ride to a driver who
-          // cannot reach it burns a whole offer timeout.
-          const routed = shortlist
-            .map((d, i) => ({ ...d, road: roadKm[i] }))
-            .filter((d): d is typeof d & { road: number } => d.road !== null)
-            .sort((a, b) => a.road - b.road);
-          if (routed.length > 0) candidate = routed[0];
-        }
-      }
-
-      await doc.ref.update({
-        dispatch: {
-          offeredTo: candidate.email,
-          offerSeq: (dispatch.offerSeq ?? 0) + 1,
-          offerExpiresAt: new Date(
-            now.getTime() + config.offerTimeoutSeconds * 1000,
-          ),
-          attemptedDrivers: [...attempted, candidate.email],
-          depth: depth + 1,
-        },
-      });
-      logger.info(`Ride ${doc.id} re-offered to ${candidate.email}`);
+      await attemptDispatch(
+        doc.ref, doc.data() as Ride, online.docs, config, now,
+      );
     }
   },
 );
