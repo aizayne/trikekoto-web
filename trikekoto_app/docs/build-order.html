@@ -377,8 +377,8 @@
 
   <div class="reality">
     <div><div class="n">99</div><div class="k">Total steps</div></div>
-    <div><div class="n" style="color:var(--done)">93</div><div class="k">Complete</div></div>
-    <div><div class="n" style="color:var(--partial)">4</div><div class="k">Partial</div></div>
+    <div><div class="n" style="color:var(--done)">94</div><div class="k">Complete</div></div>
+    <div><div class="n" style="color:var(--partial)">3</div><div class="k">Partial</div></div>
     <div><div class="n" style="color:var(--blocked)">1</div><div class="k">Blocked</div></div>
     <div><div class="n" style="color:var(--todo)">1</div><div class="k">Not started</div></div>
   </div>
@@ -416,19 +416,22 @@
   <div class="sec-head"><span class="num">01</span><h2>Progress</h2></div>
 
   <div class="reality" style="margin-top:0">
-    <div><div class="n" style="color:var(--done)">94%</div><div class="k">By step count</div></div>
-    <div><div class="n" style="color:var(--partial)">92%</div><div class="k">Weighted</div></div>
-    <div><div class="n">93<span style="color:var(--ink-faint);font-size:1rem">/99</span></div><div class="k">Steps complete</div></div>
+    <div><div class="n" style="color:var(--done)">95%</div><div class="k">By step count</div></div>
+    <div><div class="n" style="color:var(--partial)">94%</div><div class="k">Weighted</div></div>
+    <div><div class="n">94<span style="color:var(--ink-faint);font-size:1rem">/99</span></div><div class="k">Steps complete</div></div>
     <div><div class="n">400</div><div class="k">Tests passing</div></div>
   </div>
 
   <div class="note">
-    <strong>Two numbers, because one of them would mislead.</strong> 94% counts steps, and
-    steps are not the same size. The six that remain are almost all <em>validation</em> — and
+    <strong>The two numbers have converged.</strong> They sat nine points apart all week —
+    a build far ahead of its evidence. A complete field test on real hardware closed the gap,
+    and it closed from the evidence side, which is the only direction that counts.
+    <br><br>
+    95% counts steps, and steps are not the same size. The six that remain are almost all <em>validation</em> — and
     for a capstone, testing is a chapter rather than a coda.
     <br><br>
     Weighted so that proving the system counts for as much as building it, the honest figure
-    is <strong>about 92%</strong> — the mean of the six areas below, and not worth pretending
+    is <strong>about 94%</strong> — the mean of the six areas below, and not worth pretending
     is more precise than that. The build is nearly finished; the
     evidence is barely started. Quote 94% and a panel will ask what has actually been
     demonstrated.
@@ -444,14 +447,23 @@
     — or in the same building. That does not move the percentage, because handing someone a
     build is not the same as watching them use it. It removes the logistics excuse.
     <br><br>
-    <strong>The number moved because a ride happened.</strong> Validation went from 15% to
-    60% in one afternoon, and not one line of code was written to achieve it. Phases 00–06 ran
+    <strong>The number moved because rides happened.</strong> Validation went from 15% to
+    75% in one afternoon, and the only code written was two fixes the testing itself
+    uncovered. Phases 00–06 ran
     on real hardware: permissions, a real GPS fix, a 50 m walk, a presence document deleted
     rather than flagged, a live OTP, a self-filling pickup with an accurate address, a greedy
     offer, <em>a push waking a backgrounded phone</em>, and a rating that incremented exactly
-    once. Every previous update this week added a feature and left this figure where it was.
-    This one added nothing and moved the total five points. That is the argument for testing
-    over building, in the only terms a percentage understands.
+    once. Then failure paths, the kill switch, and the screens built that morning.
+    <br><br>
+    Two real defects surfaced, both found by <em>preparing</em> to test rather than by
+    testing: a ride booked when nobody was online would have waited forever, because the
+    candidate budget it was supposed to exhaust is never spent when there are no candidates;
+    and the admin ID queue had no composite index and would have failed on first open. Neither
+    was reachable by the 400 automated tests.
+    <br><br>
+    <strong>The remaining 30% is not more of the same.</strong> It is somebody who is not the
+    author: real TODA drivers, on their own handsets, in Filipino, without the person who
+    built it standing next to them. That is step 78, and nothing about it is technical.
     <br><br>
     <strong>And one number moved down, then back.</strong> ID verification shipped complete
     and well tested, and <em>backend &amp; security fell from 100% to 95%</em> — it had
@@ -498,9 +510,9 @@
       </tr>
       <tr style="background:var(--blocked-bg)">
         <td class="task">Real-world validation</td>
-        <td class="pct" style="color:var(--partial)">~60%</td>
-        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:60%;background:var(--partial)"></i></div></td>
-        <td class="desc"><strong>A whole ride has now run.</strong> Field test phases 00–06 passed on real hardware: a live OTP, then permission prompts, a presence document with a real geohash, an <span class="mono">updatedAt</span> that moved after a 50 m walk, an <span class="mono">fcmToken</span> registered, and the presence document <em>deleted</em> rather than flagged on going offline. That last one is what no emulator reproduces — a GPS stream shutting down while a delete races it. Then the ride itself, across two handsets: pickup filled itself in and the reverse-geocoded address was accurate enough for a driver to act on; the greedy sweep offered to the nearest driver within a timeout; <strong>a push woke a backgrounded phone</strong> — the single largest documented limitation of this project, retired; accept, start and complete propagated to both screens; the commuter’s cancel button disappeared on <span class="mono">in_transit</span>; and a rating incremented the driver aggregate <strong>exactly once</strong>, proving this morning’s client-to-function cutover was ordered correctly. <strong>Still unproven:</strong> failure paths (07), analytics against real data (08), access control spot checks (09), and every screen built today — ID submission, admin review, account deletion.</td>
+        <td class="pct" style="color:var(--partial)">~75%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:75%;background:var(--partial)"></i></div></td>
+        <td class="desc"><strong>A whole ride has now run.</strong> Field test phases 00–06 passed on real hardware: a live OTP, then permission prompts, a presence document with a real geohash, an <span class="mono">updatedAt</span> that moved after a 50 m walk, an <span class="mono">fcmToken</span> registered, and the presence document <em>deleted</em> rather than flagged on going offline. That last one is what no emulator reproduces — a GPS stream shutting down while a delete races it. Then the ride itself, across two handsets: pickup filled itself in and the reverse-geocoded address was accurate enough for a driver to act on; the greedy sweep offered to the nearest driver within a timeout; <strong>a push woke a backgrounded phone</strong> — the single largest documented limitation of this project, retired; accept, start and complete propagated to both screens; the commuter’s cancel button disappeared on <span class="mono">in_transit</span>; and a rating incremented the driver aggregate <strong>exactly once</strong>, proving this morning’s client-to-function cutover was ordered correctly. Failure paths all held (07): a cancel distinguished from an expiry, a driver suspended mid-shift losing the switch without a re-login, the kill switch engaging <em>and</em> releasing, and a ride that kept advancing after the commuter closed the app — the second documented limitation retired. The screens built the same day passed too (10): a rename that did not delete the photo, an ID reviewed through <span class="mono">getData()</span> with no URL minted, and a withdrawal that removed document and image together. <strong>What remains is not the author testing: it is somebody else.</strong> UAT with real TODA drivers on their own handsets (78) has not started, and that is the whole of the missing 30%.</td>
       </tr>
     </tbody>
   </table>
@@ -619,7 +631,7 @@
       <tr><td class="step">72</td><td class="task">Widget tests</td><td class="desc">23 tests over the driver dashboard and admin panel via Riverpod overrides — including the gate that keeps unapproved drivers off the road.</td><td class="deps">47, 49</td><td class="deliv">*_dashboard_test.dart</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">73</td><td class="task">Integration tests</td><td class="desc">A whole ride driven through the deployed ruleset against the emulator: book, dispatch, accept, drive, complete, rate.</td><td class="deps">72</td><td class="deliv">lifecycle.test.mjs</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">74</td><td class="task">Concurrency test</td><td class="desc">Four real races: double-tap accept, un-offered driver, accept-versus-cancel, and double rating. Exactly one writer wins each.</td><td class="deps">73</td><td class="deliv">Race-condition tests</td><td><span class="chip s-done">Done</span></td></tr>
-      <tr><td class="step">75</td><td class="task">Manual end-to-end run</td><td class="desc"><strong>Unblocked and underway.</strong> Admin verified, rules deployed, driver registered and approved, signed APK installing over the LAN. The log was <strong>rewritten on 10 September</strong> and the old results are not comparable. It had been written before commuter accounts, before the functions were deployed and before fares were removed, so six steps expected the <em>opposite</em> of current behaviour — three of them described deployed features as known limitations, meaning a tester would have recorded real successes as expected failures, and one instruction (<span class="mono">Phone off</span>) would have locked every commuter out. Now 56 steps across 11 phases, with the account flow, GPS pickup, push, the server sweep, the kill switch and a profile phase added. <strong>Phases 00–06 passed on real hardware</strong>, including the one nothing else could cover — real permission prompts, real GPS, a 50 m walk — and a complete ride across two handsets ending in a correctly-counted rating. Phases 07–10 remain: failure paths, analytics, access control, and the screens built today.</td><td class="deps">20</td><td class="deliv">Field test log</td><td><span class="chip s-partial">In progress</span></td></tr>
+      <tr><td class="step">75</td><td class="task">Manual end-to-end run</td><td class="desc"><strong>Complete.</strong> Admin verified, rules deployed, driver registered and approved, signed APK installing over the LAN. The log was <strong>rewritten on 10 September</strong> and the old results are not comparable. It had been written before commuter accounts, before the functions were deployed and before fares were removed, so six steps expected the <em>opposite</em> of current behaviour — three of them described deployed features as known limitations, meaning a tester would have recorded real successes as expected failures, and one instruction (<span class="mono">Phone off</span>) would have locked every commuter out. Now 56 steps across 11 phases, with the account flow, GPS pickup, push, the server sweep, the kill switch and a profile phase added. <strong>Phases 00–06 passed on real hardware</strong>, including the one nothing else could cover — real permission prompts, real GPS, a 50 m walk — and a complete ride across two handsets ending in a correctly-counted rating. All eleven phases ran, including analytics checked against what the tester actually did that day and the access-control redirects. Two real defects surfaced, both found by <em>preparing</em> to test rather than by testing: a ride booked with nobody online would have waited forever, and the admin ID queue had no composite index. Neither was reachable by the automated suite.</td><td class="deps">20</td><td class="deliv">Field test log</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">76</td><td class="task">Security review</td><td class="desc">19 adversarial tests covering data harvesting, privilege escalation and ride hijacking, plus an APK secret scan. Three accepted gaps carry tripwire tests. <strong>Every finding is now closed — zero High, zero Medium.</strong> The HIGH was overtaken by events twice over: an enabled-but-unused Phone provider became load-bearing, so the mitigation changed from <em>disable it</em> to <em>attest it</em>, and App Check is now enforced on both platforms. Key restrictions are applied but recorded with a caveat rather than a clean close — the web key was still accepted from a foreign origin across three Firebase endpoints, so they are defence in depth rather than a control worth claiming. <strong>The review itself is due a re-run</strong>: rider accounts, mandatory sign-in, the rating cutover and now ID verification all postdate it. That last one adds a <em>new surface</em> rather than closing a finding — the review carries its controls and, more usefully, the four things deliberately not done: no scheduled deletion enforcing the 90-day retention, no privacy notice outside the app, no review by anyone legally qualified, and nothing gating on ID status.</td><td class="deps">71</td><td class="deliv">SECURITY_REVIEW.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">77</td><td class="task">Performance &amp; cost test</td><td class="desc">Operation model built from the code. Finding: presence GPS is 93.5% of all writes and even an 8-driver pilot exceeds the free write tier. Distance filter widened to 50 m, cutting writes 2.5x.</td><td class="deps">73</td><td class="deliv">COST_AND_PERFORMANCE.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">78</td><td class="task">User acceptance testing</td><td class="desc">Real TODA drivers and commuters on their own handsets, in Filipino.</td><td class="deps">75</td><td class="deliv">UAT sign-off</td><td><span class="chip s-todo">Not started</span></td></tr>
