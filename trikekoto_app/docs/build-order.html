@@ -377,8 +377,8 @@
 
   <div class="reality">
     <div><div class="n">99</div><div class="k">Total steps</div></div>
-    <div><div class="n" style="color:var(--done)">94</div><div class="k">Complete</div></div>
-    <div><div class="n" style="color:var(--partial)">3</div><div class="k">Partial</div></div>
+    <div><div class="n" style="color:var(--done)">95</div><div class="k">Complete</div></div>
+    <div><div class="n" style="color:var(--partial)">2</div><div class="k">Partial</div></div>
     <div><div class="n" style="color:var(--blocked)">1</div><div class="k">Blocked</div></div>
     <div><div class="n" style="color:var(--todo)">1</div><div class="k">Not started</div></div>
   </div>
@@ -386,12 +386,13 @@
 
 <div class="note">
   <strong>Read the status column first.</strong> Most of this roadmap is built, deployed, and
-  covered by <strong>400 passing tests</strong> — 201 Dart and 199 against the Firestore
+  covered by <strong>402 passing tests</strong> — 201 Dart and 201 against the Firestore
   emulator.
   <br><br>
   <strong>The backend is finished.</strong> Blaze cleared the one dependency that had grown to
-  block four things at once, and everything behind it has since shipped: four gen-2 Cloud
-  Functions live on Node 22, the scheduled dispatch sweep firing every minute, rating
+  block four things at once, and everything behind it has since shipped: seven gen-2 Cloud
+  Functions live on Node 22, the scheduled dispatch sweep firing every minute, dispatch itself
+  moved off the commuter's device so the driver index could be closed to them, rating
   aggregates moved server-side and the client's write refused at the rules layer, Cloud Storage
   provisioned, a ₱500 budget alert, and the SMS region policy narrowed to the Philippines.
   <br><br>
@@ -459,7 +460,7 @@
     testing: a ride booked when nobody was online would have waited forever, because the
     candidate budget it was supposed to exhaust is never spent when there are no candidates;
     and the admin ID queue had no composite index and would have failed on first open. Neither
-    was reachable by the 400 automated tests.
+    was reachable by the 402 automated tests.
     <br><br>
     <strong>The remaining 30% is not more of the same.</strong> It is somebody who is not the
     author: real TODA drivers, on their own handsets, in Filipino, without the person who
