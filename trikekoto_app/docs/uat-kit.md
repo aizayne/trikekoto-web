@@ -2,11 +2,22 @@
 
 Roadmap step 78. Real TODA drivers and commuters, on their own handsets, in Filipino.
 
-**Do not run this until offers arrive by push** (step 62, needs Blaze). Without it
-a driver must keep the app open to receive anything, and every participant will
-report the same already-known failure instead of telling you something new.
+**The blocker is cleared.** This used to say *do not run until offers arrive by
+push* — without it every participant would have reported the same already-known
+failure instead of telling you something new. Push was deployed and verified on
+a real handset on 10 September, so the session can now show the system as it is
+meant to work rather than as a demo with an apology attached.
 
 ---
+
+> **Revised 10 September 2026.** The August version described an app where
+> booking was one tap and no personal data was collected. Since then commuters
+> must verify a phone number, the app can photograph a government ID, and
+> account deletion exists.
+>
+> The consent form was the urgent part: it said *"walang panganib"* and
+> mentioned none of it. A real driver could not have been shown the ID screen
+> under it. Do not use a printed copy of the old form.
 
 ## Before you recruit
 
@@ -53,11 +64,35 @@ participants will not want to admit they would rather not read it.
 > - Isusulat ko po ang mga napansin ko habang ginagamit ninyo ang app.
 > - Hindi po ilalagay ang inyong pangalan sa report. Gagamit po ako ng tulad ng
 >   "Driver 1" o "Pasahero 3".
-> - Walang bayad at walang panganib sa paglahok.
+> - Walang bayad sa paglahok.
+>
+> **Tungkol sa mga impormasyong hihingin ng app:**
+>
+> - **Number ninyo.** Hihingi po ang app ng mobile number at magpapadala ng
+>   code sa SMS. Kailangan po ito para makagamit. Libre po ang code.
+> - **Lokasyon.** Hihingi po ng permiso ang telepono para sa lokasyon habang
+>   ginagamit ang app.
+> - **Larawan ng ID.** May bahagi po ang app na humihingi ng litrato ng ID.
+>   **Huwag pong gamitin ang totoong ID ninyo.** Bibigyan ko po kayo ng
+>   pekeng card para dito — ang proseso po ang sinusubukan, hindi kung sino
+>   kayo. Kung mas gusto ninyong laktawan ang bahaging ito, ayos lang po.
+> - **Buburahin ko po ang lahat ng ginawa ninyo pagkatapos ng session** —
+>   ang account, ang mga biyahe, at kahit anong litrato.
 >
 > Naiintindihan ko po ang nasa itaas at pumapayag akong lumahok.
 >
 > Pangalan: ______________________  Lagda: ______________  Petsa: __________
+
+**Do not skip the ID paragraph, and mean it.** Handing a participant a dummy
+card is not a formality — it removes government ID from the session entirely,
+which takes the whole of RA 10173 off your shoulders for an afternoon. You are
+testing whether somebody can complete the flow, not whether their licence is
+genuine. A blank loyalty card photographs exactly as well.
+
+**Delete their data the same day.** Account deletion is in the app now
+(Profile → Burahin ang account), and it anonymises their rides server-side.
+Doing it in front of them, at the end, is also the most reassuring thing you
+can do for the next participant they talk to.
 
 If you plan to photograph or record audio, add a separate line for it and let
 them decline that part while still taking part.
@@ -97,13 +132,31 @@ abandoned, or five minutes elapsed.
 
 | # | Task (say this) | Done when |
 |---|---|---|
-| 1 | "Bago po tayo magsimula — buksan ninyo ang app at tingnan ninyo muna. Ano sa palagay ninyo ang magagawa dito?" | They describe it. This is a first-impression probe, not a task |
-| 2 | "Mag-book po kayo ng tricycle mula dito papuntang [malapit na palengke]." | Ride reaches `searching` |
-| 3 | "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
-| 4 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
-| 5 | *(after a completed ride)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
+| 1 | "Bago po tayo magsimula — buksan ninyo ang app at tingnan ninyo muna. Ano sa palagay ninyo ang magagawa dito?" | They describe it. A first-impression probe, not a task |
+| 2 | "Gusto ninyong mag-book. Simulan ninyo po." | **They reach the booking screen.** This is now sign-in, an SMS code, and a name — three steps before anything a passenger came for. Time it, and note every place they hesitate |
+| 3 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it |
+| 4 | "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
+| 5 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
+| 6 | *(after a completed ride)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
+| 7 | *(hand them the dummy card)* "May bahagi po ang app para kumpirmahin kung sino kayo. Subukan ninyo po." | They find Profile → ID verification and complete it. **Watch what they do at the consent tick** |
+| 8 | "Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?" | They find it, or do not. Do not help |
 
-Task 5 is deliberately open. If nobody finds the rating without being told, your
+**Task 2 is the one to watch.** It did not exist in August, when booking was
+one tap. A passenger now proves a phone number before seeing a map, and that
+is the highest-friction moment in the product — the point where a real user
+who is late for something gives up. Time it with a watch, not an impression.
+
+**Task 7 tests the consent tick, not the upload.** The submit button is
+disabled until the box is ticked. Watch whether they read the notice, tick it
+blind, or ask what it means. If everyone ticks without reading, the consent is
+technically recorded and practically meaningless, and that is worth knowing
+before a chapter rolls it out.
+
+**Task 8 is a right, not a feature.** If people cannot find account deletion,
+they cannot exercise it, and "we have deletion" becomes a claim rather than a
+capability.
+
+Task 6 is deliberately open. If nobody finds the rating without being told, your
 rating coverage in production will be poor and the driver averages unreliable.
 
 ---
@@ -119,11 +172,17 @@ rating coverage in production will be poor and the driver averages unreliable.
 | 5 | "May pasahero po. Kunin ninyo." | Offer accepted |
 | 6 | "Nasa inyo na po ang pasahero." | Trip started |
 | 7 | "Nakarating na po kayo." | Ride completed |
-| 8 | "Kung nasa terminal po kayo at may dumating na booking, sa tingin ninyo malalaman ninyo?" | Their answer about notifications — critical for the pilot |
+| 8 | *(with their phone locked and in a pocket, send them an offer)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
+| 9 | *(hand them the dummy card)* "Hihingin po ng chapter ang ID ninyo. Subukan ninyo pong ipadala." | They complete ID verification. Note whether they hesitate — a driver being asked for a licence by an app is a different feeling from being asked by a person they know |
 
 Task 3 tests the live approval update, which no participant will notice if you
-tell them to look. Task 8 is a question, not a task, and it is the single most
-important thing you will learn about whether this works in the field.
+tell them to look.
+
+**Task 8 changed.** In August it was a question — *would you know?* — because
+the honest answer was no: offers only arrived with the app open. Push is
+deployed now, so it is a real task, and it is still the single most important
+thing you will learn. A driver who does not notice the notification cannot use
+this system at a terminal, whatever the logs say.
 
 ---
 
@@ -227,6 +286,17 @@ A defensible bar:
 
 Anything that blocks a participant from finishing a core task is a **blocker** and
 should be fixed before the pilot, regardless of the scores around it.
+
+### Three bars that did not exist in August
+
+- **Sign-in.** If more than one participant in five abandons before reaching
+  the booking screen, the account requirement is costing more than it protects
+  and that belongs in your findings, not in a backlog.
+- **The push.** If a driver does not notice an offer with the phone pocketed,
+  the system does not work at a terminal — whatever the function logs say.
+- **The consent tick.** If every participant ticks it without reading, record
+  that plainly. A consent that is technically captured and practically unread
+  is a finding about the design, not about the participants.
 
 ---
 
