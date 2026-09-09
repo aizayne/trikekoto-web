@@ -353,5 +353,294 @@
   "loginBody": "Dito nagsa-sign in ang mga driver at administrator. Nakadepende sa account mo kung saan ka mapupunta.",
   "loginEmailInvalid": "Ilagay ang email na ginamit mo sa pagpaparehistro",
   "loginPasswordTooShort": "Hindi bababa sa 6 na karakter",
-  "loginRegisterAsDriver": "Magparehistro bilang TODA driver"
+  "loginRegisterAsDriver": "Magparehistro bilang TODA driver",
+  "adminTitle": "Admin",
+  "adminFeedback": "Feedback",
+  "adminDispatch": "Dispatch",
+  "adminIdReview": "ID review",
+  "adminPendingVerification": "Naghihintay ng verification",
+  "adminNothingWaitingTitle": "Walang naghihintay ng review",
+  "adminNothingWaitingBody": "Lilitaw dito ang mga bagong driver registration.",
+  "adminAllDrivers": "Lahat ng driver ({count})",
+  "@adminAllDrivers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "adminNoDriversTitle": "Wala pang driver",
+  "adminNoDriversBody": "Nakalista dito ang mga aprubado at naka-suspend na driver.",
+  "adminDriverMarked": "Namarkahan ang driver bilang {status}.",
+  "@adminDriverMarked": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "adminPlatePhone": "{plate} • {phone}",
+  "@adminPlatePhone": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEmailChapter": "{email}\n{chapter}",
+  "@adminEmailChapter": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRatingFrom": "★ {average} mula sa {count} rating",
+  "@adminRatingFrom": {
+    "placeholders": {
+      "average": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "adminApprove": "Aprubahan",
+  "adminSuspend": "I-suspend",
+  "reviewTitle": "ID review",
+  "reviewQueueFailed": "Hindi mabuksan ang queue",
+  "reviewNothingTitle": "Walang naghihintay",
+  "reviewNothingBody": "Lilitaw dito ang mga bagong ID na ipinadala.",
+  "reviewApproved": "Naaprubahan.",
+  "reviewRejected": "Hindi tinanggap.",
+  "reviewWhyRejected": "Bakit hindi tinanggap?",
+  "reviewReasonHint": "Hal. Malabo ang litrato, hindi mabasa ang numero.",
+  "reviewCancel": "Kanselahin",
+  "reviewSend": "Ipadala",
+  "reviewRoleDriver": "Driver",
+  "reviewRoleCommuter": "Commuter",
+  "reviewOpening": "Binubuksan…",
+  "reviewViewId": "Tingnan ang ID",
+  "reviewReject": "Hindi tanggap",
+  "reviewApprove": "Aprubahan",
+  "verifyEmailSent": "Naipadala ang verification email.",
+  "verifyStillNot": "Hindi pa rin nakumpirma. Buksan ang link sa email, tapos tingnan ulit.",
+  "verifyYourAddress": "ang address mo",
+  "verifyTitle": "Kumpirmahin ang email mo",
+  "verifyHeading": "Kumpirmahin ang email mo para mabuksan ang admin panel",
+  "verifyBody": "Ang pag-sign up ay hindi patunay na sa iyo ang address, kaya hindi ka bibigyan ng admin access ng server hangga't hindi nakukumpirma ang {email}.",
+  "@verifyBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifySendAgainIn": "Ipadala ulit sa {seconds}s",
+  "@verifySendAgainIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "verifySendAgain": "Ipadala ulit",
+  "verifySendEmail": "Ipadala ang verification email",
+  "verifyConfirmed": "Nakumpirma ko na",
+  "verifyCheckSpam": "Tingnan ang spam kung hindi pa dumadating. Buksan ang link, bumalik dito, tapos pindutin ang \"Nakumpirma ko na\".",
+  "cfgTitle": "Dispatch",
+  "cfgSaved": "Na-save ang settings. Live na sa lahat ng phone.",
+  "cfgIntro": "Nasa server ang mga halagang ito. Ang pagbabago ay tumatalab sa bawat phone sa loob ng ilang segundo — hindi kailangan ng bagong bersyon ng app.",
+  "cfgMatching": "Matching",
+  "cfgRadiusLabel": "Search radius (km)",
+  "cfgRadiusHelp": "Hindi kailanman ino-offer ang biyahe sa driver na mas malayo pa rito.",
+  "cfgTimeoutLabel": "Offer timeout (segundo)",
+  "cfgTimeoutHelp": "Gaano katagal sasagot ang isang driver bago lumipat ang paghahanap.",
+  "cfgMaxDriversLabel": "Bilang ng driver na susubukan",
+  "cfgMaxDriversHelp": "Naka-cap sa 10 — tinatanggihan ng security rules ang mas malalim na paghahanap, kaya ang mas malaking numero ay magbubunga lang ng refused na write.",
+  "cfgSaveSettings": "I-save ang settings",
+  "cfgEnterNumber": "Maglagay ng numero",
+  "cfgWholeNumbers": "Buong numero lang",
+  "cfgBetween": "Dapat nasa pagitan ng {min} at {max}",
+  "@cfgBetween": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "cfgStopQuestion": "Ihinto ang bagong booking?",
+  "cfgStopBody": "Hindi makakapag-book ang mga commuter hangga't hindi mo ito binubuksan ulit.\n\nNatatapos nang normal ang mga biyaheng kasalukuyang tumatakbo — walang maiiwang nakasakay sa tricycle.",
+  "cfgCancel": "Kanselahin",
+  "cfgStopBookings": "Ihinto ang booking",
+  "cfgResumed": "Tumatanggap na ulit ng booking.",
+  "cfgStopped": "Huminto ang booking. Matatapos ang mga biyaheng tumatakbo.",
+  "cfgAccepting": "Tumatanggap ng booking",
+  "cfgStoppedLabel": "Huminto ang booking",
+  "cfgAcceptingHelp": "I-off ito para ihinto ang pilot. Tumatalab ito sa bawat phone sa loob ng ilang segundo, at hindi kailangan ng app update.",
+  "cfgStoppedHelp": "Hindi makakapag-book ang mga commuter. Natatapos nang normal ang mga biyaheng tumatakbo.",
+  "fbTitle": "Feedback",
+  "fbNoneTitle": "Wala pang report",
+  "fbNoneBody": "Lilitaw dito ang mga isyu at mungkahing ipinadala mula sa app.",
+  "fbNeedsAttention": "Kailangan ng atensyon ({count})",
+  "@fbNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "fbAllHandledTitle": "Naasikaso na lahat",
+  "fbAllHandledBody": "Walang bukas na report.",
+  "fbResolved": "Naresolba ({count})",
+  "@fbResolved": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "fbCatIssue": "Isyu",
+  "fbCatSuggestion": "Mungkahi",
+  "fbCatQuestion": "Tanong",
+  "fbCatOther": "Iba pa",
+  "fbMarkedResolved": "Namarkahang naresolba.",
+  "fbReopened": "Binuksan ulit.",
+  "fbFromRole": "mula sa {role}",
+  "@fbFromRole": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "fbReopen": "Buksan ulit",
+  "fbMarkResolved": "Markahang naresolba",
+  "fbJustNow": "ngayon lang",
+  "fbMinutesAgo": "{minutes}m ang nakalipas",
+  "@fbMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "fbHoursAgo": "{hours}h ang nakalipas",
+  "@fbHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "fbDaysAgo": "{days}d ang nakalipas",
+  "@fbDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "anRides": "Biyahe",
+  "anRefresh": "I-refresh",
+  "anNoRides": "Walang biyahe sa window na ito.",
+  "anTruncated": "Ipinapakita lang ang pinakabagong {cap} biyahe. Bahagi lang ang mga total sa ibaba.",
+  "@anTruncated": {
+    "placeholders": {
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "anCompleted": "natapos",
+  "anCompletionRate": "completion rate",
+  "anCancelled": "kinansela",
+  "anNoDriverFound": "walang nakitang driver",
+  "anAvgRating": "average na rating",
+  "anUnrated": "{unrated} sa {completed} natapos na biyahe ang walang rating.",
+  "@anUnrated": {
+    "placeholders": {
+      "unrated": {
+        "type": "String"
+      },
+      "completed": {
+        "type": "String"
+      }
+    }
+  },
+  "anDaily": "Araw-araw",
+  "anByDriver": "Kada driver",
+  "anChartLabel": "Mga biyahe kada araw. Pinakaabalang araw {peak} biyahe. {days} araw ang ipinapakita.",
+  "@anChartLabel": {
+    "placeholders": {
+      "peak": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "anColDriver": "Driver",
+  "anColDone": "Tapos",
+  "anColCancelled": "Kinansela",
+  "anColRating": "Rating",
+  "fsCatProblem": "Problema",
+  "fsCatSuggestion": "Mungkahi",
+  "fsCatQuestion": "Tanong",
+  "fsCatOther": "Iba pa",
+  "fsSent": "Salamat! Nakarating sa TODA admin ang report mo.",
+  "fsTitle": "Sabihin kung ano ang nangyari",
+  "fsSubtitle": "Napupunta sa TODA administrator mo ang mga report.",
+  "fsWhatHappened": "Ano ang nangyari?",
+  "fsDescribe": "Ilarawan ang problema para may magawa ang admin",
+  "fsContact": "Contact (opsyonal)",
+  "fsContactHelper": "Kung gusto mo lang ng sagot.",
+  "fsSend": "Ipadala ang report",
+  "mapPickUpAt": "Sunduin sa {place}",
+  "@mapPickUpAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "mapDropOffAt": "Ibaba sa {place}",
+  "@mapDropOffAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "mapKm": "{km} km",
+  "@mapKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "mapOpenInMaps": "Buksan sa maps",
+  "mapNoMapsApp": "Walang maps app. Destinasyon: {lat}, {lng}",
+  "@mapNoMapsApp": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  }
 }

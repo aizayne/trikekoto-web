@@ -5,6 +5,8 @@ import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../data/feedback_report.dart';
+import '../../../core/ui/locale_controller.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Lets a commuter or driver report something, from wherever they are.
 ///
@@ -35,12 +37,16 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
   String _category = FeedbackCategory.issue;
   bool _busy = false;
 
-  static const _labels = {
-    FeedbackCategory.issue: 'Problem',
-    FeedbackCategory.suggestion: 'Suggestion',
-    FeedbackCategory.question: 'Question',
-    FeedbackCategory.other: 'Other',
-  };
+  /// A function rather than a `static const` map, because these are shown to
+  /// the person and therefore have to follow the chosen language. A const map
+  /// cannot reach the localisations, which is why it used to be English on a
+  /// Filipino screen.
+  static Map<String, String> _labels(L l) => {
+        FeedbackCategory.issue: l.fsCatProblem,
+        FeedbackCategory.suggestion: l.fsCatSuggestion,
+        FeedbackCategory.question: l.fsCatQuestion,
+        FeedbackCategory.other: l.fsCatOther,
+      };
 
   @override
   void dispose() {
@@ -68,7 +74,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        showSnack(context, 'Salamat! Your report reached the TODA admin.');
+        showSnack(context, context.l.fsSent);
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -93,10 +99,10 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Tell us what happened', style: context.text.titleMedium),
+            Text(context.l.fsTitle, style: context.text.titleMedium),
             const Gap(AppSpacing.xs),
             Text(
-              'Reports go to your TODA administrator.',
+              context.l.fsSubtitle,
               style: context.text.bodySmall,
             ),
             const Gap(AppSpacing.lg),
@@ -104,7 +110,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
             Wrap(
               spacing: AppSpacing.sm,
               children: [
-                for (final entry in _labels.entries)
+                for (final entry in _labels(context.l).entries)
                   ChoiceChip(
                     label: Text(entry.value),
                     selected: _category == entry.key,
@@ -121,20 +127,20 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
               // than a rejected write after someone has typed a paragraph.
               maxLength: 2000,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'What happened?',
+              decoration: InputDecoration(
+                labelText: context.l.fsWhatHappened,
                 alignLabelWithHint: true,
               ),
               validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Describe the problem so an admin can act on it'
+                  ? context.l.fsDescribe
                   : null,
             ),
             const Gap(AppSpacing.sm),
             TextFormField(
               controller: _contact,
-              decoration: const InputDecoration(
-                labelText: 'Contact (optional)',
-                helperText: 'Only if you want a reply.',
+              decoration: InputDecoration(
+                labelText: context.l.fsContact,
+                helperText: context.l.fsContactHelper,
               ),
             ),
             const Gap(AppSpacing.xl),
@@ -149,7 +155,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
                         color: AppColors.onAccent,
                       ),
                     )
-                  : const Text('Send report'),
+                  : Text(context.l.fsSend),
             ),
           ],
         ),

@@ -1332,6 +1332,732 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Magparehistro bilang TODA driver'**
   String get loginRegisterAsDriver;
+
+  /// No description provided for @adminTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Admin'**
+  String get adminTitle;
+
+  /// No description provided for @adminFeedback.
+  ///
+  /// In fil, this message translates to:
+  /// **'Feedback'**
+  String get adminFeedback;
+
+  /// No description provided for @adminDispatch.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dispatch'**
+  String get adminDispatch;
+
+  /// No description provided for @adminIdReview.
+  ///
+  /// In fil, this message translates to:
+  /// **'ID review'**
+  String get adminIdReview;
+
+  /// No description provided for @adminPendingVerification.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naghihintay ng verification'**
+  String get adminPendingVerification;
+
+  /// No description provided for @adminNothingWaitingTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang naghihintay ng review'**
+  String get adminNothingWaitingTitle;
+
+  /// No description provided for @adminNothingWaitingBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lilitaw dito ang mga bagong driver registration.'**
+  String get adminNothingWaitingBody;
+
+  /// No description provided for @adminAllDrivers.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lahat ng driver ({count})'**
+  String adminAllDrivers(String count);
+
+  /// No description provided for @adminNoDriversTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang driver'**
+  String get adminNoDriversTitle;
+
+  /// No description provided for @adminNoDriversBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakalista dito ang mga aprubado at naka-suspend na driver.'**
+  String get adminNoDriversBody;
+
+  /// No description provided for @adminDriverMarked.
+  ///
+  /// In fil, this message translates to:
+  /// **'Namarkahan ang driver bilang {status}.'**
+  String adminDriverMarked(String status);
+
+  /// No description provided for @adminPlatePhone.
+  ///
+  /// In fil, this message translates to:
+  /// **'{plate} • {phone}'**
+  String adminPlatePhone(String plate, String phone);
+
+  /// No description provided for @adminEmailChapter.
+  ///
+  /// In fil, this message translates to:
+  /// **'{email}\n{chapter}'**
+  String adminEmailChapter(String email, String chapter);
+
+  /// No description provided for @adminRatingFrom.
+  ///
+  /// In fil, this message translates to:
+  /// **'★ {average} mula sa {count} rating'**
+  String adminRatingFrom(String average, String count);
+
+  /// No description provided for @adminApprove.
+  ///
+  /// In fil, this message translates to:
+  /// **'Aprubahan'**
+  String get adminApprove;
+
+  /// No description provided for @adminSuspend.
+  ///
+  /// In fil, this message translates to:
+  /// **'I-suspend'**
+  String get adminSuspend;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'ID review'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewQueueFailed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi mabuksan ang queue'**
+  String get reviewQueueFailed;
+
+  /// No description provided for @reviewNothingTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang naghihintay'**
+  String get reviewNothingTitle;
+
+  /// No description provided for @reviewNothingBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lilitaw dito ang mga bagong ID na ipinadala.'**
+  String get reviewNothingBody;
+
+  /// No description provided for @reviewApproved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naaprubahan.'**
+  String get reviewApproved;
+
+  /// No description provided for @reviewRejected.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi tinanggap.'**
+  String get reviewRejected;
+
+  /// No description provided for @reviewWhyRejected.
+  ///
+  /// In fil, this message translates to:
+  /// **'Bakit hindi tinanggap?'**
+  String get reviewWhyRejected;
+
+  /// No description provided for @reviewReasonHint.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hal. Malabo ang litrato, hindi mabasa ang numero.'**
+  String get reviewReasonHint;
+
+  /// No description provided for @reviewCancel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kanselahin'**
+  String get reviewCancel;
+
+  /// No description provided for @reviewSend.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala'**
+  String get reviewSend;
+
+  /// No description provided for @reviewRoleDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Driver'**
+  String get reviewRoleDriver;
+
+  /// No description provided for @reviewRoleCommuter.
+  ///
+  /// In fil, this message translates to:
+  /// **'Commuter'**
+  String get reviewRoleCommuter;
+
+  /// No description provided for @reviewOpening.
+  ///
+  /// In fil, this message translates to:
+  /// **'Binubuksan…'**
+  String get reviewOpening;
+
+  /// No description provided for @reviewViewId.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tingnan ang ID'**
+  String get reviewViewId;
+
+  /// No description provided for @reviewReject.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi tanggap'**
+  String get reviewReject;
+
+  /// No description provided for @reviewApprove.
+  ///
+  /// In fil, this message translates to:
+  /// **'Aprubahan'**
+  String get reviewApprove;
+
+  /// No description provided for @verifyEmailSent.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naipadala ang verification email.'**
+  String get verifyEmailSent;
+
+  /// No description provided for @verifyStillNot.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi pa rin nakumpirma. Buksan ang link sa email, tapos tingnan ulit.'**
+  String get verifyStillNot;
+
+  /// No description provided for @verifyYourAddress.
+  ///
+  /// In fil, this message translates to:
+  /// **'ang address mo'**
+  String get verifyYourAddress;
+
+  /// No description provided for @verifyTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kumpirmahin ang email mo'**
+  String get verifyTitle;
+
+  /// No description provided for @verifyHeading.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kumpirmahin ang email mo para mabuksan ang admin panel'**
+  String get verifyHeading;
+
+  /// No description provided for @verifyBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ang pag-sign up ay hindi patunay na sa iyo ang address, kaya hindi ka bibigyan ng admin access ng server hangga\'t hindi nakukumpirma ang {email}.'**
+  String verifyBody(String email);
+
+  /// No description provided for @verifySendAgainIn.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala ulit sa {seconds}s'**
+  String verifySendAgainIn(String seconds);
+
+  /// No description provided for @verifySendAgain.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala ulit'**
+  String get verifySendAgain;
+
+  /// No description provided for @verifySendEmail.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala ang verification email'**
+  String get verifySendEmail;
+
+  /// No description provided for @verifyConfirmed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakumpirma ko na'**
+  String get verifyConfirmed;
+
+  /// No description provided for @verifyCheckSpam.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tingnan ang spam kung hindi pa dumadating. Buksan ang link, bumalik dito, tapos pindutin ang \"Nakumpirma ko na\".'**
+  String get verifyCheckSpam;
+
+  /// No description provided for @cfgTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dispatch'**
+  String get cfgTitle;
+
+  /// No description provided for @cfgSaved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Na-save ang settings. Live na sa lahat ng phone.'**
+  String get cfgSaved;
+
+  /// No description provided for @cfgIntro.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nasa server ang mga halagang ito. Ang pagbabago ay tumatalab sa bawat phone sa loob ng ilang segundo — hindi kailangan ng bagong bersyon ng app.'**
+  String get cfgIntro;
+
+  /// No description provided for @cfgMatching.
+  ///
+  /// In fil, this message translates to:
+  /// **'Matching'**
+  String get cfgMatching;
+
+  /// No description provided for @cfgRadiusLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Search radius (km)'**
+  String get cfgRadiusLabel;
+
+  /// No description provided for @cfgRadiusHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi kailanman ino-offer ang biyahe sa driver na mas malayo pa rito.'**
+  String get cfgRadiusHelp;
+
+  /// No description provided for @cfgTimeoutLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Offer timeout (segundo)'**
+  String get cfgTimeoutLabel;
+
+  /// No description provided for @cfgTimeoutHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Gaano katagal sasagot ang isang driver bago lumipat ang paghahanap.'**
+  String get cfgTimeoutHelp;
+
+  /// No description provided for @cfgMaxDriversLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Bilang ng driver na susubukan'**
+  String get cfgMaxDriversLabel;
+
+  /// No description provided for @cfgMaxDriversHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naka-cap sa 10 — tinatanggihan ng security rules ang mas malalim na paghahanap, kaya ang mas malaking numero ay magbubunga lang ng refused na write.'**
+  String get cfgMaxDriversHelp;
+
+  /// No description provided for @cfgSaveSettings.
+  ///
+  /// In fil, this message translates to:
+  /// **'I-save ang settings'**
+  String get cfgSaveSettings;
+
+  /// No description provided for @cfgEnterNumber.
+  ///
+  /// In fil, this message translates to:
+  /// **'Maglagay ng numero'**
+  String get cfgEnterNumber;
+
+  /// No description provided for @cfgWholeNumbers.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buong numero lang'**
+  String get cfgWholeNumbers;
+
+  /// No description provided for @cfgBetween.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dapat nasa pagitan ng {min} at {max}'**
+  String cfgBetween(String min, String max);
+
+  /// No description provided for @cfgStopQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ihinto ang bagong booking?'**
+  String get cfgStopQuestion;
+
+  /// No description provided for @cfgStopBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi makakapag-book ang mga commuter hangga\'t hindi mo ito binubuksan ulit.\n\nNatatapos nang normal ang mga biyaheng kasalukuyang tumatakbo — walang maiiwang nakasakay sa tricycle.'**
+  String get cfgStopBody;
+
+  /// No description provided for @cfgCancel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kanselahin'**
+  String get cfgCancel;
+
+  /// No description provided for @cfgStopBookings.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ihinto ang booking'**
+  String get cfgStopBookings;
+
+  /// No description provided for @cfgResumed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tumatanggap na ulit ng booking.'**
+  String get cfgResumed;
+
+  /// No description provided for @cfgStopped.
+  ///
+  /// In fil, this message translates to:
+  /// **'Huminto ang booking. Matatapos ang mga biyaheng tumatakbo.'**
+  String get cfgStopped;
+
+  /// No description provided for @cfgAccepting.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tumatanggap ng booking'**
+  String get cfgAccepting;
+
+  /// No description provided for @cfgStoppedLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Huminto ang booking'**
+  String get cfgStoppedLabel;
+
+  /// No description provided for @cfgAcceptingHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'I-off ito para ihinto ang pilot. Tumatalab ito sa bawat phone sa loob ng ilang segundo, at hindi kailangan ng app update.'**
+  String get cfgAcceptingHelp;
+
+  /// No description provided for @cfgStoppedHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi makakapag-book ang mga commuter. Natatapos nang normal ang mga biyaheng tumatakbo.'**
+  String get cfgStoppedHelp;
+
+  /// No description provided for @fbTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Feedback'**
+  String get fbTitle;
+
+  /// No description provided for @fbNoneTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang report'**
+  String get fbNoneTitle;
+
+  /// No description provided for @fbNoneBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lilitaw dito ang mga isyu at mungkahing ipinadala mula sa app.'**
+  String get fbNoneBody;
+
+  /// No description provided for @fbNeedsAttention.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng atensyon ({count})'**
+  String fbNeedsAttention(String count);
+
+  /// No description provided for @fbAllHandledTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naasikaso na lahat'**
+  String get fbAllHandledTitle;
+
+  /// No description provided for @fbAllHandledBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang bukas na report.'**
+  String get fbAllHandledBody;
+
+  /// No description provided for @fbResolved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naresolba ({count})'**
+  String fbResolved(String count);
+
+  /// No description provided for @fbCatIssue.
+  ///
+  /// In fil, this message translates to:
+  /// **'Isyu'**
+  String get fbCatIssue;
+
+  /// No description provided for @fbCatSuggestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mungkahi'**
+  String get fbCatSuggestion;
+
+  /// No description provided for @fbCatQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tanong'**
+  String get fbCatQuestion;
+
+  /// No description provided for @fbCatOther.
+  ///
+  /// In fil, this message translates to:
+  /// **'Iba pa'**
+  String get fbCatOther;
+
+  /// No description provided for @fbMarkedResolved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Namarkahang naresolba.'**
+  String get fbMarkedResolved;
+
+  /// No description provided for @fbReopened.
+  ///
+  /// In fil, this message translates to:
+  /// **'Binuksan ulit.'**
+  String get fbReopened;
+
+  /// No description provided for @fbFromRole.
+  ///
+  /// In fil, this message translates to:
+  /// **'mula sa {role}'**
+  String fbFromRole(String role);
+
+  /// No description provided for @fbReopen.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buksan ulit'**
+  String get fbReopen;
+
+  /// No description provided for @fbMarkResolved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Markahang naresolba'**
+  String get fbMarkResolved;
+
+  /// No description provided for @fbJustNow.
+  ///
+  /// In fil, this message translates to:
+  /// **'ngayon lang'**
+  String get fbJustNow;
+
+  /// No description provided for @fbMinutesAgo.
+  ///
+  /// In fil, this message translates to:
+  /// **'{minutes}m ang nakalipas'**
+  String fbMinutesAgo(String minutes);
+
+  /// No description provided for @fbHoursAgo.
+  ///
+  /// In fil, this message translates to:
+  /// **'{hours}h ang nakalipas'**
+  String fbHoursAgo(String hours);
+
+  /// No description provided for @fbDaysAgo.
+  ///
+  /// In fil, this message translates to:
+  /// **'{days}d ang nakalipas'**
+  String fbDaysAgo(String days);
+
+  /// No description provided for @anRides.
+  ///
+  /// In fil, this message translates to:
+  /// **'Biyahe'**
+  String get anRides;
+
+  /// No description provided for @anRefresh.
+  ///
+  /// In fil, this message translates to:
+  /// **'I-refresh'**
+  String get anRefresh;
+
+  /// No description provided for @anNoRides.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang biyahe sa window na ito.'**
+  String get anNoRides;
+
+  /// No description provided for @anTruncated.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipinapakita lang ang pinakabagong {cap} biyahe. Bahagi lang ang mga total sa ibaba.'**
+  String anTruncated(String cap);
+
+  /// No description provided for @anCompleted.
+  ///
+  /// In fil, this message translates to:
+  /// **'natapos'**
+  String get anCompleted;
+
+  /// No description provided for @anCompletionRate.
+  ///
+  /// In fil, this message translates to:
+  /// **'completion rate'**
+  String get anCompletionRate;
+
+  /// No description provided for @anCancelled.
+  ///
+  /// In fil, this message translates to:
+  /// **'kinansela'**
+  String get anCancelled;
+
+  /// No description provided for @anNoDriverFound.
+  ///
+  /// In fil, this message translates to:
+  /// **'walang nakitang driver'**
+  String get anNoDriverFound;
+
+  /// No description provided for @anAvgRating.
+  ///
+  /// In fil, this message translates to:
+  /// **'average na rating'**
+  String get anAvgRating;
+
+  /// No description provided for @anUnrated.
+  ///
+  /// In fil, this message translates to:
+  /// **'{unrated} sa {completed} natapos na biyahe ang walang rating.'**
+  String anUnrated(String unrated, String completed);
+
+  /// No description provided for @anDaily.
+  ///
+  /// In fil, this message translates to:
+  /// **'Araw-araw'**
+  String get anDaily;
+
+  /// No description provided for @anByDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kada driver'**
+  String get anByDriver;
+
+  /// No description provided for @anChartLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mga biyahe kada araw. Pinakaabalang araw {peak} biyahe. {days} araw ang ipinapakita.'**
+  String anChartLabel(String peak, String days);
+
+  /// No description provided for @anColDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Driver'**
+  String get anColDriver;
+
+  /// No description provided for @anColDone.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tapos'**
+  String get anColDone;
+
+  /// No description provided for @anColCancelled.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kinansela'**
+  String get anColCancelled;
+
+  /// No description provided for @anColRating.
+  ///
+  /// In fil, this message translates to:
+  /// **'Rating'**
+  String get anColRating;
+
+  /// No description provided for @fsCatProblem.
+  ///
+  /// In fil, this message translates to:
+  /// **'Problema'**
+  String get fsCatProblem;
+
+  /// No description provided for @fsCatSuggestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mungkahi'**
+  String get fsCatSuggestion;
+
+  /// No description provided for @fsCatQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tanong'**
+  String get fsCatQuestion;
+
+  /// No description provided for @fsCatOther.
+  ///
+  /// In fil, this message translates to:
+  /// **'Iba pa'**
+  String get fsCatOther;
+
+  /// No description provided for @fsSent.
+  ///
+  /// In fil, this message translates to:
+  /// **'Salamat! Nakarating sa TODA admin ang report mo.'**
+  String get fsSent;
+
+  /// No description provided for @fsTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Sabihin kung ano ang nangyari'**
+  String get fsTitle;
+
+  /// No description provided for @fsSubtitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Napupunta sa TODA administrator mo ang mga report.'**
+  String get fsSubtitle;
+
+  /// No description provided for @fsWhatHappened.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ano ang nangyari?'**
+  String get fsWhatHappened;
+
+  /// No description provided for @fsDescribe.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ilarawan ang problema para may magawa ang admin'**
+  String get fsDescribe;
+
+  /// No description provided for @fsContact.
+  ///
+  /// In fil, this message translates to:
+  /// **'Contact (opsyonal)'**
+  String get fsContact;
+
+  /// No description provided for @fsContactHelper.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kung gusto mo lang ng sagot.'**
+  String get fsContactHelper;
+
+  /// No description provided for @fsSend.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala ang report'**
+  String get fsSend;
+
+  /// No description provided for @mapPickUpAt.
+  ///
+  /// In fil, this message translates to:
+  /// **'Sunduin sa {place}'**
+  String mapPickUpAt(String place);
+
+  /// No description provided for @mapDropOffAt.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ibaba sa {place}'**
+  String mapDropOffAt(String place);
+
+  /// No description provided for @mapKm.
+  ///
+  /// In fil, this message translates to:
+  /// **'{km} km'**
+  String mapKm(String km);
+
+  /// No description provided for @mapOpenInMaps.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buksan sa maps'**
+  String get mapOpenInMaps;
+
+  /// No description provided for @mapNoMapsApp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang maps app. Destinasyon: {lat}, {lng}'**
+  String mapNoMapsApp(String lat, String lng);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

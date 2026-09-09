@@ -59,7 +59,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       if (mounted) {
         setState(() => _sentOnce = true);
         _startCooldown();
-        showSnack(context, 'Verification email sent.');
+        showSnack(context, context.l.verifyEmailSent);
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -77,7 +77,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       if (!verified) {
         showSnack(
           context,
-          'Still not confirmed. Open the link in the email, then check again.',
+          context.l.verifyStillNot,
           error: true,
         );
       }
@@ -92,16 +92,17 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final email = ref.watch(sessionProvider).user?.email ?? 'your address';
+    final email =
+        ref.watch(sessionProvider).user?.email ?? context.l.verifyYourAddress;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Confirm your email'),
+        title: Text(context.l.verifyTitle),
         actions: [
           const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(sessionProvider.notifier).signOut(),
           ),
@@ -125,16 +126,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   const Gap(AppSpacing.xl),
 
                   Text(
-                    'Confirm your email to open the admin panel',
+                    context.l.verifyHeading,
                     textAlign: TextAlign.center,
                     style: context.text.titleLarge,
                   ),
                   const Gap(AppSpacing.md),
 
                   Text(
-                    'Signing up does not prove you own an address, so the '
-                    'server will not grant admin access until $email is '
-                    'confirmed.',
+                    context.l.verifyBody(email),
                     textAlign: TextAlign.center,
                     style: context.text.bodyMedium
                         ?.copyWith(color: context.scheme.onSurfaceVariant),
@@ -156,10 +155,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                         : const Icon(Icons.send_outlined),
                     label: Text(
                       _cooldown > 0
-                          ? 'Send again in ${_cooldown}s'
+                          ? context.l.verifySendAgainIn('$_cooldown')
                           : _sentOnce
-                              ? 'Send again'
-                              : 'Send verification email',
+                              ? context.l.verifySendAgain
+                              : context.l.verifySendEmail,
                     ),
                   ),
                   const Gap(AppSpacing.md),
@@ -173,14 +172,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.refresh),
-                    label: const Text('I have confirmed it'),
+                    label: Text(context.l.verifyConfirmed),
                   ),
 
                   if (_sentOnce) ...[
                     const Gap(AppSpacing.xl),
                     Text(
-                      'Check spam if it has not arrived. Open the link, come '
-                      'back here, then tap "I have confirmed it".',
+                      context.l.verifyCheckSpam,
                       textAlign: TextAlign.center,
                       style: context.text.bodySmall
                           ?.copyWith(color: context.scheme.onSurfaceVariant),

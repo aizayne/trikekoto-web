@@ -696,4 +696,425 @@ class LFil extends L {
 
   @override
   String get loginRegisterAsDriver => 'Magparehistro bilang TODA driver';
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get adminFeedback => 'Feedback';
+
+  @override
+  String get adminDispatch => 'Dispatch';
+
+  @override
+  String get adminIdReview => 'ID review';
+
+  @override
+  String get adminPendingVerification => 'Naghihintay ng verification';
+
+  @override
+  String get adminNothingWaitingTitle => 'Walang naghihintay ng review';
+
+  @override
+  String get adminNothingWaitingBody =>
+      'Lilitaw dito ang mga bagong driver registration.';
+
+  @override
+  String adminAllDrivers(String count) {
+    return 'Lahat ng driver ($count)';
+  }
+
+  @override
+  String get adminNoDriversTitle => 'Wala pang driver';
+
+  @override
+  String get adminNoDriversBody =>
+      'Nakalista dito ang mga aprubado at naka-suspend na driver.';
+
+  @override
+  String adminDriverMarked(String status) {
+    return 'Namarkahan ang driver bilang $status.';
+  }
+
+  @override
+  String adminPlatePhone(String plate, String phone) {
+    return '$plate • $phone';
+  }
+
+  @override
+  String adminEmailChapter(String email, String chapter) {
+    return '$email\n$chapter';
+  }
+
+  @override
+  String adminRatingFrom(String average, String count) {
+    return '★ $average mula sa $count rating';
+  }
+
+  @override
+  String get adminApprove => 'Aprubahan';
+
+  @override
+  String get adminSuspend => 'I-suspend';
+
+  @override
+  String get reviewTitle => 'ID review';
+
+  @override
+  String get reviewQueueFailed => 'Hindi mabuksan ang queue';
+
+  @override
+  String get reviewNothingTitle => 'Walang naghihintay';
+
+  @override
+  String get reviewNothingBody =>
+      'Lilitaw dito ang mga bagong ID na ipinadala.';
+
+  @override
+  String get reviewApproved => 'Naaprubahan.';
+
+  @override
+  String get reviewRejected => 'Hindi tinanggap.';
+
+  @override
+  String get reviewWhyRejected => 'Bakit hindi tinanggap?';
+
+  @override
+  String get reviewReasonHint =>
+      'Hal. Malabo ang litrato, hindi mabasa ang numero.';
+
+  @override
+  String get reviewCancel => 'Kanselahin';
+
+  @override
+  String get reviewSend => 'Ipadala';
+
+  @override
+  String get reviewRoleDriver => 'Driver';
+
+  @override
+  String get reviewRoleCommuter => 'Commuter';
+
+  @override
+  String get reviewOpening => 'Binubuksan…';
+
+  @override
+  String get reviewViewId => 'Tingnan ang ID';
+
+  @override
+  String get reviewReject => 'Hindi tanggap';
+
+  @override
+  String get reviewApprove => 'Aprubahan';
+
+  @override
+  String get verifyEmailSent => 'Naipadala ang verification email.';
+
+  @override
+  String get verifyStillNot =>
+      'Hindi pa rin nakumpirma. Buksan ang link sa email, tapos tingnan ulit.';
+
+  @override
+  String get verifyYourAddress => 'ang address mo';
+
+  @override
+  String get verifyTitle => 'Kumpirmahin ang email mo';
+
+  @override
+  String get verifyHeading =>
+      'Kumpirmahin ang email mo para mabuksan ang admin panel';
+
+  @override
+  String verifyBody(String email) {
+    return 'Ang pag-sign up ay hindi patunay na sa iyo ang address, kaya hindi ka bibigyan ng admin access ng server hangga\'t hindi nakukumpirma ang $email.';
+  }
+
+  @override
+  String verifySendAgainIn(String seconds) {
+    return 'Ipadala ulit sa ${seconds}s';
+  }
+
+  @override
+  String get verifySendAgain => 'Ipadala ulit';
+
+  @override
+  String get verifySendEmail => 'Ipadala ang verification email';
+
+  @override
+  String get verifyConfirmed => 'Nakumpirma ko na';
+
+  @override
+  String get verifyCheckSpam =>
+      'Tingnan ang spam kung hindi pa dumadating. Buksan ang link, bumalik dito, tapos pindutin ang \"Nakumpirma ko na\".';
+
+  @override
+  String get cfgTitle => 'Dispatch';
+
+  @override
+  String get cfgSaved => 'Na-save ang settings. Live na sa lahat ng phone.';
+
+  @override
+  String get cfgIntro =>
+      'Nasa server ang mga halagang ito. Ang pagbabago ay tumatalab sa bawat phone sa loob ng ilang segundo — hindi kailangan ng bagong bersyon ng app.';
+
+  @override
+  String get cfgMatching => 'Matching';
+
+  @override
+  String get cfgRadiusLabel => 'Search radius (km)';
+
+  @override
+  String get cfgRadiusHelp =>
+      'Hindi kailanman ino-offer ang biyahe sa driver na mas malayo pa rito.';
+
+  @override
+  String get cfgTimeoutLabel => 'Offer timeout (segundo)';
+
+  @override
+  String get cfgTimeoutHelp =>
+      'Gaano katagal sasagot ang isang driver bago lumipat ang paghahanap.';
+
+  @override
+  String get cfgMaxDriversLabel => 'Bilang ng driver na susubukan';
+
+  @override
+  String get cfgMaxDriversHelp =>
+      'Naka-cap sa 10 — tinatanggihan ng security rules ang mas malalim na paghahanap, kaya ang mas malaking numero ay magbubunga lang ng refused na write.';
+
+  @override
+  String get cfgSaveSettings => 'I-save ang settings';
+
+  @override
+  String get cfgEnterNumber => 'Maglagay ng numero';
+
+  @override
+  String get cfgWholeNumbers => 'Buong numero lang';
+
+  @override
+  String cfgBetween(String min, String max) {
+    return 'Dapat nasa pagitan ng $min at $max';
+  }
+
+  @override
+  String get cfgStopQuestion => 'Ihinto ang bagong booking?';
+
+  @override
+  String get cfgStopBody =>
+      'Hindi makakapag-book ang mga commuter hangga\'t hindi mo ito binubuksan ulit.\n\nNatatapos nang normal ang mga biyaheng kasalukuyang tumatakbo — walang maiiwang nakasakay sa tricycle.';
+
+  @override
+  String get cfgCancel => 'Kanselahin';
+
+  @override
+  String get cfgStopBookings => 'Ihinto ang booking';
+
+  @override
+  String get cfgResumed => 'Tumatanggap na ulit ng booking.';
+
+  @override
+  String get cfgStopped =>
+      'Huminto ang booking. Matatapos ang mga biyaheng tumatakbo.';
+
+  @override
+  String get cfgAccepting => 'Tumatanggap ng booking';
+
+  @override
+  String get cfgStoppedLabel => 'Huminto ang booking';
+
+  @override
+  String get cfgAcceptingHelp =>
+      'I-off ito para ihinto ang pilot. Tumatalab ito sa bawat phone sa loob ng ilang segundo, at hindi kailangan ng app update.';
+
+  @override
+  String get cfgStoppedHelp =>
+      'Hindi makakapag-book ang mga commuter. Natatapos nang normal ang mga biyaheng tumatakbo.';
+
+  @override
+  String get fbTitle => 'Feedback';
+
+  @override
+  String get fbNoneTitle => 'Wala pang report';
+
+  @override
+  String get fbNoneBody =>
+      'Lilitaw dito ang mga isyu at mungkahing ipinadala mula sa app.';
+
+  @override
+  String fbNeedsAttention(String count) {
+    return 'Kailangan ng atensyon ($count)';
+  }
+
+  @override
+  String get fbAllHandledTitle => 'Naasikaso na lahat';
+
+  @override
+  String get fbAllHandledBody => 'Walang bukas na report.';
+
+  @override
+  String fbResolved(String count) {
+    return 'Naresolba ($count)';
+  }
+
+  @override
+  String get fbCatIssue => 'Isyu';
+
+  @override
+  String get fbCatSuggestion => 'Mungkahi';
+
+  @override
+  String get fbCatQuestion => 'Tanong';
+
+  @override
+  String get fbCatOther => 'Iba pa';
+
+  @override
+  String get fbMarkedResolved => 'Namarkahang naresolba.';
+
+  @override
+  String get fbReopened => 'Binuksan ulit.';
+
+  @override
+  String fbFromRole(String role) {
+    return 'mula sa $role';
+  }
+
+  @override
+  String get fbReopen => 'Buksan ulit';
+
+  @override
+  String get fbMarkResolved => 'Markahang naresolba';
+
+  @override
+  String get fbJustNow => 'ngayon lang';
+
+  @override
+  String fbMinutesAgo(String minutes) {
+    return '${minutes}m ang nakalipas';
+  }
+
+  @override
+  String fbHoursAgo(String hours) {
+    return '${hours}h ang nakalipas';
+  }
+
+  @override
+  String fbDaysAgo(String days) {
+    return '${days}d ang nakalipas';
+  }
+
+  @override
+  String get anRides => 'Biyahe';
+
+  @override
+  String get anRefresh => 'I-refresh';
+
+  @override
+  String get anNoRides => 'Walang biyahe sa window na ito.';
+
+  @override
+  String anTruncated(String cap) {
+    return 'Ipinapakita lang ang pinakabagong $cap biyahe. Bahagi lang ang mga total sa ibaba.';
+  }
+
+  @override
+  String get anCompleted => 'natapos';
+
+  @override
+  String get anCompletionRate => 'completion rate';
+
+  @override
+  String get anCancelled => 'kinansela';
+
+  @override
+  String get anNoDriverFound => 'walang nakitang driver';
+
+  @override
+  String get anAvgRating => 'average na rating';
+
+  @override
+  String anUnrated(String unrated, String completed) {
+    return '$unrated sa $completed natapos na biyahe ang walang rating.';
+  }
+
+  @override
+  String get anDaily => 'Araw-araw';
+
+  @override
+  String get anByDriver => 'Kada driver';
+
+  @override
+  String anChartLabel(String peak, String days) {
+    return 'Mga biyahe kada araw. Pinakaabalang araw $peak biyahe. $days araw ang ipinapakita.';
+  }
+
+  @override
+  String get anColDriver => 'Driver';
+
+  @override
+  String get anColDone => 'Tapos';
+
+  @override
+  String get anColCancelled => 'Kinansela';
+
+  @override
+  String get anColRating => 'Rating';
+
+  @override
+  String get fsCatProblem => 'Problema';
+
+  @override
+  String get fsCatSuggestion => 'Mungkahi';
+
+  @override
+  String get fsCatQuestion => 'Tanong';
+
+  @override
+  String get fsCatOther => 'Iba pa';
+
+  @override
+  String get fsSent => 'Salamat! Nakarating sa TODA admin ang report mo.';
+
+  @override
+  String get fsTitle => 'Sabihin kung ano ang nangyari';
+
+  @override
+  String get fsSubtitle => 'Napupunta sa TODA administrator mo ang mga report.';
+
+  @override
+  String get fsWhatHappened => 'Ano ang nangyari?';
+
+  @override
+  String get fsDescribe => 'Ilarawan ang problema para may magawa ang admin';
+
+  @override
+  String get fsContact => 'Contact (opsyonal)';
+
+  @override
+  String get fsContactHelper => 'Kung gusto mo lang ng sagot.';
+
+  @override
+  String get fsSend => 'Ipadala ang report';
+
+  @override
+  String mapPickUpAt(String place) {
+    return 'Sunduin sa $place';
+  }
+
+  @override
+  String mapDropOffAt(String place) {
+    return 'Ibaba sa $place';
+  }
+
+  @override
+  String mapKm(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get mapOpenInMaps => 'Buksan sa maps';
+
+  @override
+  String mapNoMapsApp(String lat, String lng) {
+    return 'Walang maps app. Destinasyon: $lat, $lng';
+  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../data/ride_analytics.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// The selected window. A Notifier rather than a plain value so changing it
 /// re-runs the query through the normal provider graph.
@@ -64,10 +65,11 @@ class RideAnalyticsPanel extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text('Rides', style: context.text.titleMedium),
+                  child:
+                      Text(context.l.anRides, style: context.text.titleMedium),
                 ),
                 IconButton(
-                  tooltip: 'Refresh',
+                  tooltip: context.l.anRefresh,
                   icon: const Icon(Icons.refresh),
                   onPressed: () => ref.invalidate(rideAnalyticsProvider),
                 ),
@@ -119,7 +121,7 @@ class _Body extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
         child: Text(
-          'No rides in this window.',
+          context.l.anNoRides,
           style: context.text.bodyMedium
               ?.copyWith(color: context.scheme.onSurfaceVariant),
         ),
@@ -132,8 +134,7 @@ class _Body extends StatelessWidget {
         if (a.truncated) ...[
           _Notice(
             icon: Icons.filter_alt_outlined,
-            text: 'Showing the most recent $_readCap rides only. '
-                'Totals below are partial.',
+            text: context.l.anTruncated('$_readCap'),
           ),
           const Gap(AppSpacing.lg),
         ],
@@ -144,22 +145,22 @@ class _Body extends StatelessWidget {
           children: [
             _Stat(
               value: '${a.completed}',
-              label: 'completed',
+              label: context.l.anCompleted,
               tone: context.semantic.success,
             ),
             _Stat(
               value: a.completionRate == null
                   ? '—'
                   : '${(a.completionRate! * 100).round()}%',
-              label: 'completion rate',
+              label: context.l.anCompletionRate,
             ),
             _Stat(
               value: '${a.cancelled}',
-              label: 'cancelled',
+              label: context.l.anCancelled,
             ),
             _Stat(
               value: '${a.expired}',
-              label: 'no driver found',
+              label: context.l.anNoDriverFound,
               // The one failure mode the operator can actually act on, by
               // recruiting drivers or widening the search radius.
               tone: a.expired > 0 ? context.scheme.error : null,
@@ -168,7 +169,7 @@ class _Body extends StatelessWidget {
               value: a.averageRating == null
                   ? '—'
                   : a.averageRating!.toStringAsFixed(2),
-              label: 'avg rating',
+              label: context.l.anAvgRating,
             ),
           ],
         ),
@@ -177,7 +178,7 @@ class _Body extends StatelessWidget {
         if (a.unrated > 0) ...[
           const Gap(AppSpacing.md),
           Text(
-            '${a.unrated} of ${a.completed} completed rides went unrated.',
+            context.l.anUnrated('${a.unrated}', '${a.completed}'),
             style: context.text.bodySmall
                 ?.copyWith(color: context.scheme.onSurfaceVariant),
           ),
@@ -187,14 +188,14 @@ class _Body extends StatelessWidget {
         // there is a shape to see.
         if (a.window.days > 1) ...[
           const Gap(AppSpacing.xl),
-          Text('Daily', style: context.text.titleSmall),
+          Text(context.l.anDaily, style: context.text.titleSmall),
           const Gap(AppSpacing.md),
           _DailyChart(points: a.daily, peak: a.busiestDayTotal),
         ],
 
         if (a.drivers.isNotEmpty) ...[
           const Gap(AppSpacing.xl),
-          Text('By driver', style: context.text.titleSmall),
+          Text(context.l.anByDriver, style: context.text.titleSmall),
           const Gap(AppSpacing.sm),
           _DriverTable(rows: a.drivers),
         ],
@@ -220,8 +221,7 @@ class _DailyChart extends StatelessWidget {
     return Semantics(
       // The bars are decorative to a screen reader; the figure it needs is
       // the one a sighted reader takes from their shape.
-      label: 'Daily rides. Busiest day $peak rides. '
-          '${points.length} days shown.',
+      label: context.l.anChartLabel('$peak', '${points.length}'),
       excludeSemantics: true,
       child: SizedBox(
         height: 108,
@@ -325,11 +325,11 @@ class _DriverTable extends StatelessWidget {
         headingRowHeight: 36,
         dataRowMinHeight: 40,
         dataRowMaxHeight: 48,
-        columns: const [
-          DataColumn(label: Text('Driver')),
-          DataColumn(label: Text('Done'), numeric: true),
-          DataColumn(label: Text('Cancelled'), numeric: true),
-          DataColumn(label: Text('Rating'), numeric: true),
+        columns: [
+          DataColumn(label: Text(context.l.anColDriver)),
+          DataColumn(label: Text(context.l.anColDone), numeric: true),
+          DataColumn(label: Text(context.l.anColCancelled), numeric: true),
+          DataColumn(label: Text(context.l.anColRating), numeric: true),
         ],
         rows: [
           for (final r in rows)

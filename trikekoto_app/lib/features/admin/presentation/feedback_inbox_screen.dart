@@ -6,6 +6,8 @@ import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../feedback/data/feedback_report.dart';
+import '../../../core/ui/locale_controller.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Every report, newest first.
 ///
@@ -29,7 +31,7 @@ class FeedbackInboxScreen extends ConsumerWidget {
     final feedbackAsync = ref.watch(allFeedbackProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Feedback')),
+      appBar: AppBar(title: Text(context.l.fbTitle)),
       body: SafeArea(
         child: feedbackAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -41,12 +43,12 @@ class FeedbackInboxScreen extends ConsumerWidget {
           ),
           data: (reports) {
             if (reports.isEmpty) {
-              return const Padding(
+              return Padding(
                 padding: EdgeInsets.all(AppSpacing.xl),
                 child: AppEmptyState(
                   icon: Icons.forum_outlined,
-                  title: 'No reports yet',
-                  body: 'Issues and suggestions sent from the app appear here.',
+                  title: context.l.fbNoneTitle,
+                  body: context.l.fbNoneBody,
                 ),
               );
             }
@@ -57,19 +59,19 @@ class FeedbackInboxScreen extends ConsumerWidget {
             return ListView(
               padding: const EdgeInsets.all(AppSpacing.xl),
               children: [
-                Text('Needs attention (${open.length})',
+                Text(context.l.fbNeedsAttention('${open.length}'),
                     style: context.text.titleMedium),
                 const Gap(AppSpacing.md),
                 if (open.isEmpty)
-                  const AppEmptyState(
+                  AppEmptyState(
                     icon: Icons.check_circle_outline,
-                    title: 'Everything handled',
-                    body: 'No open reports.',
+                    title: context.l.fbAllHandledTitle,
+                    body: context.l.fbAllHandledBody,
                   ),
                 for (final r in open) _ReportCard(report: r),
                 if (closed.isNotEmpty) ...[
                   const Gap(AppSpacing.xxl),
-                  Text('Resolved (${closed.length})',
+                  Text(context.l.fbResolved('${closed.length}'),
                       style: context.text.titleMedium),
                   const Gap(AppSpacing.md),
                   for (final r in closed) _ReportCard(report: r),
@@ -87,12 +89,12 @@ class _ReportCard extends ConsumerWidget {
   const _ReportCard({required this.report});
   final FeedbackReport report;
 
-  static const _labels = {
-    FeedbackCategory.issue: 'Issue',
-    FeedbackCategory.suggestion: 'Suggestion',
-    FeedbackCategory.question: 'Question',
-    FeedbackCategory.other: 'Other',
-  };
+  static Map<String, String> _labels(L l) => {
+        FeedbackCategory.issue: l.fbCatIssue,
+        FeedbackCategory.suggestion: l.fbCatSuggestion,
+        FeedbackCategory.question: l.fbCatQuestion,
+        FeedbackCategory.other: l.fbCatOther,
+      };
 
   Future<void> _setResolved(
       BuildContext context, WidgetRef ref, bool resolved) async {
@@ -109,7 +111,8 @@ class _ReportCard extends ConsumerWidget {
         'resolvedAt': resolved ? FieldValue.serverTimestamp() : null,
       });
       if (context.mounted) {
-        showSnack(context, resolved ? 'Marked resolved.' : 'Reopened.');
+        showSnack(context,
+            resolved ? context.l.fbMarkedResolved : context.l.fbReopened);
       }
     } catch (e) {
       if (context.mounted) showSnack(context, describeError(e), error: true);
@@ -145,13 +148,15 @@ class _ReportCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
-                    _labels[report.category] ?? report.category,
+                    _labels(context.l)[report.category] ??
+                        report.category,
                     style: context.text.bodySmall
                         ?.copyWith(color: accent, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const Gap(AppSpacing.sm),
-                Text('from a ${report.role}', style: context.text.bodySmall),
+                Text(context.l.fbFromRole(report.role),
+                    style: context.text.bodySmall),
                 const Spacer(),
                 Text(_when(report.createdAt), style: context.text.bodySmall),
               ],
@@ -182,13 +187,13 @@ class _ReportCard extends ConsumerWidget {
                   TextButton.icon(
                     onPressed: () => _setResolved(context, ref, false),
                     icon: const Icon(Icons.undo, size: AppSpacing.iconSm),
-                    label: const Text('Reopen'),
+                    label: Text(context.l.fbReopen),
                   )
                 else
                   TextButton.icon(
                     onPressed: () => _setResolved(context, ref, true),
                     icon: const Icon(Icons.check, size: AppSpacing.iconSm),
-                    label: const Text('Mark resolved'),
+                    label: Text(context.l.fbMarkResolved),
                   ),
               ],
             ),

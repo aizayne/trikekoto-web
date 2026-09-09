@@ -7,6 +7,7 @@ import '../../../core/geo/geo_utils.dart';
 import '../../../core/map/osm_map.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../rides/data/ride.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// Where the driver is headed right now, and how to get there.
 ///
@@ -60,13 +61,13 @@ class DriverRideMap extends StatelessWidget {
             Expanded(
               child: Text(
                 _headingToPickup
-                    ? 'Pick up at $_destinationLabel'
-                    : 'Drop off at $_destinationLabel',
+                    ? context.l.mapPickUpAt(_destinationLabel)
+                    : context.l.mapDropOffAt(_destinationLabel),
                 style: context.text.titleSmall,
               ),
             ),
             if (away != null)
-              Text('${away.toStringAsFixed(1)} km',
+              Text(context.l.mapKm(away.toStringAsFixed(1)),
                   style: context.text.bodySmall),
           ],
         ),
@@ -101,7 +102,7 @@ class DriverRideMap extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () => _navigate(context, destination),
           icon: const Icon(Icons.navigation_outlined),
-          label: const Text('Open in maps'),
+          label: Text(context.l.mapOpenInMaps),
         ),
       ],
     );
@@ -131,8 +132,8 @@ class DriverRideMap extends StatelessWidget {
     if (context.mounted) {
       showSnack(
         context,
-        'No maps app available. Destination: '
-        '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
+        context.l.mapNoMapsApp(
+            lat.toStringAsFixed(5), lng.toStringAsFixed(5)),
         error: true,
       );
     }

@@ -42,12 +42,12 @@ class AdminDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin'),
+        title: Text(context.l.adminTitle),
         actions: [
           const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(sessionProvider.notifier).signOut(),
           ),
@@ -72,7 +72,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: _AdminLink(
                       icon: Icons.forum_outlined,
-                      label: 'Feedback',
+                      label: context.l.adminFeedback,
                       badge: ref.watch(openFeedbackCountProvider).value,
                       onTap: () => context.go('/admin/feedback'),
                     ),
@@ -81,7 +81,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: _AdminLink(
                       icon: Icons.tune,
-                      label: 'Dispatch',
+                      label: context.l.adminDispatch,
                       onTap: () => context.go('/admin/config'),
                     ),
                   ),
@@ -93,7 +93,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: _AdminLink(
                       icon: Icons.badge_outlined,
-                      label: 'ID review',
+                      label: context.l.adminIdReview,
                       badge: ref.watch(pendingIdCountProvider),
                       onTap: () => context.go('/admin/ids'),
                     ),
@@ -108,7 +108,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               // leads — and carries a count badge when it needs attention.
               Row(
                 children: [
-                  Text('Pending verification',
+                  Text(context.l.adminPendingVerification,
                       style: context.text.titleMedium),
                   const Gap(AppSpacing.sm),
                   if (pending.isNotEmpty)
@@ -132,22 +132,22 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
               const Gap(AppSpacing.md),
               if (pending.isEmpty)
-                const AppEmptyState(
+                AppEmptyState(
                   icon: Icons.inbox_outlined,
-                  title: 'Nothing waiting for review',
-                  body: 'New driver registrations appear here.',
+                  title: context.l.adminNothingWaitingTitle,
+                  body: context.l.adminNothingWaitingBody,
                 ),
               for (final d in pending) _DriverTile(driver: d),
 
               const Gap(AppSpacing.xxl),
-              Text('All drivers (${rest.length})',
+              Text(context.l.adminAllDrivers('${rest.length}'),
                   style: context.text.titleMedium),
               const Gap(AppSpacing.md),
               if (rest.isEmpty)
-                const AppEmptyState(
+                AppEmptyState(
                   icon: Icons.groups_outlined,
-                  title: 'No drivers yet',
-                  body: 'Approved and suspended drivers are listed here.',
+                  title: context.l.adminNoDriversTitle,
+                  body: context.l.adminNoDriversBody,
                 ),
               for (final d in rest) _DriverTile(driver: d),
             ],
@@ -248,7 +248,9 @@ class _DriverTile extends ConsumerWidget {
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      if (context.mounted) showSnack(context, 'Driver marked $status.');
+      if (context.mounted) {
+        showSnack(context, context.l.adminDriverMarked(status));
+      }
     } catch (e) {
       if (context.mounted) showSnack(context, describeError(e), error: true);
     }
@@ -281,11 +283,13 @@ class _DriverTile extends ConsumerWidget {
                       Text(driver.fullName, style: context.text.titleSmall),
                       const Gap(AppSpacing.xs),
                       Text(
-                        '${driver.plateNumber} • ${driver.phone}',
+                        context.l.adminPlatePhone(
+                            driver.plateNumber, driver.phone),
                         style: context.text.bodySmall,
                       ),
                       Text(
-                        '${driver.email}\n${driver.todaChapter}',
+                        context.l.adminEmailChapter(
+                            driver.email, driver.todaChapter),
                         style: context.text.bodySmall,
                       ),
                     ],
@@ -313,8 +317,9 @@ class _DriverTile extends ConsumerWidget {
             if (driver.ratingCount > 0) ...[
               const Gap(AppSpacing.sm),
               Text(
-                '★ ${driver.ratingAverage!.toStringAsFixed(1)} '
-                'from ${driver.ratingCount} ratings',
+                context.l.adminRatingFrom(
+                    driver.ratingAverage!.toStringAsFixed(1),
+                    '${driver.ratingCount}'),
                 style: context.text.bodySmall,
               ),
             ],
@@ -329,14 +334,14 @@ class _DriverTile extends ConsumerWidget {
                     onPressed: () =>
                         _setStatus(context, ref, DriverStatus.approved),
                     icon: const Icon(Icons.check, size: AppSpacing.iconSm),
-                    label: const Text('Approve'),
+                    label: Text(context.l.adminApprove),
                   ),
                 if (driver.status == DriverStatus.approved)
                   TextButton.icon(
                     onPressed: () =>
                         _setStatus(context, ref, DriverStatus.suspended),
                     icon: const Icon(Icons.block, size: AppSpacing.iconSm),
-                    label: const Text('Suspend'),
+                    label: Text(context.l.adminSuspend),
                     style: TextButton.styleFrom(
                         foregroundColor: semantic.danger),
                   ),

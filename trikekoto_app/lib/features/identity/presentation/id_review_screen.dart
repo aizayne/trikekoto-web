@@ -7,6 +7,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
 import '../application/id_verification_service.dart';
 import '../data/id_submission.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// The admin review queue for government IDs.
 ///
@@ -28,7 +29,7 @@ class IdReviewScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ID review'),
+        title: Text(context.l.reviewTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
@@ -42,20 +43,20 @@ class IdReviewScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.xxl),
               child: AppEmptyState(
                 icon: Icons.cloud_off,
-                title: 'Hindi mabuksan ang queue',
+                title: context.l.reviewQueueFailed,
                 body: describeError(e),
               ),
             ),
           ),
           data: (items) {
             if (items.isEmpty) {
-              return const Center(
+              return Center(
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.xxl),
                   child: AppEmptyState(
                     icon: Icons.verified_outlined,
-                    title: 'Walang naghihintay',
-                    body: 'Lilitaw dito ang mga bagong ID na ipinadala.',
+                    title: context.l.reviewNothingTitle,
+                    body: context.l.reviewNothingBody,
                   ),
                 ),
               );
@@ -132,7 +133,8 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
         // in a reviewed card would mean an identity document sitting in
         // memory long after there was any reason to look at it.
         setState(() => _image = null);
-        showSnack(context, approve ? 'Naaprubahan.' : 'Hindi tinanggap.');
+        showSnack(context,
+            approve ? context.l.reviewApproved : context.l.reviewRejected);
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -148,19 +150,19 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     final out = await showDialog<String>(
       context: context,
       builder: (d) => AlertDialog(
-        title: const Text('Bakit hindi tinanggap?'),
+        title: Text(context.l.reviewWhyRejected),
         content: TextField(
           controller: c,
           autofocus: true,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Hal. Malabo ang litrato, hindi mabasa ang numero.',
+          decoration: InputDecoration(
+            hintText: context.l.reviewReasonHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(d),
-            child: const Text('Kanselahin'),
+            child: Text(context.l.reviewCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -168,7 +170,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
               if (t.length < 3) return;
               Navigator.pop(d, t);
             },
-            child: const Text('Ipadala'),
+            child: Text(context.l.reviewSend),
           ),
         ],
       ),
@@ -198,7 +200,9 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
-                    s.role == IdRole.driver ? 'Driver' : 'Commuter',
+                    s.role == IdRole.driver
+                        ? context.l.reviewRoleDriver
+                        : context.l.reviewRoleCommuter,
                     style: context.text.bodySmall,
                   ),
                 ),
@@ -231,7 +235,9 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                         height: AppSpacing.iconSm,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.image_outlined),
-                label: Text(_loading ? 'Binubuksan…' : 'Tingnan ang ID'),
+                label: Text(_loading
+                    ? context.l.reviewOpening
+                    : context.l.reviewViewId),
               ),
 
             const Gap(AppSpacing.lg),
@@ -240,7 +246,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _busy ? null : () => _decide(approve: false),
-                    child: Text('Hindi tanggap',
+                    child: Text(context.l.reviewReject,
                         style: TextStyle(color: context.scheme.error)),
                   ),
                 ),
@@ -248,7 +254,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                 Expanded(
                   child: FilledButton(
                     onPressed: _busy ? null : () => _decide(approve: true),
-                    child: const Text('Aprubahan'),
+                    child: Text(context.l.reviewApprove),
                   ),
                 ),
               ],

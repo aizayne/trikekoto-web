@@ -7,6 +7,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// Edits `config/app` — the dispatch settings every client reads.
 ///
@@ -65,7 +66,7 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
           .doc(FsCollections.configAppDoc)
           .set(payload, SetOptions(merge: true));
 
-      if (mounted) showSnack(context, 'Settings saved. Clients update live.');
+      if (mounted) showSnack(context, context.l.cfgSaved);
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
     } finally {
@@ -78,36 +79,35 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
     _seed(ref.watch(dispatchConfigProvider));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dispatch')),
+      appBar: AppBar(title: Text(context.l.cfgTitle)),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.xl),
             children: [
-              const _Explainer(
-                'These values live on the server. Changing them takes effect '
-                'on every phone within seconds — no new app version needed.',
+              _Explainer(
+                context.l.cfgIntro,
               ),
               const Gap(AppSpacing.xxl),
 
               const _BookingSwitch(),
               const Gap(AppSpacing.xxl),
 
-              Text('Matching', style: context.text.titleMedium),
+              Text(context.l.cfgMatching, style: context.text.titleMedium),
               const Gap(AppSpacing.md),
               _numberField(
                 'searchRadiusKm',
-                'Search radius (km)',
-                'Drivers further than this are never offered the ride.',
+                context.l.cfgRadiusLabel,
+                context.l.cfgRadiusHelp,
                 min: 0.5,
                 max: 50,
               ),
               const Gap(AppSpacing.md),
               _numberField(
                 'offerTimeoutSeconds',
-                'Offer timeout (seconds)',
-                'How long one driver has to answer before the search moves on.',
+                context.l.cfgTimeoutLabel,
+                context.l.cfgTimeoutHelp,
                 min: 5,
                 max: 120,
                 integer: true,
@@ -115,9 +115,8 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
               const Gap(AppSpacing.md),
               _numberField(
                 'maxDriversToTry',
-                'Drivers to try',
-                'Capped at 10 — the security rules reject a deeper search, so '
-                    'a larger number here would only produce refused writes.',
+                context.l.cfgMaxDriversLabel,
+                context.l.cfgMaxDriversHelp,
                 min: 1,
                 max: DispatchDefaults.maxDriversToTry.toDouble(),
                 integer: true,
@@ -135,7 +134,7 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
                           color: AppColors.onAccent,
                         ),
                       )
-                    : const Text('Save settings'),
+                    : Text(context.l.cfgSaveSettings),
               ),
             ],
           ),
@@ -232,20 +231,18 @@ class _BookingSwitchState extends ConsumerState<_BookingSwitch> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Stop new bookings?'),
-          content: const Text(
-            'Commuters will not be able to book until you turn this back on.\n\n'
-            'Rides already in progress finish normally — nobody sitting in a '
-            'tricycle is stranded.',
+          title: Text(context.l.cfgStopQuestion),
+          content: Text(
+            context.l.cfgStopBody,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(context.l.cfgCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Stop bookings'),
+              child: Text(context.l.cfgStopBookings),
             ),
           ],
         ),
@@ -265,8 +262,8 @@ class _BookingSwitchState extends ConsumerState<_BookingSwitch> {
         showSnack(
           context,
           accepting
-              ? 'Bookings resumed.'
-              : 'Bookings stopped. Rides in progress will finish.',
+              ? context.l.cfgResumed
+              : context.l.cfgStopped,
         );
       }
     } catch (e) {
@@ -298,7 +295,9 @@ class _BookingSwitchState extends ConsumerState<_BookingSwitch> {
                 const Gap(AppSpacing.md),
                 Expanded(
                   child: Text(
-                    accepting ? 'Accepting bookings' : 'Bookings stopped',
+                    accepting
+                        ? context.l.cfgAccepting
+                        : context.l.cfgStoppedLabel,
                     style: context.text.titleMedium,
                   ),
                 ),
@@ -315,10 +314,8 @@ class _BookingSwitchState extends ConsumerState<_BookingSwitch> {
             const Gap(AppSpacing.sm),
             Text(
               accepting
-                  ? 'Turn this off to halt the pilot. It takes effect on every '
-                    'phone within seconds, and needs no app update.'
-                  : 'Commuters cannot book. Rides already in progress finish '
-                    'normally.',
+                  ? context.l.cfgAcceptingHelp
+                  : context.l.cfgStoppedHelp,
               style: context.text.bodySmall
                   ?.copyWith(color: context.scheme.onSurfaceVariant),
             ),

@@ -691,4 +691,421 @@ class LEn extends L {
 
   @override
   String get loginRegisterAsDriver => 'Register as a TODA driver';
+
+  @override
+  String get adminTitle => 'Admin';
+
+  @override
+  String get adminFeedback => 'Feedback';
+
+  @override
+  String get adminDispatch => 'Dispatch';
+
+  @override
+  String get adminIdReview => 'ID review';
+
+  @override
+  String get adminPendingVerification => 'Pending verification';
+
+  @override
+  String get adminNothingWaitingTitle => 'Nothing waiting for review';
+
+  @override
+  String get adminNothingWaitingBody => 'New driver registrations appear here.';
+
+  @override
+  String adminAllDrivers(String count) {
+    return 'All drivers ($count)';
+  }
+
+  @override
+  String get adminNoDriversTitle => 'No drivers yet';
+
+  @override
+  String get adminNoDriversBody =>
+      'Approved and suspended drivers are listed here.';
+
+  @override
+  String adminDriverMarked(String status) {
+    return 'Driver marked $status.';
+  }
+
+  @override
+  String adminPlatePhone(String plate, String phone) {
+    return '$plate • $phone';
+  }
+
+  @override
+  String adminEmailChapter(String email, String chapter) {
+    return '$email\n$chapter';
+  }
+
+  @override
+  String adminRatingFrom(String average, String count) {
+    return '★ $average from $count ratings';
+  }
+
+  @override
+  String get adminApprove => 'Approve';
+
+  @override
+  String get adminSuspend => 'Suspend';
+
+  @override
+  String get reviewTitle => 'ID review';
+
+  @override
+  String get reviewQueueFailed => 'Cannot open the queue';
+
+  @override
+  String get reviewNothingTitle => 'Nothing waiting';
+
+  @override
+  String get reviewNothingBody => 'Newly submitted IDs appear here.';
+
+  @override
+  String get reviewApproved => 'Approved.';
+
+  @override
+  String get reviewRejected => 'Not accepted.';
+
+  @override
+  String get reviewWhyRejected => 'Why was it not accepted?';
+
+  @override
+  String get reviewReasonHint =>
+      'e.g. Photo is blurry, the number cannot be read.';
+
+  @override
+  String get reviewCancel => 'Cancel';
+
+  @override
+  String get reviewSend => 'Send';
+
+  @override
+  String get reviewRoleDriver => 'Driver';
+
+  @override
+  String get reviewRoleCommuter => 'Commuter';
+
+  @override
+  String get reviewOpening => 'Opening…';
+
+  @override
+  String get reviewViewId => 'View the ID';
+
+  @override
+  String get reviewReject => 'Not accepted';
+
+  @override
+  String get reviewApprove => 'Approve';
+
+  @override
+  String get verifyEmailSent => 'Verification email sent.';
+
+  @override
+  String get verifyStillNot =>
+      'Still not confirmed. Open the link in the email, then check again.';
+
+  @override
+  String get verifyYourAddress => 'your address';
+
+  @override
+  String get verifyTitle => 'Confirm your email';
+
+  @override
+  String get verifyHeading => 'Confirm your email to open the admin panel';
+
+  @override
+  String verifyBody(String email) {
+    return 'Signing up does not prove you own an address, so the server will not grant admin access until $email is confirmed.';
+  }
+
+  @override
+  String verifySendAgainIn(String seconds) {
+    return 'Send again in ${seconds}s';
+  }
+
+  @override
+  String get verifySendAgain => 'Send again';
+
+  @override
+  String get verifySendEmail => 'Send verification email';
+
+  @override
+  String get verifyConfirmed => 'I have confirmed it';
+
+  @override
+  String get verifyCheckSpam =>
+      'Check spam if it has not arrived. Open the link, come back here, then tap \"I have confirmed it\".';
+
+  @override
+  String get cfgTitle => 'Dispatch';
+
+  @override
+  String get cfgSaved => 'Settings saved. Clients update live.';
+
+  @override
+  String get cfgIntro =>
+      'These values live on the server. Changing them takes effect on every phone within seconds — no new app version needed.';
+
+  @override
+  String get cfgMatching => 'Matching';
+
+  @override
+  String get cfgRadiusLabel => 'Search radius (km)';
+
+  @override
+  String get cfgRadiusHelp =>
+      'Drivers further than this are never offered the ride.';
+
+  @override
+  String get cfgTimeoutLabel => 'Offer timeout (seconds)';
+
+  @override
+  String get cfgTimeoutHelp =>
+      'How long one driver has to answer before the search moves on.';
+
+  @override
+  String get cfgMaxDriversLabel => 'Drivers to try';
+
+  @override
+  String get cfgMaxDriversHelp =>
+      'Capped at 10 — the security rules reject a deeper search, so a larger number here would only produce refused writes.';
+
+  @override
+  String get cfgSaveSettings => 'Save settings';
+
+  @override
+  String get cfgEnterNumber => 'Enter a number';
+
+  @override
+  String get cfgWholeNumbers => 'Whole numbers only';
+
+  @override
+  String cfgBetween(String min, String max) {
+    return 'Must be between $min and $max';
+  }
+
+  @override
+  String get cfgStopQuestion => 'Stop new bookings?';
+
+  @override
+  String get cfgStopBody =>
+      'Commuters will not be able to book until you turn this back on.\n\nRides already in progress finish normally — nobody sitting in a tricycle is stranded.';
+
+  @override
+  String get cfgCancel => 'Cancel';
+
+  @override
+  String get cfgStopBookings => 'Stop bookings';
+
+  @override
+  String get cfgResumed => 'Bookings resumed.';
+
+  @override
+  String get cfgStopped => 'Bookings stopped. Rides in progress will finish.';
+
+  @override
+  String get cfgAccepting => 'Accepting bookings';
+
+  @override
+  String get cfgStoppedLabel => 'Bookings stopped';
+
+  @override
+  String get cfgAcceptingHelp =>
+      'Turn this off to halt the pilot. It takes effect on every phone within seconds, and needs no app update.';
+
+  @override
+  String get cfgStoppedHelp =>
+      'Commuters cannot book. Rides already in progress finish normally.';
+
+  @override
+  String get fbTitle => 'Feedback';
+
+  @override
+  String get fbNoneTitle => 'No reports yet';
+
+  @override
+  String get fbNoneBody =>
+      'Issues and suggestions sent from the app appear here.';
+
+  @override
+  String fbNeedsAttention(String count) {
+    return 'Needs attention ($count)';
+  }
+
+  @override
+  String get fbAllHandledTitle => 'Everything handled';
+
+  @override
+  String get fbAllHandledBody => 'No open reports.';
+
+  @override
+  String fbResolved(String count) {
+    return 'Resolved ($count)';
+  }
+
+  @override
+  String get fbCatIssue => 'Issue';
+
+  @override
+  String get fbCatSuggestion => 'Suggestion';
+
+  @override
+  String get fbCatQuestion => 'Question';
+
+  @override
+  String get fbCatOther => 'Other';
+
+  @override
+  String get fbMarkedResolved => 'Marked resolved.';
+
+  @override
+  String get fbReopened => 'Reopened.';
+
+  @override
+  String fbFromRole(String role) {
+    return 'from a $role';
+  }
+
+  @override
+  String get fbReopen => 'Reopen';
+
+  @override
+  String get fbMarkResolved => 'Mark resolved';
+
+  @override
+  String get fbJustNow => 'just now';
+
+  @override
+  String fbMinutesAgo(String minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String fbHoursAgo(String hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String fbDaysAgo(String days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get anRides => 'Rides';
+
+  @override
+  String get anRefresh => 'Refresh';
+
+  @override
+  String get anNoRides => 'No rides in this window.';
+
+  @override
+  String anTruncated(String cap) {
+    return 'Showing the most recent $cap rides only. Totals below are partial.';
+  }
+
+  @override
+  String get anCompleted => 'completed';
+
+  @override
+  String get anCompletionRate => 'completion rate';
+
+  @override
+  String get anCancelled => 'cancelled';
+
+  @override
+  String get anNoDriverFound => 'no driver found';
+
+  @override
+  String get anAvgRating => 'avg rating';
+
+  @override
+  String anUnrated(String unrated, String completed) {
+    return '$unrated of $completed completed rides went unrated.';
+  }
+
+  @override
+  String get anDaily => 'Daily';
+
+  @override
+  String get anByDriver => 'By driver';
+
+  @override
+  String anChartLabel(String peak, String days) {
+    return 'Daily rides. Busiest day $peak rides. $days days shown.';
+  }
+
+  @override
+  String get anColDriver => 'Driver';
+
+  @override
+  String get anColDone => 'Done';
+
+  @override
+  String get anColCancelled => 'Cancelled';
+
+  @override
+  String get anColRating => 'Rating';
+
+  @override
+  String get fsCatProblem => 'Problem';
+
+  @override
+  String get fsCatSuggestion => 'Suggestion';
+
+  @override
+  String get fsCatQuestion => 'Question';
+
+  @override
+  String get fsCatOther => 'Other';
+
+  @override
+  String get fsSent => 'Thanks! Your report reached the TODA admin.';
+
+  @override
+  String get fsTitle => 'Tell us what happened';
+
+  @override
+  String get fsSubtitle => 'Reports go to your TODA administrator.';
+
+  @override
+  String get fsWhatHappened => 'What happened?';
+
+  @override
+  String get fsDescribe => 'Describe the problem so an admin can act on it';
+
+  @override
+  String get fsContact => 'Contact (optional)';
+
+  @override
+  String get fsContactHelper => 'Only if you want a reply.';
+
+  @override
+  String get fsSend => 'Send report';
+
+  @override
+  String mapPickUpAt(String place) {
+    return 'Pick up at $place';
+  }
+
+  @override
+  String mapDropOffAt(String place) {
+    return 'Drop off at $place';
+  }
+
+  @override
+  String mapKm(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get mapOpenInMaps => 'Open in maps';
+
+  @override
+  String mapNoMapsApp(String lat, String lng) {
+    return 'No maps app available. Destination: $lat, $lng';
+  }
 }
