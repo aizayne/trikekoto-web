@@ -58,6 +58,7 @@ class _RiderOnboardingScreenState
       appBar: AppBar(
         title: Text(context.l.onboardingTitle),
         actions: [
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
             tooltip: context.l.signOut,

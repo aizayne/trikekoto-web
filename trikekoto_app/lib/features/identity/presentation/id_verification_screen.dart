@@ -8,6 +8,7 @@ import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../application/id_verification_service.dart';
 import '../data/id_submission.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// Submitting a government ID, for either role.
 ///
@@ -65,7 +66,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Kunan ng litrato ang ID'),
+              title: Text(context.l.idTakePhoto),
               onTap: () {
                 Navigator.pop(sheet);
                 _pickPhoto(ImageSource.camera);
@@ -73,7 +74,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Pumili sa gallery'),
+              title: Text(context.l.idGallery),
               onTap: () {
                 Navigator.pop(sheet);
                 _pickPhoto(ImageSource.gallery);
@@ -88,11 +89,11 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_photo == null) {
-      showSnack(context, 'Kailangan ng litrato ng ID.', error: true);
+      showSnack(context, context.l.idPhotoRequired, error: true);
       return;
     }
     if (!_consented) {
-      showSnack(context, 'Kailangan mong pumayag muna.', error: true);
+      showSnack(context, context.l.idConsentRequired, error: true);
       return;
     }
 
@@ -109,7 +110,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
             photoBytes: _photo!,
           );
       if (mounted) {
-        showSnack(context, 'Naipadala na. Hihintayin ang review.');
+        showSnack(context, context.l.idSubmitted);
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -125,19 +126,18 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (d) => AlertDialog(
-        title: const Text('Bawiin ang ID?'),
-        content: const Text(
-          'Buburahin ang litrato at ang detalye ng ID mo. Puwede kang '
-          'magpadala ulit anumang oras.',
+        title: Text(context.l.idWithdrawQuestion),
+        content: Text(
+          context.l.idWithdrawBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(d, false),
-            child: const Text('Hindi'),
+            child: Text(context.l.idWithdrawNo),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(d, true),
-            child: const Text('Burahin'),
+            child: Text(context.l.idWithdrawYes),
           ),
         ],
       ),
@@ -153,7 +153,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
           _consented = false;
           _number.clear();
         });
-        showSnack(context, 'Nabura na ang ID mo.');
+        showSnack(context, context.l.idDeleted);
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -168,7 +168,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ID verification'),
+        title: Text(context.l.idTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -200,20 +200,20 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
       IdStatus.approved => (
           Icons.verified_user_outlined,
           context.semantic.success,
-          'Beripikado na',
-          'Nakumpirma ng chapter ang ID mo.',
+          context.l.idApprovedTitle,
+          context.l.idApprovedBody,
         ),
       IdStatus.rejected => (
           Icons.report_outlined,
           context.scheme.error,
-          'Hindi tinanggap',
-          sub.rejectionReason ?? 'Walang ibinigay na dahilan.',
+          context.l.idRejectedTitle,
+          sub.rejectionReason ?? context.l.idNoReason,
         ),
       _ => (
           Icons.hourglass_empty,
           context.scheme.secondary,
-          'Hinihintay ang review',
-          'Ipinadala na ang ID mo. Aabisuhan ka dito pagkatapos.',
+          context.l.idPendingTitle,
+          context.l.idPendingBody,
         ),
     };
 
@@ -236,11 +236,11 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               children: [
-                _row(context, 'Uri ng ID', IdTypes.label(sub.idType)),
+                _row(context, context.l.idTypeRow, IdTypes.label(sub.idType)),
                 const Gap(AppSpacing.sm),
                 // Masked. A reviewer needs the number; the person who
                 // submitted it only needs to recognise which card this was.
-                _row(context, 'Numero', _mask(sub.idNumber)),
+                _row(context, context.l.idNumberRow, _mask(sub.idNumber)),
               ],
             ),
           ),
@@ -250,12 +250,12 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
         OutlinedButton.icon(
           onPressed: _busy ? null : _withdraw,
           icon: Icon(Icons.delete_outline, color: context.scheme.error),
-          label: Text('Bawiin at burahin ang ID',
+          label: Text(context.l.idWithdrawAndDelete,
               style: TextStyle(color: context.scheme.error)),
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Buburahin nito ang litrato at ang detalye, kahit na-aprubahan na.',
+          context.l.idWithdrawNote,
           textAlign: TextAlign.center,
           style: context.text.bodySmall,
         ),
@@ -284,13 +284,13 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Kumpirmahin ang pagkakakilanlan',
+          Text(context.l.idConfirmIdentity,
               style: context.text.headlineSmall),
           const Gap(AppSpacing.sm),
           Text(
             widget.role == IdRole.driver
-                ? 'Kailangan ito ng TODA chapter bago ka makatanggap ng biyahe.'
-                : 'Nakakatulong ito para ligtas ang lahat sa biyahe.',
+                ? context.l.idWhyDriver
+                : context.l.idWhyRider,
             style: context.text.bodyMedium
                 ?.copyWith(color: context.scheme.onSurfaceVariant),
           ),
@@ -298,9 +298,9 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
 
           DropdownButtonFormField<String>(
             initialValue: _idType,
-            decoration: const InputDecoration(
-              labelText: 'Uri ng ID',
-              prefixIcon: Icon(Icons.badge_outlined),
+            decoration: InputDecoration(
+              labelText: context.l.idTypeLabel,
+              prefixIcon: const Icon(Icons.badge_outlined),
             ),
             items: [
               for (final e in IdTypes.options.entries)
@@ -312,14 +312,14 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
 
           TextFormField(
             controller: _number,
-            decoration: const InputDecoration(
-              labelText: 'Numero ng ID',
-              prefixIcon: Icon(Icons.pin_outlined),
+            decoration: InputDecoration(
+              labelText: context.l.idNumberLabel,
+              prefixIcon: const Icon(Icons.pin_outlined),
             ),
             validator: (v) {
               final t = (v ?? '').trim();
-              if (t.length < 4) return 'Masyadong maikli';
-              if (t.length > 40) return 'Masyadong mahaba';
+              if (t.length < 4) return context.l.idNumberTooShort;
+              if (t.length > 40) return context.l.idNumberTooLong;
               return null;
             },
           ),
@@ -343,7 +343,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.onAccent),
                   )
-                : const Text('Ipadala para sa review'),
+                : Text(context.l.idSubmitForReview),
           ),
         ],
       ),
@@ -375,10 +375,10 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
                         size: AppSpacing.iconLg,
                         color: context.scheme.onSurfaceVariant),
                     const Gap(AppSpacing.sm),
-                    Text('Litrato ng ID',
+                    Text(context.l.idPhotoTitle,
                         style: context.text.titleSmall),
                     const Gap(AppSpacing.xs),
-                    Text('Siguraduhing mabasa ang pangalan at numero',
+                    Text(context.l.idPhotoHint,
                         style: context.text.bodySmall),
                   ],
                 ),
@@ -401,16 +401,11 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Paano gagamitin ang ID mo',
+            Text(context.l.idHowUsedTitle,
                 style: context.text.titleSmall),
             const Gap(AppSpacing.sm),
             Text(
-              '• Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin '
-              'kung sino ka.\n'
-              '• Hindi ito makikita ng ibang pasahero o ng driver mo.\n'
-              '• Buburahin ito 90 araw matapos ang review, o kaagad kapag '
-              'binawi mo.\n'
-              '• Puwede mong burahin anumang oras dito sa screen na ito.',
+              context.l.idHowUsedBody,
               style: context.text.bodySmall,
             ),
             const Gap(AppSpacing.md),
@@ -420,7 +415,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
               title: Text(
-                'Pumapayag ako na iproseso ang ID ko para sa pagkumpirma.',
+                context.l.idConsentLabel,
                 style: context.text.bodyMedium,
               ),
             ),

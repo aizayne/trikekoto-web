@@ -966,6 +966,372 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Mag-report ng problema'**
   String get driverReportProblem;
+
+  /// No description provided for @idTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'ID verification'**
+  String get idTitle;
+
+  /// No description provided for @idTakePhoto.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kunan ng litrato ang ID'**
+  String get idTakePhoto;
+
+  /// No description provided for @idGallery.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pumili sa gallery'**
+  String get idGallery;
+
+  /// No description provided for @idPhotoRequired.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng litrato ng ID.'**
+  String get idPhotoRequired;
+
+  /// No description provided for @idConsentRequired.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan mong pumayag muna.'**
+  String get idConsentRequired;
+
+  /// No description provided for @idSubmitted.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naipadala na. Hihintayin ang review.'**
+  String get idSubmitted;
+
+  /// No description provided for @idWithdrawQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Bawiin ang ID?'**
+  String get idWithdrawQuestion;
+
+  /// No description provided for @idWithdrawBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buburahin ang litrato at ang detalye ng ID mo. Puwede kang magpadala ulit anumang oras.'**
+  String get idWithdrawBody;
+
+  /// No description provided for @idWithdrawNo.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi'**
+  String get idWithdrawNo;
+
+  /// No description provided for @idWithdrawYes.
+  ///
+  /// In fil, this message translates to:
+  /// **'Burahin'**
+  String get idWithdrawYes;
+
+  /// No description provided for @idDeleted.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nabura na ang ID mo.'**
+  String get idDeleted;
+
+  /// No description provided for @idApprovedTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Beripikado na'**
+  String get idApprovedTitle;
+
+  /// No description provided for @idApprovedBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakumpirma ng chapter ang ID mo.'**
+  String get idApprovedBody;
+
+  /// No description provided for @idRejectedTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi tinanggap'**
+  String get idRejectedTitle;
+
+  /// No description provided for @idNoReason.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang ibinigay na dahilan.'**
+  String get idNoReason;
+
+  /// No description provided for @idPendingTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hinihintay ang review'**
+  String get idPendingTitle;
+
+  /// No description provided for @idPendingBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipinadala na ang ID mo. Aabisuhan ka dito pagkatapos.'**
+  String get idPendingBody;
+
+  /// No description provided for @idTypeRow.
+  ///
+  /// In fil, this message translates to:
+  /// **'Uri ng ID'**
+  String get idTypeRow;
+
+  /// No description provided for @idNumberRow.
+  ///
+  /// In fil, this message translates to:
+  /// **'Numero'**
+  String get idNumberRow;
+
+  /// No description provided for @idWithdrawAndDelete.
+  ///
+  /// In fil, this message translates to:
+  /// **'Bawiin at burahin ang ID'**
+  String get idWithdrawAndDelete;
+
+  /// No description provided for @idWithdrawNote.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buburahin nito ang litrato at ang detalye, kahit na-aprubahan na.'**
+  String get idWithdrawNote;
+
+  /// No description provided for @idConfirmIdentity.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kumpirmahin ang pagkakakilanlan'**
+  String get idConfirmIdentity;
+
+  /// No description provided for @idWhyDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ito ng TODA chapter bago ka makatanggap ng biyahe.'**
+  String get idWhyDriver;
+
+  /// No description provided for @idWhyRider.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakakatulong ito para ligtas ang lahat sa biyahe.'**
+  String get idWhyRider;
+
+  /// No description provided for @idTypeLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Uri ng ID'**
+  String get idTypeLabel;
+
+  /// No description provided for @idNumberLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Numero ng ID'**
+  String get idNumberLabel;
+
+  /// No description provided for @idNumberTooShort.
+  ///
+  /// In fil, this message translates to:
+  /// **'Masyadong maikli'**
+  String get idNumberTooShort;
+
+  /// No description provided for @idNumberTooLong.
+  ///
+  /// In fil, this message translates to:
+  /// **'Masyadong mahaba'**
+  String get idNumberTooLong;
+
+  /// No description provided for @idSubmitForReview.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala para sa review'**
+  String get idSubmitForReview;
+
+  /// No description provided for @idPhotoTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Litrato ng ID'**
+  String get idPhotoTitle;
+
+  /// No description provided for @idPhotoHint.
+  ///
+  /// In fil, this message translates to:
+  /// **'Siguraduhing mabasa ang pangalan at numero'**
+  String get idPhotoHint;
+
+  /// No description provided for @idHowUsedTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Paano gagamitin ang ID mo'**
+  String get idHowUsedTitle;
+
+  /// No description provided for @idHowUsedBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'• Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka.\n• Hindi ito makikita ng ibang pasahero o ng driver mo.\n• Buburahin ito 90 araw matapos ang review, o kaagad kapag binawi mo.\n• Puwede mong burahin anumang oras dito sa screen na ito.'**
+  String get idHowUsedBody;
+
+  /// No description provided for @idConsentLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pumapayag ako na iproseso ang ID ko para sa pagkumpirma.'**
+  String get idConsentLabel;
+
+  /// No description provided for @regTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Driver registration'**
+  String get regTitle;
+
+  /// No description provided for @regPendingNote.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ang bagong account ay Pending muna. May TODA admin na magbe-verify sa iyo bago ka makatanggap ng biyahe.'**
+  String get regPendingNote;
+
+  /// No description provided for @regYourDetails.
+  ///
+  /// In fil, this message translates to:
+  /// **'Detalye mo'**
+  String get regYourDetails;
+
+  /// No description provided for @regFirstName.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pangalan'**
+  String get regFirstName;
+
+  /// No description provided for @regLastName.
+  ///
+  /// In fil, this message translates to:
+  /// **'Apelyido'**
+  String get regLastName;
+
+  /// No description provided for @regMobile.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mobile number'**
+  String get regMobile;
+
+  /// No description provided for @regMobileHelper.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ito ang tatawagan ng commuter kapag tinanggap mo.'**
+  String get regMobileHelper;
+
+  /// No description provided for @regYourTricycle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tricycle mo'**
+  String get regYourTricycle;
+
+  /// No description provided for @regPlate.
+  ///
+  /// In fil, this message translates to:
+  /// **'Plate number'**
+  String get regPlate;
+
+  /// No description provided for @regPlateHelper.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipapakita sa commuter para makita ka nila.'**
+  String get regPlateHelper;
+
+  /// No description provided for @regTodaChapter.
+  ///
+  /// In fil, this message translates to:
+  /// **'TODA chapter'**
+  String get regTodaChapter;
+
+  /// No description provided for @regSignInSection.
+  ///
+  /// In fil, this message translates to:
+  /// **'Sign-in'**
+  String get regSignInSection;
+
+  /// No description provided for @regEmail.
+  ///
+  /// In fil, this message translates to:
+  /// **'Email'**
+  String get regEmail;
+
+  /// No description provided for @regEmailInvalid.
+  ///
+  /// In fil, this message translates to:
+  /// **'Maglagay ng tamang email address'**
+  String get regEmailInvalid;
+
+  /// No description provided for @regPassword.
+  ///
+  /// In fil, this message translates to:
+  /// **'Password'**
+  String get regPassword;
+
+  /// No description provided for @regPasswordHelper.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi bababa sa 6 na karakter.'**
+  String get regPasswordHelper;
+
+  /// No description provided for @regShowPassword.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipakita ang password'**
+  String get regShowPassword;
+
+  /// No description provided for @regHidePassword.
+  ///
+  /// In fil, this message translates to:
+  /// **'Itago ang password'**
+  String get regHidePassword;
+
+  /// No description provided for @regPasswordTooShort.
+  ///
+  /// In fil, this message translates to:
+  /// **'Gumamit ng hindi bababa sa 6 na karakter'**
+  String get regPasswordTooShort;
+
+  /// No description provided for @regCreateAccount.
+  ///
+  /// In fil, this message translates to:
+  /// **'Gumawa ng account'**
+  String get regCreateAccount;
+
+  /// No description provided for @regFieldRequired.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ilagay ang {label}'**
+  String regFieldRequired(String label);
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mag-sign in'**
+  String get loginTitle;
+
+  /// No description provided for @loginWelcome.
+  ///
+  /// In fil, this message translates to:
+  /// **'Maligayang pagbabalik'**
+  String get loginWelcome;
+
+  /// No description provided for @loginBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dito nagsa-sign in ang mga driver at administrator. Nakadepende sa account mo kung saan ka mapupunta.'**
+  String get loginBody;
+
+  /// No description provided for @loginEmailInvalid.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ilagay ang email na ginamit mo sa pagpaparehistro'**
+  String get loginEmailInvalid;
+
+  /// No description provided for @loginPasswordTooShort.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi bababa sa 6 na karakter'**
+  String get loginPasswordTooShort;
+
+  /// No description provided for @loginRegisterAsDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Magparehistro bilang TODA driver'**
+  String get loginRegisterAsDriver;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -7,6 +7,7 @@ import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../data/driver.dart';
+import '../../../core/ui/locale_controller.dart';
 
 class DriverRegisterScreen extends ConsumerStatefulWidget {
   const DriverRegisterScreen({super.key});
@@ -84,7 +85,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Driver registration'),
+        title: Text(context.l.regTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
@@ -106,58 +107,57 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                     // pending screen is not a surprise.
                     _Notice(
                       icon: Icons.hourglass_top_outlined,
-                      text: 'New accounts start as Pending. A TODA admin '
-                          'verifies you before you can accept rides.',
+                      text: context.l.regPendingNote,
                     ),
                     const Gap(AppSpacing.xl),
 
-                    _SectionLabel('Your details'),
+                    _SectionLabel(context.l.regYourDetails),
                     const Gap(AppSpacing.md),
-                    _field(_firstName, 'First name',
+                    _field(_firstName, context.l.regFirstName,
                         icon: Icons.person_outline,
                         capitalization: TextCapitalization.words),
                     const Gap(AppSpacing.md),
-                    _field(_lastName, 'Last name',
+                    _field(_lastName, context.l.regLastName,
                         capitalization: TextCapitalization.words),
                     const Gap(AppSpacing.md),
                     _field(
                       _phone,
-                      'Mobile number',
+                      context.l.regMobile,
                       min: 7,
                       icon: Icons.phone_outlined,
                       keyboard: TextInputType.phone,
-                      helper: 'Commuters call this number when you accept.',
+                      helper: context.l.regMobileHelper,
                     ),
 
                     const Gap(AppSpacing.xxl),
-                    _SectionLabel('Your tricycle'),
+                    _SectionLabel(context.l.regYourTricycle),
                     const Gap(AppSpacing.md),
                     _field(
                       _plate,
-                      'Plate number',
+                      context.l.regPlate,
                       min: 3,
                       icon: Icons.confirmation_number_outlined,
                       capitalization: TextCapitalization.characters,
-                      helper: 'Shown to the commuter so they find you.',
+                      helper: context.l.regPlateHelper,
                     ),
                     const Gap(AppSpacing.md),
-                    _field(_toda, 'TODA chapter',
+                    _field(_toda, context.l.regTodaChapter,
                         icon: Icons.groups_outlined,
                         capitalization: TextCapitalization.words),
 
                     const Gap(AppSpacing.xxl),
-                    _SectionLabel('Sign-in'),
+                    _SectionLabel(context.l.regSignInSection),
                     const Gap(AppSpacing.md),
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline),
+                      decoration: InputDecoration(
+                        labelText: context.l.regEmail,
+                        prefixIcon: const Icon(Icons.mail_outline),
                       ),
                       validator: (v) => (v == null || !v.contains('@'))
-                          ? 'Enter a valid email address'
+                          ? context.l.regEmailInvalid
                           : null,
                     ),
                     const Gap(AppSpacing.md),
@@ -166,12 +166,14 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                       obscureText: _obscure,
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
-                        labelText: 'Password',
+                        labelText: context.l.regPassword,
                         prefixIcon: const Icon(Icons.lock_outline),
-                        helperText: 'At least 6 characters.',
+                        helperText: context.l.regPasswordHelper,
                         suffixIcon: IconButton(
                           tooltip:
-                              _obscure ? 'Show password' : 'Hide password',
+                              _obscure
+                                  ? context.l.regShowPassword
+                                  : context.l.regHidePassword,
                           icon: Icon(_obscure
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined),
@@ -179,7 +181,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                         ),
                       ),
                       validator: (v) => (v == null || v.length < 6)
-                          ? 'Use at least 6 characters'
+                          ? context.l.regPasswordTooShort
                           : null,
                     ),
                     const Gap(AppSpacing.xxl),
@@ -194,7 +196,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                                 color: AppColors.onAccent,
                               ),
                             )
-                          : const Text('Create account'),
+                          : Text(context.l.regCreateAccount),
                     ),
                   ],
                 ),
@@ -227,7 +229,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       // Errors name the field rather than saying "Required", so an error
       // summary read aloud still identifies what to fix.
       validator: (v) => (v == null || v.trim().length < min)
-          ? 'Enter your ${label.toLowerCase()}'
+          ? context.l.regFieldRequired(label.toLowerCase())
           : null,
     );
   }

@@ -290,6 +290,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
       appBar: AppBar(
         title: Text(context.l.bookTitle),
         actions: [
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           // Shows the rider's own photo once they have one, so the way to
           // change it is the thing it changes.

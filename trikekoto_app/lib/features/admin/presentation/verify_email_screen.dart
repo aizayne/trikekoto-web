@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// Shown instead of the admin panel when the signed-in address is unconfirmed.
 ///
@@ -97,6 +98,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       appBar: AppBar(
         title: const Text('Confirm your email'),
         actions: [
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
             tooltip: 'Sign out',

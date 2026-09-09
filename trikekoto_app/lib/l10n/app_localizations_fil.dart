@@ -501,4 +501,199 @@ class LFil extends L {
 
   @override
   String get driverReportProblem => 'Mag-report ng problema';
+
+  @override
+  String get idTitle => 'ID verification';
+
+  @override
+  String get idTakePhoto => 'Kunan ng litrato ang ID';
+
+  @override
+  String get idGallery => 'Pumili sa gallery';
+
+  @override
+  String get idPhotoRequired => 'Kailangan ng litrato ng ID.';
+
+  @override
+  String get idConsentRequired => 'Kailangan mong pumayag muna.';
+
+  @override
+  String get idSubmitted => 'Naipadala na. Hihintayin ang review.';
+
+  @override
+  String get idWithdrawQuestion => 'Bawiin ang ID?';
+
+  @override
+  String get idWithdrawBody =>
+      'Buburahin ang litrato at ang detalye ng ID mo. Puwede kang magpadala ulit anumang oras.';
+
+  @override
+  String get idWithdrawNo => 'Hindi';
+
+  @override
+  String get idWithdrawYes => 'Burahin';
+
+  @override
+  String get idDeleted => 'Nabura na ang ID mo.';
+
+  @override
+  String get idApprovedTitle => 'Beripikado na';
+
+  @override
+  String get idApprovedBody => 'Nakumpirma ng chapter ang ID mo.';
+
+  @override
+  String get idRejectedTitle => 'Hindi tinanggap';
+
+  @override
+  String get idNoReason => 'Walang ibinigay na dahilan.';
+
+  @override
+  String get idPendingTitle => 'Hinihintay ang review';
+
+  @override
+  String get idPendingBody =>
+      'Ipinadala na ang ID mo. Aabisuhan ka dito pagkatapos.';
+
+  @override
+  String get idTypeRow => 'Uri ng ID';
+
+  @override
+  String get idNumberRow => 'Numero';
+
+  @override
+  String get idWithdrawAndDelete => 'Bawiin at burahin ang ID';
+
+  @override
+  String get idWithdrawNote =>
+      'Buburahin nito ang litrato at ang detalye, kahit na-aprubahan na.';
+
+  @override
+  String get idConfirmIdentity => 'Kumpirmahin ang pagkakakilanlan';
+
+  @override
+  String get idWhyDriver =>
+      'Kailangan ito ng TODA chapter bago ka makatanggap ng biyahe.';
+
+  @override
+  String get idWhyRider => 'Nakakatulong ito para ligtas ang lahat sa biyahe.';
+
+  @override
+  String get idTypeLabel => 'Uri ng ID';
+
+  @override
+  String get idNumberLabel => 'Numero ng ID';
+
+  @override
+  String get idNumberTooShort => 'Masyadong maikli';
+
+  @override
+  String get idNumberTooLong => 'Masyadong mahaba';
+
+  @override
+  String get idSubmitForReview => 'Ipadala para sa review';
+
+  @override
+  String get idPhotoTitle => 'Litrato ng ID';
+
+  @override
+  String get idPhotoHint => 'Siguraduhing mabasa ang pangalan at numero';
+
+  @override
+  String get idHowUsedTitle => 'Paano gagamitin ang ID mo';
+
+  @override
+  String get idHowUsedBody =>
+      '• Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka.\n• Hindi ito makikita ng ibang pasahero o ng driver mo.\n• Buburahin ito 90 araw matapos ang review, o kaagad kapag binawi mo.\n• Puwede mong burahin anumang oras dito sa screen na ito.';
+
+  @override
+  String get idConsentLabel =>
+      'Pumapayag ako na iproseso ang ID ko para sa pagkumpirma.';
+
+  @override
+  String get regTitle => 'Driver registration';
+
+  @override
+  String get regPendingNote =>
+      'Ang bagong account ay Pending muna. May TODA admin na magbe-verify sa iyo bago ka makatanggap ng biyahe.';
+
+  @override
+  String get regYourDetails => 'Detalye mo';
+
+  @override
+  String get regFirstName => 'Pangalan';
+
+  @override
+  String get regLastName => 'Apelyido';
+
+  @override
+  String get regMobile => 'Mobile number';
+
+  @override
+  String get regMobileHelper =>
+      'Ito ang tatawagan ng commuter kapag tinanggap mo.';
+
+  @override
+  String get regYourTricycle => 'Tricycle mo';
+
+  @override
+  String get regPlate => 'Plate number';
+
+  @override
+  String get regPlateHelper => 'Ipapakita sa commuter para makita ka nila.';
+
+  @override
+  String get regTodaChapter => 'TODA chapter';
+
+  @override
+  String get regSignInSection => 'Sign-in';
+
+  @override
+  String get regEmail => 'Email';
+
+  @override
+  String get regEmailInvalid => 'Maglagay ng tamang email address';
+
+  @override
+  String get regPassword => 'Password';
+
+  @override
+  String get regPasswordHelper => 'Hindi bababa sa 6 na karakter.';
+
+  @override
+  String get regShowPassword => 'Ipakita ang password';
+
+  @override
+  String get regHidePassword => 'Itago ang password';
+
+  @override
+  String get regPasswordTooShort => 'Gumamit ng hindi bababa sa 6 na karakter';
+
+  @override
+  String get regCreateAccount => 'Gumawa ng account';
+
+  @override
+  String regFieldRequired(String label) {
+    return 'Ilagay ang $label';
+  }
+
+  @override
+  String get loginTitle => 'Mag-sign in';
+
+  @override
+  String get loginWelcome => 'Maligayang pagbabalik';
+
+  @override
+  String get loginBody =>
+      'Dito nagsa-sign in ang mga driver at administrator. Nakadepende sa account mo kung saan ka mapupunta.';
+
+  @override
+  String get loginEmailInvalid =>
+      'Ilagay ang email na ginamit mo sa pagpaparehistro';
+
+  @override
+  String get loginPasswordTooShort => 'Hindi bababa sa 6 na karakter';
+
+  @override
+  String get loginRegisterAsDriver => 'Magparehistro bilang TODA driver';
 }

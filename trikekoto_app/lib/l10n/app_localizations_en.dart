@@ -498,4 +498,197 @@ class LEn extends L {
 
   @override
   String get driverReportProblem => 'Report a problem';
+
+  @override
+  String get idTitle => 'ID verification';
+
+  @override
+  String get idTakePhoto => 'Photograph the ID';
+
+  @override
+  String get idGallery => 'Choose from gallery';
+
+  @override
+  String get idPhotoRequired => 'A photo of the ID is required.';
+
+  @override
+  String get idConsentRequired => 'You need to agree first.';
+
+  @override
+  String get idSubmitted => 'Sent. It will be reviewed.';
+
+  @override
+  String get idWithdrawQuestion => 'Withdraw the ID?';
+
+  @override
+  String get idWithdrawBody =>
+      'Your ID photo and details will be deleted. You can send it again at any time.';
+
+  @override
+  String get idWithdrawNo => 'No';
+
+  @override
+  String get idWithdrawYes => 'Delete';
+
+  @override
+  String get idDeleted => 'Your ID has been deleted.';
+
+  @override
+  String get idApprovedTitle => 'Verified';
+
+  @override
+  String get idApprovedBody => 'The chapter has confirmed your ID.';
+
+  @override
+  String get idRejectedTitle => 'Not accepted';
+
+  @override
+  String get idNoReason => 'No reason was given.';
+
+  @override
+  String get idPendingTitle => 'Waiting for review';
+
+  @override
+  String get idPendingBody =>
+      'Your ID has been sent. You will be told here once it is reviewed.';
+
+  @override
+  String get idTypeRow => 'ID type';
+
+  @override
+  String get idNumberRow => 'Number';
+
+  @override
+  String get idWithdrawAndDelete => 'Withdraw and delete the ID';
+
+  @override
+  String get idWithdrawNote =>
+      'This deletes the photo and the details, even if it was already approved.';
+
+  @override
+  String get idConfirmIdentity => 'Confirm your identity';
+
+  @override
+  String get idWhyDriver =>
+      'The TODA chapter needs this before you can take rides.';
+
+  @override
+  String get idWhyRider => 'This helps keep everyone safe on a ride.';
+
+  @override
+  String get idTypeLabel => 'ID type';
+
+  @override
+  String get idNumberLabel => 'ID number';
+
+  @override
+  String get idNumberTooShort => 'Too short';
+
+  @override
+  String get idNumberTooLong => 'Too long';
+
+  @override
+  String get idSubmitForReview => 'Send for review';
+
+  @override
+  String get idPhotoTitle => 'Photo of the ID';
+
+  @override
+  String get idPhotoHint => 'Make sure the name and number can be read';
+
+  @override
+  String get idHowUsedTitle => 'How your ID is used';
+
+  @override
+  String get idHowUsedBody =>
+      '• Only a TODA chapter officer looks at it, to confirm who you are.\n• No other passenger and no driver of yours can see it.\n• It is deleted 90 days after review, or immediately if you withdraw it.\n• You can delete it at any time from this screen.';
+
+  @override
+  String get idConsentLabel =>
+      'I agree to my ID being processed for verification.';
+
+  @override
+  String get regTitle => 'Driver registration';
+
+  @override
+  String get regPendingNote =>
+      'New accounts start as Pending. A TODA admin verifies you before you can accept rides.';
+
+  @override
+  String get regYourDetails => 'Your details';
+
+  @override
+  String get regFirstName => 'First name';
+
+  @override
+  String get regLastName => 'Last name';
+
+  @override
+  String get regMobile => 'Mobile number';
+
+  @override
+  String get regMobileHelper => 'Commuters call this number when you accept.';
+
+  @override
+  String get regYourTricycle => 'Your tricycle';
+
+  @override
+  String get regPlate => 'Plate number';
+
+  @override
+  String get regPlateHelper => 'Shown to the commuter so they find you.';
+
+  @override
+  String get regTodaChapter => 'TODA chapter';
+
+  @override
+  String get regSignInSection => 'Sign-in';
+
+  @override
+  String get regEmail => 'Email';
+
+  @override
+  String get regEmailInvalid => 'Enter a valid email address';
+
+  @override
+  String get regPassword => 'Password';
+
+  @override
+  String get regPasswordHelper => 'At least 6 characters.';
+
+  @override
+  String get regShowPassword => 'Show password';
+
+  @override
+  String get regHidePassword => 'Hide password';
+
+  @override
+  String get regPasswordTooShort => 'Use at least 6 characters';
+
+  @override
+  String get regCreateAccount => 'Create account';
+
+  @override
+  String regFieldRequired(String label) {
+    return 'Enter your $label';
+  }
+
+  @override
+  String get loginTitle => 'Sign in';
+
+  @override
+  String get loginWelcome => 'Welcome back';
+
+  @override
+  String get loginBody =>
+      'Drivers and administrators sign in here. Where you land depends on your account.';
+
+  @override
+  String get loginEmailInvalid => 'Enter the email you registered with';
+
+  @override
+  String get loginPasswordTooShort => 'At least 6 characters';
+
+  @override
+  String get loginRegisterAsDriver => 'Register as a TODA driver';
 }

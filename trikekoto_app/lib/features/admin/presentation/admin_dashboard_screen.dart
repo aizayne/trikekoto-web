@@ -12,6 +12,7 @@ import '../../../core/ui/theme_controller.dart';
 import '../../drivers/data/driver.dart';
 import 'ride_analytics_panel.dart';
 import 'verify_email_screen.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// All drivers, so the panel can show the verification queue and the roster in
 /// one stream. `list` on `drivers` is admin-only, so this query simply fails
@@ -43,6 +44,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Admin'),
         actions: [
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
             tooltip: 'Sign out',

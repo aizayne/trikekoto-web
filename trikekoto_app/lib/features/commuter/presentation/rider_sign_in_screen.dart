@@ -155,7 +155,7 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
               ? setState(() => _verificationId = null)
               : context.go('/'),
         ),
-        actions: const [ThemeToggleButton()],
+        actions: const [LanguageToggleButton(), ThemeToggleButton()],
       ),
       body: SafeArea(
         child: Center(

@@ -163,6 +163,7 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
           onPressed: () => context.go('/commuter'),
         ),
         actions: [
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
             tooltip: context.l.signOut,

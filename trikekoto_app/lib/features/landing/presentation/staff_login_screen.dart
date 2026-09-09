@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/locale_controller.dart';
 
 /// One form for both drivers and admins. Which panel you land in is decided by
 /// [SessionController] from Firestore, not by anything chosen here — picking
@@ -48,7 +49,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign in'),
+        title: Text(context.l.loginTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -67,11 +68,11 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Welcome back', style: context.text.headlineSmall),
+                      Text(context.l.loginWelcome,
+                          style: context.text.headlineSmall),
                       const Gap(AppSpacing.xs),
                       Text(
-                        'Drivers and administrators sign in here. Where you '
-                        'land depends on your account.',
+                        context.l.loginBody,
                         style: context.text.bodySmall,
                       ),
                       const Gap(AppSpacing.xxl),
@@ -80,12 +81,12 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.mail_outline),
+                        decoration: InputDecoration(
+                          labelText: context.l.regEmail,
+                          prefixIcon: const Icon(Icons.mail_outline),
                         ),
                         validator: (v) => (v == null || !v.contains('@'))
-                            ? 'Enter the email you registered with'
+                            ? context.l.loginEmailInvalid
                             : null,
                       ),
                       const Gap(AppSpacing.md),
@@ -95,12 +96,14 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                         autofillHints: const [AutofillHints.password],
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: context.l.regPassword,
                           prefixIcon: const Icon(Icons.lock_outline),
                           // Typing a password blind on a phone keyboard in
                           // sunlight is the usual cause of a failed sign-in.
                           suffixIcon: IconButton(
-                            tooltip: _obscure ? 'Show password' : 'Hide password',
+                            tooltip: _obscure
+                                ? context.l.regShowPassword
+                                : context.l.regHidePassword,
                             icon: Icon(_obscure
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined),
@@ -109,7 +112,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                           ),
                         ),
                         validator: (v) => (v == null || v.length < 6)
-                            ? 'At least 6 characters'
+                            ? context.l.loginPasswordTooShort
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
@@ -125,12 +128,12 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                                   color: AppColors.onAccent,
                                 ),
                               )
-                            : const Text('Sign in'),
+                            : Text(context.l.loginTitle),
                       ),
                       const Gap(AppSpacing.sm),
                       TextButton(
                         onPressed: _busy ? null : () => context.go('/register'),
-                        child: const Text('Register as a TODA driver'),
+                        child: Text(context.l.loginRegisterAsDriver),
                       ),
                     ],
                   ),

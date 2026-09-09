@@ -31,6 +31,7 @@ class DriverDashboardScreen extends ConsumerWidget {
             onPressed: () =>
                 showFeedbackSheet(context, role: FeedbackRole.driver),
           ),
+          const LanguageToggleButton(),
           const ThemeToggleButton(),
           IconButton(
             tooltip: context.l.signOut,
