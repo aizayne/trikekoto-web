@@ -56,6 +56,43 @@ service firebase.storage {
       allow delete: if isSelf(uid);
     }
 
+
+    // ═══════════════════════════════════════════════════════
+    //  ids/{uid}/card — government ID, for manual review
+    // ═══════════════════════════════════════════════════════
+    // Sensitive personal information under RA 10173. Held to a stricter
+    // standard than the profile photo above, in three ways.
+    //
+    // Read is the subject or an admin, and nobody else — not the driver a
+    // commuter rides with, not another admin-less staff account.
+    //
+    // Nothing ever mints a download URL for this object. The admin app reads
+    // the bytes with getData(), which stays subject to this rule; a download
+    // URL would carry a token that bypasses it and would keep working after
+    // the submission was deleted.
+    //
+    // The subject may delete their own, so withdrawing consent is something
+    // they can actually do rather than something they have to ask for.
+    match /ids/{uid}/card {
+      function isAdminReviewer() {
+        return request.auth != null
+          && request.auth.token.email_verified == true
+          && firestore.exists(
+               /databases/(default)/documents/admins/$(request.auth.token.email));
+      }
+
+      allow read: if isSelf(uid) || isAdminReviewer();
+
+      allow write: if isSelf(uid)
+        // 4 MB. Larger than a profile photo because an ID has to stay
+        // legible enough to read a number off, and smaller than a modern
+        // camera's default so the client is obliged to downscale.
+        && request.resource.size < 4 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+
+      allow delete: if isSelf(uid) || isAdminReviewer();
+    }
+
     // ═══════════════════════════════════════════════════════
     //  Default deny — anything not matched above is refused.
     // ═══════════════════════════════════════════════════════

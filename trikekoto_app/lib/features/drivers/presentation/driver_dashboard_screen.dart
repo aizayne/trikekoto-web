@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
@@ -51,6 +52,20 @@ class DriverDashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.xl),
             children: [
               _StatusBanner(driver: driver),
+              const Gap(AppSpacing.md),
+              // Available at every status, including pending — a driver
+              // waiting on approval is exactly who should be able to send
+              // the document that unblocks it.
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.badge_outlined),
+                  title: const Text('ID verification'),
+                  subtitle: const Text(
+                      'Ipadala ang lisensya o ID para sa chapter'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/driver/id'),
+                ),
+              ),
               const Gap(AppSpacing.lg),
               if (driver.isApproved) ...[
                 const _OnlineToggle(),

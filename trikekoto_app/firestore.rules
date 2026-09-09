@@ -549,6 +549,78 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+
+    // ═══════════════════════════════════════════════════════
+    //  id_submissions/{uid}
+    // ═══════════════════════════════════════════════════════
+    // Government ID submitted for manual review. Its own collection, on
+    // purpose, for three reasons.
+    //
+    // `riders/` refuses `list` to everyone including admins, so that the
+    // commuter roster cannot be enumerated. Putting ID data there would have
+    // meant undoing that to let an admin review it. Here the admin reads
+    // exactly the review queue and nothing else.
+    //
+    // Retention is a delete of one document plus one Storage object, rather
+    // than surgery on a profile someone is still using.
+    //
+    // And the blast radius of a mistake in these rules is bounded to the
+    // review data, instead of reachingnames, phone numbers and ride history.
+    //
+    // **This is sensitive personal information under RA 10173.** The photo
+    // itself lives in Storage; this document holds only a PATH to it, never
+    // a download URL — a download URL carries a token that bypasses the
+    // Storage rules, which is acceptable for a profile picture and not for
+    // a government ID.
+    match /id_submissions/{subjectUid} {
+      function isSelfSubject() {
+        return isSignedIn() && subjectUid == uid();
+      }
+
+      function validNewSubmission() {
+        let d = request.resource.data;
+        return d.subjectUid == subjectUid
+          && d.role in ['driver', 'rider']
+          && d.status == 'pending'          // self-approval is impossible
+          && d.idType is string    && d.idType.size() >= 2   && d.idType.size() <= 40
+          && d.idNumber is string  && d.idNumber.size() >= 4 && d.idNumber.size() <= 40
+          && d.idPhotoPath is string && d.idPhotoPath == 'ids/' + subjectUid + '/card'
+          // Consent is recorded with the submission rather than assumed from
+          // the act of uploading. Without a timestamp there is no evidence
+          // it was ever given, which is the first thing an audit asks for.
+          && d.consentAt == request.time
+          && d.submittedAt == request.time
+          && d.get('reviewedBy', null) == null
+          && d.get('reviewedAt', null) == null;
+      }
+
+      // A reviewer may only record a decision. They cannot alter what was
+      // submitted, so a rejected ID cannot be quietly edited into an
+      // approved one.
+      function validReview() {
+        let d = request.resource.data;
+        return onlyChanged(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason'])
+          && d.status in ['approved', 'rejected']
+          && resource.data.status == 'pending'
+          && d.reviewedBy == tokenEmail()
+          && d.reviewedAt == request.time
+          && (d.status == 'approved'
+              || (d.rejectionReason is string
+                  && d.rejectionReason.size() >= 3
+                  && d.rejectionReason.size() <= 300));
+      }
+
+      allow get: if isSelfSubject() || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSelfSubject() && validNewSubmission();
+      allow update: if isAdmin() && validReview();
+      // Either side may delete: the subject withdrawing consent, or an admin
+      // enforcing retention. Deleting the document does not delete the
+      // image — the Storage rule admits that separately, and both are done
+      // together by the client.
+      allow delete: if isSelfSubject() || isAdmin();
+    }
+
     // ═══════════════════════════════════════════════════════
     //  Default deny — anything not matched above is refused.
     // ═══════════════════════════════════════════════════════

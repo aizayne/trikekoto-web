@@ -205,6 +205,63 @@ Readable by any signed-in user, writable by admins.
 
 ---
 
+## `id_submissions/{subjectUid}`
+
+Government ID submitted for manual review. **The only collection in this
+schema holding sensitive personal information** in the sense the Data Privacy
+Act of 2012 (RA 10173) uses the term — everything else is ordinary personal
+information.
+
+Its own collection, not a field on `riders/` or `drivers/`, for three reasons.
+`riders` refuses `list` to everyone including admins so the commuter roster
+cannot be enumerated, and putting ID data there would have meant undoing that
+to allow review. Retention becomes a delete of one document plus one Storage
+object rather than surgery on a profile in daily use. And a mistake in these
+rules reaches the review data only, not names, phone numbers and ride history.
+
+| Field | Type | Notes |
+|---|---|---|
+| `subjectUid` | string | must equal the document ID |
+| `role` | string | `driver` or `rider` |
+| `idType` | string | key from a closed list — see `IdTypes` |
+| `idNumber` | string | 4–40 chars |
+| `idPhotoPath` | string | **a Storage path, never a URL** — always `ids/{uid}/card` |
+| `status` | string | `pending` on create; only an admin may move it |
+| `consentAt` | timestamp | must equal request time; cannot be back-dated |
+| `submittedAt` | timestamp | must equal request time |
+| `reviewedBy` | string? | the reviewing admin, must equal their own token email |
+| `reviewedAt` | timestamp? | |
+| `rejectionReason` | string? | required on rejection, 3–300 chars |
+
+**Why a path and not a URL.** A Firebase download URL carries an access token
+that bypasses the Storage rules entirely: anyone holding the string can fetch
+the object, from anywhere, and it keeps working after the document is deleted.
+That is an acceptable trade for a profile photo the driver is meant to see. It
+is the wrong trade for a government ID. The reviewer reads bytes with
+`getData()`, which is checked against the rules on every call and leaves
+nothing behind.
+
+**Rules.** Create is self-only with `status: 'pending'`, no reviewer fields, a
+consent timestamp equal to request time, and a photo path pinned to the
+subject's own uid. Read is the subject or a verified admin — explicitly not
+the driver a commuter is riding with. `list` is admin-only. Update is
+admin-only, may touch only the four decision fields, requires the pre-image to
+be `pending` so a decision cannot be revisited, and requires a reason on
+rejection. Delete is the subject or an admin, which is how withdrawal and
+retention both work.
+
+**Retention.** 90 days after review, or immediately on withdrawal. Deleting
+the document alone is not enough — the image must go with it, which
+`IdVerificationService.withdraw` does in one call. There is no scheduled job
+enforcing the 90 days yet; it is a documented policy an admin performs, and
+that gap is deliberate rather than overlooked.
+
+**Not wired to anything.** Booking and going online do not currently check ID
+status. Gating them is a one-line rules change and a policy decision, not a
+technical one.
+
+---
+
 ## Indexes
 
 `firestore.indexes.json` carries no inline comments because the CLI validates

@@ -31,6 +31,15 @@ class FsCollections {
   static const feedback = 'feedback';
   static const config = 'config';
 
+  /// Government ID submitted for manual review, keyed by the subject's uid.
+  ///
+  /// Its own collection rather than a field on riders/ or drivers/. Those
+  /// collections have their own access shapes — riders refuses `list` even to
+  /// an admin — and this is the one place holding sensitive personal
+  /// information under RA 10173. Keeping it separate bounds both the review
+  /// grant an admin needs and the blast radius of a mistake in either rule.
+  static const idSubmissions = 'id_submissions';
+
   /// The singleton runtime-config document: `config/app`.
   static const configAppDoc = 'app';
 }

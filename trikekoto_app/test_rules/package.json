@@ -6,7 +6,7 @@
   "description": "Security-rules unit tests for TrikeKoTo, run against the Firestore emulator.",
   "scripts": {
     "test": "firebase emulators:exec --config ../firebase.json --only firestore,auth --project trikekoto-rules-test \"npm run test:mocha\"",
-    "test:mocha": "mocha --timeout 30000 rules.test.mjs lifecycle.test.mjs attacks.test.mjs migration.test.mjs riders.test.mjs"
+    "test:mocha": "mocha --timeout 30000 rules.test.mjs lifecycle.test.mjs attacks.test.mjs migration.test.mjs riders.test.mjs id_submissions.test.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

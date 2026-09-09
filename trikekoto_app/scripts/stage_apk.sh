@@ -22,7 +22,20 @@ DEST=build/web/download/trikekoto.apk
 mkdir -p "$(dirname "$DEST")"
 cp "$SRC" "$DEST"
 
-echo "staged $(stat -c %s "$DEST") bytes -> $DEST"
+SRC_SIZE=$(stat -c %s "$SRC")
+DEST_SIZE=$(stat -c %s "$DEST")
+
+# Assert rather than announce. This script once failed on Windows with
+# "Class not registered", the deploy ran anyway, and a stale APK shipped —
+# the failure its header warns about, made by the script itself. A size
+# mismatch here now stops the pipeline instead of printing into a log
+# nobody reads.
+if [ "$SRC_SIZE" != "$DEST_SIZE" ]; then
+  echo "STAGING FAILED: source $SRC_SIZE bytes, staged $DEST_SIZE" >&2
+  exit 1
+fi
+
+echo "staged $DEST_SIZE bytes -> $DEST"
 echo "built  $(date -r "$SRC" '+%Y-%m-%d %H:%M')"
 echo
 echo "Next:  firebase deploy --only hosting"

@@ -204,6 +204,19 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                           ),
                         const Gap(AppSpacing.xxl),
 
+                        // Separate from Save. Submitting an ID is a
+                        // different act with different consequences, and
+                        // bundling it into "save your profile" would be a
+                        // consent nobody noticed giving.
+                        OutlinedButton.icon(
+                          onPressed: _busy
+                              ? null
+                              : () => context.push('/commuter/id'),
+                          icon: const Icon(Icons.badge_outlined),
+                          label: const Text('ID verification'),
+                        ),
+                        const Gap(AppSpacing.lg),
+
                         FilledButton(
                           onPressed: _busy ? null : _save,
                           child: _busy

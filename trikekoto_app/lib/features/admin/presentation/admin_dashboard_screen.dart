@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../identity/application/id_verification_service.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
@@ -84,6 +85,21 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const Gap(AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: _AdminLink(
+                      icon: Icons.badge_outlined,
+                      label: 'ID review',
+                      badge: ref.watch(pendingIdCountProvider),
+                      onTap: () => context.go('/admin/ids'),
+                    ),
+                  ),
+                  const Gap(AppSpacing.md),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
               const Gap(AppSpacing.xxl),
 
               // The verification queue is the admin's actual job, so it
@@ -141,6 +157,14 @@ class AdminDashboardScreen extends ConsumerWidget {
 }
 
 /// How many reports are waiting, for the badge on the dashboard.
+/// How many IDs are waiting. Shown as a badge, absent at zero — a badge
+/// reading "0" trains people to ignore badges.
+final pendingIdCountProvider = Provider<int?>((ref) {
+  // Derived from the queue that is already streaming, rather than a second
+  // listener on the same collection — one subscription, one read cost.
+  return ref.watch(pendingIdSubmissionsProvider).value?.length;
+});
+
 final openFeedbackCountProvider = StreamProvider<int>((ref) {
   return ref
       .watch(refsProvider)

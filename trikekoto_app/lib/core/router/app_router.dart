@@ -10,6 +10,9 @@ import '../../features/commuter/presentation/rider_onboarding_screen.dart';
 import '../../features/commuter/presentation/rider_profile_screen.dart';
 import '../../features/commuter/presentation/rider_sign_in_screen.dart';
 import '../../features/drivers/presentation/driver_dashboard_screen.dart';
+import '../../features/identity/data/id_submission.dart';
+import '../../features/identity/presentation/id_review_screen.dart';
+import '../../features/identity/presentation/id_verification_screen.dart';
 import '../../features/drivers/presentation/driver_register_screen.dart';
 import '../../features/landing/presentation/landing_screen.dart';
 import '../../features/landing/presentation/staff_login_screen.dart';
@@ -96,11 +99,23 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'profile',
             builder: (_, _) => const RiderProfileScreen(),
           ),
+          GoRoute(
+            path: 'id',
+            builder: (_, _) =>
+                const IdVerificationScreen(role: IdRole.rider),
+          ),
         ],
       ),
       GoRoute(
         path: '/driver',
         builder: (_, _) => const DriverDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'id',
+            builder: (_, _) =>
+                const IdVerificationScreen(role: IdRole.driver),
+          ),
+        ],
       ),
       GoRoute(
         path: '/admin',
@@ -116,6 +131,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'config',
             builder: (_, _) => const ConfigEditorScreen(),
+          ),
+          GoRoute(
+            path: 'ids',
+            builder: (_, _) => const IdReviewScreen(),
           ),
         ],
       ),

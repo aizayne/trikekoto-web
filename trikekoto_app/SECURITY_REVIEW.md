@@ -22,6 +22,7 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | Critical issues | **0** |
 | High | **0** — the SMS toll-fraud finding is closed; App Check is enforced on both platforms |
 | Medium | **0** — key restrictions applied; see the caveat on what they actually enforce |
+| New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Accepted by design | **3** — documented below with tripwire tests |
 
@@ -192,6 +193,53 @@ A misleading label is worth recording too: Google Cloud lists the key the
 configure` reused the project's earliest key rather than minting a new one.
 Restricting by the console's row name rather than by the key value would have
 broken Android.
+
+---
+
+## New surface — government ID verification
+
+Added after this review was written, at the project owner's decision and
+against my recommendation, which was drivers only. Recording that here because
+a reviewer should know the trade was made knowingly rather than by default.
+
+**What changed.** The system previously held a name, a phone number and an
+optional selfie. It now holds government ID images and numbers for both
+drivers and commuters — **sensitive personal information under RA 10173**,
+a category it did not previously touch at all.
+
+**Why this is a step change, not an increment.** A breach of the old data set
+exposes contact details. A breach of this one exposes identity documents,
+which are reusable against the person elsewhere. The obligations differ too:
+lawful basis, documented consent, retention limits, and breach notification
+all attach.
+
+**Controls built for it.**
+
+| | |
+|---|---|
+| Isolation | Its own collection and Storage path, so `riders` keeps `list: false` and a mistake here reaches nothing else |
+| No URLs | The image is never given a download URL; reviewers read bytes, checked against the rules every call |
+| Consent | A blocking checkbox with the terms on screen, and a server timestamp the rules require and refuse to back-date |
+| Least privilege | Read is subject or verified admin only — explicitly not the driver a commuter rides with |
+| No self-approval | `status` forced to `pending` on create; only an admin may move it, only once, and never while altering the submission |
+| Withdrawal | The subject can delete their own document and image, without asking |
+| Coverage | 30 emulator tests and 18 unit tests, written before the UI existed |
+
+**What is not done, and should be before real collection begins.**
+
+- **No scheduled deletion.** The 90-day retention is a documented policy an
+  admin performs by hand. It will be forgotten. A scheduled function is the
+  honest fix.
+- **No privacy notice outside the app.** The consent text is in the app; a
+  thesis pilot collecting from real people should have one their adviser and
+  the TODA chapter have seen.
+- **Not reviewed by anyone qualified.** I am not a lawyer and this is not
+  legal advice. PRMSU will likely have an ethics review process; this belongs
+  in it before a single real ID is collected.
+- **Nothing gates on it.** Booking and going online do not check ID status, so
+  today the feature collects data without yet changing who may do what. That
+  is the safest possible starting state, and it is worth being deliberate
+  about when to change it.
 
 ---
 
