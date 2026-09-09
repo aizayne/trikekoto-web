@@ -273,4 +273,232 @@ class LFil extends L {
 
   @override
   String get pickerConfirm => 'Kumpirmahin ang location';
+
+  @override
+  String get bookTitle => 'Mag-book ng ride';
+
+  @override
+  String get bookWhereTo => 'Saan tayo?';
+
+  @override
+  String get bookNearestFirst =>
+      'Ino-offer muna namin ang ride mo sa pinakamalapit na driver.';
+
+  @override
+  String get bookCurrentLocation => 'Kasalukuyang location';
+
+  @override
+  String get bookSetPickup => 'Itakda ang sundo';
+
+  @override
+  String get bookSetDropoff => 'Itakda ang babaan';
+
+  @override
+  String get bookSetBoth => 'Itakda sa mapa ang sundo at babaan mo.';
+
+  @override
+  String get bookPickup => 'Sundo';
+
+  @override
+  String get bookDropoff => 'Babaan';
+
+  @override
+  String get bookLocating => 'Hinahanap ang location mo…';
+
+  @override
+  String get bookSetOnMap => 'Itakda sa mapa';
+
+  @override
+  String get bookYourName => 'Pangalan mo';
+
+  @override
+  String get bookEnterName => 'Ilagay ang pangalan mo';
+
+  @override
+  String get bookNumberHelper => 'Para matawagan ka ng driver mo.';
+
+  @override
+  String get bookNumberInvalid => 'Maglagay ng number na matatawagan ng driver';
+
+  @override
+  String get bookFinding => 'Naghahanap ng driver…';
+
+  @override
+  String get bookFindDriver => 'Maghanap ng driver';
+
+  @override
+  String get bookProfile => 'Profile';
+
+  @override
+  String get bookReportProblem => 'Mag-report ng problema';
+
+  @override
+  String get bookExit => 'Lumabas';
+
+  @override
+  String get trackTitle => 'Live tracking';
+
+  @override
+  String get trackOnTheWay => 'Papunta na sa babaan mo';
+
+  @override
+  String trackKmAway(String km) {
+    return '$km km ang layo';
+  }
+
+  @override
+  String get trackWorkingRoute => 'Kinakalkula ang ruta…';
+
+  @override
+  String get trackTrip => 'Biyahe';
+
+  @override
+  String trackTripSummary(String km, String minutes) {
+    return '$km km$minutes';
+  }
+
+  @override
+  String trackAboutMinutes(String minutes) {
+    return ' · mga $minutes min';
+  }
+
+  @override
+  String get trackApproximate => 'Tinatantiya — hindi maabot ang route service';
+
+  @override
+  String get trackTryAgain => 'Subukang muli';
+
+  @override
+  String get statusSearching => 'Naghahanap ng driver…';
+
+  @override
+  String get statusAccepted => 'Papunta na ang driver';
+
+  @override
+  String get statusInTransit => 'Papunta na sa babaan mo';
+
+  @override
+  String statusAsked(String depth, String total) {
+    return 'Natanong na ang $depth sa $total malapit na driver';
+  }
+
+  @override
+  String callDriver(String name) {
+    return 'Tawagan si $name';
+  }
+
+  @override
+  String get cancelRide => 'Kanselahin ang ride';
+
+  @override
+  String dialerFailed(String phone) {
+    return 'Hindi mabuksan ang dialler. Number: $phone';
+  }
+
+  @override
+  String get rateTitle => 'Kumusta ang biyahe mo?';
+
+  @override
+  String get ratePayCash => 'Bayaran ang nakasaad na TODA fare nang cash.';
+
+  @override
+  String get rateThanks => 'Salamat sa rating!';
+
+  @override
+  String get driverTitle => 'Driver';
+
+  @override
+  String get driverNoProfile => 'Walang nakitang driver profile.';
+
+  @override
+  String get driverIdVerification => 'ID verification';
+
+  @override
+  String get driverIdSubtitle => 'Ipadala ang lisensya o ID para sa chapter';
+
+  @override
+  String get driverVerified => 'Verified TODA driver';
+
+  @override
+  String get driverSuspended =>
+      'Naka-suspend ang account mo. Hindi ka makakatanggap ng ride.';
+
+  @override
+  String get driverRejected => 'Hindi natanggap ang registration mo.';
+
+  @override
+  String get driverPending =>
+      'Hinihintay ang verification. Kailangan ka munang aprubahan ng admin bago ka makatanggap ng ride.';
+
+  @override
+  String driverNamePlate(String name, String plate) {
+    return '$name • $plate';
+  }
+
+  @override
+  String driverRating(String average, String count) {
+    return '★ $average ($count)';
+  }
+
+  @override
+  String get driverOnline => 'Online';
+
+  @override
+  String get driverOffline => 'Offline';
+
+  @override
+  String get driverOnlineSubtitle =>
+      'Nakikita ng malapit na commuter ang location mo';
+
+  @override
+  String get driverOfflineSubtitle =>
+      'Mag-online para makatanggap ng ride offer';
+
+  @override
+  String get driverCurrentRide => 'Kasalukuyang biyahe';
+
+  @override
+  String driverCallCommuter(String name) {
+    return 'Tawagan si $name';
+  }
+
+  @override
+  String get driverStartTrip => 'Simulan ang biyahe';
+
+  @override
+  String get driverCompleteRide => 'Tapusin ang biyahe';
+
+  @override
+  String get driverCancel => 'Kanselahin';
+
+  @override
+  String get driverWaiting => 'Naghihintay ng biyahe';
+
+  @override
+  String get driverYouAreOffline => 'Naka-offline ka';
+
+  @override
+  String get driverWaitingBody =>
+      'Ioofer sa iyo ang pinakamalapit na booking pagdating nito. Panatilihing bukas ang screen na ito.';
+
+  @override
+  String get driverOfflineBody =>
+      'Mag-online sa itaas para makatanggap ng ride offer.';
+
+  @override
+  String get driverNewOffer => 'Bagong ride offer';
+
+  @override
+  String driverRoute(String from, String to) {
+    return '$from  →  $to';
+  }
+
+  @override
+  String get driverDecline => 'Tanggihan';
+
+  @override
+  String get driverAccept => 'Tanggapin';
+
+  @override
+  String get driverReportProblem => 'Mag-report ng problema';
 }

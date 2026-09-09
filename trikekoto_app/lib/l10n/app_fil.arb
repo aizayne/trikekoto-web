@@ -133,5 +133,157 @@
   "pickerHelp": "I-drag ang mapa para ilagay ang pin — o hanapin sa itaas, o gamitin ang location mo.",
   "pickerNameLabel": "Pangalanan ang lugar",
   "pickerNameHint": "hal. Plaza, Palengke, Barangay Hall",
-  "pickerConfirm": "Kumpirmahin ang location"
+  "pickerConfirm": "Kumpirmahin ang location",
+  "bookTitle": "Mag-book ng ride",
+  "bookWhereTo": "Saan tayo?",
+  "bookNearestFirst": "Ino-offer muna namin ang ride mo sa pinakamalapit na driver.",
+  "bookCurrentLocation": "Kasalukuyang location",
+  "bookSetPickup": "Itakda ang sundo",
+  "bookSetDropoff": "Itakda ang babaan",
+  "bookSetBoth": "Itakda sa mapa ang sundo at babaan mo.",
+  "bookPickup": "Sundo",
+  "bookDropoff": "Babaan",
+  "bookLocating": "Hinahanap ang location mo…",
+  "bookSetOnMap": "Itakda sa mapa",
+  "bookYourName": "Pangalan mo",
+  "bookEnterName": "Ilagay ang pangalan mo",
+  "bookNumberHelper": "Para matawagan ka ng driver mo.",
+  "bookNumberInvalid": "Maglagay ng number na matatawagan ng driver",
+  "bookFinding": "Naghahanap ng driver…",
+  "bookFindDriver": "Maghanap ng driver",
+  "bookProfile": "Profile",
+  "bookReportProblem": "Mag-report ng problema",
+  "bookExit": "Lumabas",
+  "trackTitle": "Live tracking",
+  "trackOnTheWay": "Papunta na sa babaan mo",
+  "trackKmAway": "{km} km ang layo",
+  "@trackKmAway": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "trackWorkingRoute": "Kinakalkula ang ruta…",
+  "trackTrip": "Biyahe",
+  "trackTripSummary": "{km} km{minutes}",
+  "@trackTripSummary": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "trackAboutMinutes": " · mga {minutes} min",
+  "@trackAboutMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "trackApproximate": "Tinatantiya — hindi maabot ang route service",
+  "trackTryAgain": "Subukang muli",
+  "statusSearching": "Naghahanap ng driver…",
+  "statusAccepted": "Papunta na ang driver",
+  "statusInTransit": "Papunta na sa babaan mo",
+  "statusAsked": "Natanong na ang {depth} sa {total} malapit na driver",
+  "@statusAsked": {
+    "placeholders": {
+      "depth": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "callDriver": "Tawagan si {name}",
+  "@callDriver": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelRide": "Kanselahin ang ride",
+  "dialerFailed": "Hindi mabuksan ang dialler. Number: {phone}",
+  "@dialerFailed": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "rateTitle": "Kumusta ang biyahe mo?",
+  "ratePayCash": "Bayaran ang nakasaad na TODA fare nang cash.",
+  "rateThanks": "Salamat sa rating!",
+  "driverTitle": "Driver",
+  "driverNoProfile": "Walang nakitang driver profile.",
+  "driverIdVerification": "ID verification",
+  "driverIdSubtitle": "Ipadala ang lisensya o ID para sa chapter",
+  "driverVerified": "Verified TODA driver",
+  "driverSuspended": "Naka-suspend ang account mo. Hindi ka makakatanggap ng ride.",
+  "driverRejected": "Hindi natanggap ang registration mo.",
+  "driverPending": "Hinihintay ang verification. Kailangan ka munang aprubahan ng admin bago ka makatanggap ng ride.",
+  "driverNamePlate": "{name} • {plate}",
+  "@driverNamePlate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
+  "driverRating": "★ {average} ({count})",
+  "@driverRating": {
+    "placeholders": {
+      "average": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "driverOnline": "Online",
+  "driverOffline": "Offline",
+  "driverOnlineSubtitle": "Nakikita ng malapit na commuter ang location mo",
+  "driverOfflineSubtitle": "Mag-online para makatanggap ng ride offer",
+  "driverCurrentRide": "Kasalukuyang biyahe",
+  "driverCallCommuter": "Tawagan si {name}",
+  "@driverCallCommuter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "driverStartTrip": "Simulan ang biyahe",
+  "driverCompleteRide": "Tapusin ang biyahe",
+  "driverCancel": "Kanselahin",
+  "driverWaiting": "Naghihintay ng biyahe",
+  "driverYouAreOffline": "Naka-offline ka",
+  "driverWaitingBody": "Ioofer sa iyo ang pinakamalapit na booking pagdating nito. Panatilihing bukas ang screen na ito.",
+  "driverOfflineBody": "Mag-online sa itaas para makatanggap ng ride offer.",
+  "driverNewOffer": "Bagong ride offer",
+  "driverRoute": "{from}  →  {to}",
+  "@driverRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "driverDecline": "Tanggihan",
+  "driverAccept": "Tanggapin",
+  "driverReportProblem": "Mag-report ng problema"
 }

@@ -8,6 +8,7 @@ import 'package:trikekoto_app/features/drivers/application/driver_controllers.da
 import 'package:trikekoto_app/features/drivers/data/driver.dart';
 import 'package:trikekoto_app/features/drivers/presentation/driver_dashboard_screen.dart';
 import 'package:trikekoto_app/features/rides/data/ride.dart';
+import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 /// Widget tests for the driver dashboard.
 ///
@@ -60,6 +61,12 @@ Widget _harness({
       presenceProvider.overrideWith(() => _FakePresence(online: online)),
     ],
     child: MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       theme: AppTheme.light,
       home: const DriverDashboardScreen(),
     ),

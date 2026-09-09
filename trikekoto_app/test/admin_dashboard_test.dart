@@ -11,6 +11,7 @@ import 'package:trikekoto_app/features/admin/data/ride_analytics.dart';
 import 'package:trikekoto_app/features/admin/presentation/ride_analytics_panel.dart';
 import 'package:trikekoto_app/features/drivers/data/driver.dart';
 import 'package:trikekoto_app/features/rides/data/ride.dart';
+import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 /// Widget tests for the admin panel.
 ///
@@ -88,6 +89,12 @@ Widget _harness({
           .overrideWith((ref) => Stream.value(openFeedback)),
     ],
     child: MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       theme: AppTheme.light,
       home: const AdminDashboardScreen(),
     ),

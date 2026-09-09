@@ -12,6 +12,7 @@ import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/driver_controllers.dart';
 import '../data/driver.dart';
 import 'driver_ride_map.dart';
+import '../../../core/ui/locale_controller.dart';
 
 class DriverDashboardScreen extends ConsumerWidget {
   const DriverDashboardScreen({super.key});
@@ -22,17 +23,17 @@ class DriverDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Driver'),
+        title: Text(context.l.driverTitle),
         actions: [
           IconButton(
-            tooltip: 'Report a problem',
+            tooltip: context.l.driverReportProblem,
             icon: const Icon(Icons.flag_outlined),
             onPressed: () =>
                 showFeedbackSheet(context, role: FeedbackRole.driver),
           ),
           const ThemeToggleButton(),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await ref.read(presenceProvider.notifier).goOffline();
@@ -46,7 +47,7 @@ class DriverDashboardScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text(describeError(e))),
         data: (driver) {
           if (driver == null) {
-            return const Center(child: Text('No driver profile found.'));
+            return Center(child: Text(context.l.driverNoProfile));
           }
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.xl),
@@ -59,9 +60,9 @@ class DriverDashboardScreen extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.badge_outlined),
-                  title: const Text('ID verification'),
-                  subtitle: const Text(
-                      'Ipadala ang lisensya o ID para sa chapter'),
+                  title: Text(context.l.driverIdVerification),
+                  subtitle: Text(
+                      context.l.driverIdSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/driver/id'),
                 ),
@@ -98,26 +99,25 @@ class _StatusBanner extends StatelessWidget {
           semantic.success,
           semantic.successContainer,
           Icons.verified_outlined,
-          'Verified TODA driver',
+          context.l.driverVerified,
         ),
       DriverStatus.suspended => (
           semantic.danger,
           semantic.dangerContainer,
           Icons.block_outlined,
-          'Your account is suspended. You cannot accept rides.',
+          context.l.driverSuspended,
         ),
       DriverStatus.rejected => (
           semantic.danger,
           semantic.dangerContainer,
           Icons.cancel_outlined,
-          'Your registration was rejected.',
+          context.l.driverRejected,
         ),
       _ => (
           semantic.warning,
           semantic.warningContainer,
           Icons.hourglass_top_outlined,
-          'Pending verification. An admin must approve you before you can '
-              'accept rides.',
+          context.l.driverPending,
         ),
     };
 
@@ -143,15 +143,18 @@ class _StatusBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${driver.fullName} • ${driver.plateNumber}',
+                  Text(
+                      context.l.driverNamePlate(
+                          driver.fullName, driver.plateNumber),
                       style: Theme.of(context).textTheme.titleSmall),
                   const Gap(AppSpacing.xs / 2),
                   Text(text, style: Theme.of(context).textTheme.bodySmall),
                   if (driver.ratingCount > 0) ...[
                     const Gap(AppSpacing.xs),
                     Text(
-                      '★ ${driver.ratingAverage!.toStringAsFixed(1)} '
-                      '(${driver.ratingCount})',
+                      context.l.driverRating(
+                          driver.ratingAverage!.toStringAsFixed(1),
+                          '${driver.ratingCount}'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -175,11 +178,12 @@ class _OnlineToggle extends ConsumerWidget {
     return Card(
       child: SwitchListTile(
         value: online,
-        title: Text(online ? 'Online' : 'Offline'),
+        title: Text(
+            online ? context.l.driverOnline : context.l.driverOffline),
         subtitle: Text(
           online
-              ? 'Your location is visible to nearby commuters'
-              : 'Go online to receive ride offers',
+              ? context.l.driverOnlineSubtitle
+              : context.l.driverOfflineSubtitle,
         ),
         onChanged: (want) async {
           final controller = ref.read(presenceProvider.notifier);
@@ -220,7 +224,7 @@ class _ActiveRideSection extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Current ride',
+                Text(context.l.driverCurrentRide,
                     style: Theme.of(context).textTheme.titleMedium),
                 const Gap(AppSpacing.md),
 
@@ -247,7 +251,7 @@ class _ActiveRideSection extends ConsumerWidget {
                       ),
                     ),
                     IconButton.filledTonal(
-                      tooltip: 'Call ${ride.commuterName}',
+                      tooltip: context.l.driverCallCommuter(ride.commuterName),
                       icon: const Icon(Icons.phone),
                       onPressed: () => _call(context, ride.commuterPhone),
                     ),
@@ -257,17 +261,17 @@ class _ActiveRideSection extends ConsumerWidget {
                 if (ride.status == RideStatus.accepted)
                   FilledButton(
                     onPressed: () => _run(context, () => actions.start(ride)),
-                    child: const Text('Start trip'),
+                    child: Text(context.l.driverStartTrip),
                   )
                 else
                   FilledButton(
                     onPressed: () => _run(context, () => actions.complete(ride)),
-                    child: const Text('Complete ride'),
+                    child: Text(context.l.driverCompleteRide),
                   ),
                 const Gap(AppSpacing.sm),
                 OutlinedButton(
                   onPressed: () => _run(context, () => actions.cancel(ride)),
-                  child: const Text('Cancel'),
+                  child: Text(context.l.driverCancel),
                 ),
               ],
             ),
@@ -287,7 +291,7 @@ class _ActiveRideSection extends ConsumerWidget {
       // Fall through to the message below.
     }
     if (context.mounted) {
-      showSnack(context, 'Could not open the dialler. Number: $phone',
+      showSnack(context, context.l.dialerFailed(phone),
           error: true);
     }
   }
@@ -314,13 +318,14 @@ class _OffersSection extends ConsumerWidget {
             icon: online
                 ? Icons.notifications_none_outlined
                 : Icons.wifi_off_outlined,
-            title: online ? 'Waiting for a ride' : 'You are offline',
+            title: online
+                ? context.l.driverWaiting
+                : context.l.driverYouAreOffline,
             // The empty state names the reason, so a driver who forgot to go
             // online is not left wondering why nothing arrives.
             body: online
-                ? 'You will be offered the nearest booking as soon as one '
-                    'comes in. Keep this screen open.'
-                : 'Go online above to start receiving ride offers.',
+                ? context.l.driverWaitingBody
+                : context.l.driverOfflineBody,
           );
         }
 
@@ -334,10 +339,11 @@ class _OffersSection extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('New ride offer',
+                      Text(context.l.driverNewOffer,
                           style: Theme.of(context).textTheme.titleMedium),
                       const Gap(AppSpacing.md),
-                      Text('${ride.pickup.label}  →  ${ride.dropoff.label}'),
+                      Text(context.l.driverRoute(
+                          ride.pickup.label, ride.dropoff.label)),
                       const Gap(AppSpacing.xs),
                       Row(
                         children: [
@@ -356,7 +362,7 @@ class _OffersSection extends ConsumerWidget {
                             child: OutlinedButton(
                               onPressed: () => _run(
                                   context, () => actions.decline(ride)),
-                              child: const Text('Decline'),
+                              child: Text(context.l.driverDecline),
                             ),
                           ),
                           const Gap(AppSpacing.md),
@@ -364,7 +370,7 @@ class _OffersSection extends ConsumerWidget {
                             child: FilledButton(
                               onPressed: () =>
                                   _run(context, () => actions.accept(ride)),
-                              child: const Text('Accept'),
+                              child: Text(context.l.driverAccept),
                             ),
                           ),
                         ],

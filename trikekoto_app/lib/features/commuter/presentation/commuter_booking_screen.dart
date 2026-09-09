@@ -22,6 +22,7 @@ import '../../rides/data/ride.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/commuter_location.dart';
 import '../application/dispatch_controller.dart';
+import '../../../core/ui/locale_controller.dart';
 
 class CommuterBookingScreen extends ConsumerStatefulWidget {
   const CommuterBookingScreen({super.key});
@@ -89,7 +90,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
           // something the driver can read, and this is honest about what it
           // is. `_confirm()` in the picker refuses an empty label, so the
           // pickup can never end up nameless.
-          label: 'Kasalukuyang lokasyon',
+          label: context.l.bookCurrentLocation,
         );
       });
 
@@ -150,7 +151,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
     final result = await Navigator.of(context).push<PickedLocation>(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          title: isPickup ? 'Set pickup' : 'Set drop-off',
+          title: isPickup ? context.l.bookSetPickup : context.l.bookSetDropoff,
           initialCenter: center,
           initialLabel: existing?.label ?? '',
         ),
@@ -193,7 +194,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_pickup == null || _dropoff == null) {
-      showSnack(context, 'Set both your pickup and drop-off on the map.',
+      showSnack(context, context.l.bookSetBoth,
           error: true);
       return;
     }
@@ -250,7 +251,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
     try {
       final refs = ref.read(refsProvider);
       await refs.ride(ride.id).update(RideWrites.rate(stars: stars));
-      if (mounted) showSnack(context, 'Salamat sa rating!');
+      if (mounted) showSnack(context, context.l.rateThanks);
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
       return;
@@ -287,13 +288,13 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book a ride'),
+        title: Text(context.l.bookTitle),
         actions: [
           const ThemeToggleButton(),
           // Shows the rider's own photo once they have one, so the way to
           // change it is the thing it changes.
           IconButton(
-            tooltip: 'Profile',
+            tooltip: context.l.bookProfile,
             icon: Builder(builder: (context) {
               final url =
                   ref.watch(myRiderProfileProvider).value?.profilePhotoUrl;
@@ -310,13 +311,13 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
             onPressed: () => context.push('/commuter/profile'),
           ),
           IconButton(
-            tooltip: 'Report a problem',
+            tooltip: context.l.bookReportProblem,
             icon: const Icon(Icons.flag_outlined),
             onPressed: () =>
                 showFeedbackSheet(context, role: FeedbackRole.commuter),
           ),
           IconButton(
-            tooltip: 'Exit',
+            tooltip: context.l.bookExit,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(sessionProvider.notifier).signOut(),
           ),
@@ -363,10 +364,10 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Saan tayo?', style: context.text.headlineSmall),
+          Text(context.l.bookWhereTo, style: context.text.headlineSmall),
           const Gap(AppSpacing.xs),
           Text(
-            'We offer your ride to the nearest available driver first.',
+            context.l.bookNearestFirst,
             style: context.text.bodySmall,
           ),
           const Gap(AppSpacing.xxl),
@@ -381,15 +382,15 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                   _RouteRow(
                     icon: Icons.my_location,
                     color: context.semantic.success,
-                    label: 'Pickup',
+                    label: context.l.bookPickup,
                     value: _pickup?.label,
                     // Says what is happening while the opening fix runs.
                     // "Set on map" during those seconds reads as though
                     // nothing is coming, and the commuter taps away from a
                     // field that was about to fill itself in.
                     placeholder: _locating && _pickup == null
-                        ? 'Hinahanap ang lokasyon mo…'
-                        : 'Set on map',
+                        ? context.l.bookLocating
+                        : context.l.bookSetOnMap,
                     onTap: () => _pick(isPickup: true),
                   ),
                   Padding(
@@ -409,9 +410,9 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                   _RouteRow(
                     icon: Icons.place,
                     color: context.scheme.error,
-                    label: 'Drop-off',
+                    label: context.l.bookDropoff,
                     value: _dropoff?.label,
-                    placeholder: 'Set on map',
+                    placeholder: context.l.bookSetOnMap,
                     onTap: () => _pick(isPickup: false),
                   ),
                 ],
@@ -433,24 +434,24 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
           TextFormField(
             controller: _name,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Your name',
-              prefixIcon: Icon(Icons.person_outline),
+            decoration: InputDecoration(
+              labelText: context.l.bookYourName,
+              prefixIcon: const Icon(Icons.person_outline),
             ),
             validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                (v == null || v.trim().isEmpty) ? context.l.bookEnterName : null,
           ),
           const Gap(AppSpacing.md),
           TextFormField(
             controller: _phone,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Mobile number',
-              prefixIcon: Icon(Icons.phone_outlined),
-              helperText: 'So your driver can reach you.',
+            decoration: InputDecoration(
+              labelText: context.l.signInNumberLabel,
+              prefixIcon: const Icon(Icons.phone_outlined),
+              helperText: context.l.bookNumberHelper,
             ),
             validator: (v) => (v == null || v.trim().length < 7)
-                ? 'Enter a mobile number the driver can call'
+                ? context.l.bookNumberInvalid
                 : null,
           ),
           const Gap(AppSpacing.xxl),
@@ -466,7 +467,8 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                     ),
                   )
                 : const Icon(Icons.search),
-            label: Text(_busy ? 'Finding a driver…' : 'Find a driver'),
+            label: Text(
+                _busy ? context.l.bookFinding : context.l.bookFindDriver),
           ),
         ],
       ),
@@ -532,8 +534,8 @@ class _TrackingMap extends ConsumerWidget {
         const Gap(AppSpacing.sm),
         Text(
           ride.status == RideStatus.inTransit
-              ? 'On the way to your drop-off'
-              : '${away.toStringAsFixed(1)} km away',
+              ? context.l.trackOnTheWay
+              : context.l.trackKmAway(away.toStringAsFixed(1)),
           style: context.text.bodySmall,
         ),
       ],
@@ -549,7 +551,7 @@ class _FullScreenTracking extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final me = ref.watch(commuterPositionProvider).value;
     return Scaffold(
-      appBar: AppBar(title: const Text('Live tracking')),
+      appBar: AppBar(title: Text(context.l.trackTitle)),
       body: OsmMap(
         center: ride.driverLocation!.latLng,
         zoom: 16,
@@ -652,7 +654,7 @@ class _RoutingPlaceholder extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const Gap(AppSpacing.md),
-          Text('Working out the route…', style: context.text.bodySmall),
+          Text(context.l.trackWorkingRoute, style: context.text.bodySmall),
         ],
       ),
     );
@@ -690,13 +692,15 @@ class _TripSummaryRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Trip',
+                  context.l.trackTrip,
                   style: context.text.bodySmall
                       ?.copyWith(color: context.scheme.onSecondaryContainer),
                 ),
                 Text(
-                  '${route.distanceKm.toStringAsFixed(1)} km'
-                  '${minutes > 0 ? ' · about $minutes min' : ''}',
+                  context.l.trackTripSummary(
+                    route.distanceKm.toStringAsFixed(1),
+                    minutes > 0 ? context.l.trackAboutMinutes('$minutes') : '',
+                  ),
                   style: context.text.titleMedium
                       ?.copyWith(color: context.scheme.onSecondaryContainer),
                 ),
@@ -705,7 +709,7 @@ class _TripSummaryRow extends StatelessWidget {
                 // real road distance.
                 if (!route.isRouted)
                   Text(
-                    'Approximate — could not reach the route service',
+                    context.l.trackApproximate,
                     style: context.text.bodySmall?.copyWith(
                       color: context.scheme.onSecondaryContainer,
                       fontSize: 11,
@@ -745,7 +749,7 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
+              label: Text(context.l.trackTryAgain),
             ),
           ],
         ),
@@ -789,9 +793,9 @@ class _ActiveRideCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     switch (ride.status) {
-                      RideStatus.searching => 'Looking for a driver…',
-                      RideStatus.accepted => 'Driver is on the way',
-                      RideStatus.inTransit => 'On the way to your drop-off',
+                      RideStatus.searching => context.l.statusSearching,
+                      RideStatus.accepted => context.l.statusAccepted,
+                      RideStatus.inTransit => context.l.statusInTransit,
                       _ => ride.status.wire,
                     },
                     style: theme.textTheme.titleMedium,
@@ -813,8 +817,8 @@ class _ActiveRideCard extends StatelessWidget {
               ),
               const Gap(AppSpacing.sm),
               Text(
-                'Asked ${ride.dispatch.depth} of '
-                '${DispatchDefaults.maxDriversToTry} nearby drivers',
+                context.l.statusAsked('${ride.dispatch.depth}',
+                    '${DispatchDefaults.maxDriversToTry}'),
                 style: theme.textTheme.bodySmall,
               ),
             ],
@@ -850,7 +854,7 @@ class _ActiveRideCard extends StatelessWidget {
                   // reaches for, so it gets a real target rather than a line
                   // of text they have to copy.
                   IconButton.filledTonal(
-                    tooltip: 'Call ${driver.firstName}',
+                    tooltip: context.l.callDriver(driver.firstName),
                     icon: const Icon(Icons.phone),
                     onPressed: () => _dial(context, driver.phone),
                   ),
@@ -873,7 +877,7 @@ class _ActiveRideCard extends StatelessWidget {
               const Gap(AppSpacing.xl),
               OutlinedButton(
                 onPressed: onCancel,
-                child: const Text('Cancel ride'),
+                child: Text(context.l.cancelRide),
               ),
             ],
           ],
@@ -886,7 +890,7 @@ class _ActiveRideCard extends StatelessWidget {
     final uri = Uri(scheme: 'tel', path: phone);
     if (!await launchUrl(uri)) {
       if (context.mounted) {
-        showSnack(context, 'Could not open the dialler. Number: $phone',
+        showSnack(context, context.l.dialerFailed(phone),
             error: true);
       }
     }
@@ -917,7 +921,7 @@ class _RateCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('How was your ride?',
+            Text(context.l.rateTitle,
                 style: Theme.of(context).textTheme.titleMedium),
             const Gap(AppSpacing.xs),
             Text(
@@ -926,7 +930,7 @@ class _RateCard extends StatelessWidget {
             ),
             const Gap(AppSpacing.md),
             Text(
-              'Pay the posted TODA fare in cash.',
+              context.l.ratePayCash,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,

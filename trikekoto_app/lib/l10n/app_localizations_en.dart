@@ -270,4 +270,232 @@ class LEn extends L {
 
   @override
   String get pickerConfirm => 'Confirm location';
+
+  @override
+  String get bookTitle => 'Book a ride';
+
+  @override
+  String get bookWhereTo => 'Where to?';
+
+  @override
+  String get bookNearestFirst =>
+      'We offer your ride to the nearest available driver first.';
+
+  @override
+  String get bookCurrentLocation => 'Current location';
+
+  @override
+  String get bookSetPickup => 'Set pickup';
+
+  @override
+  String get bookSetDropoff => 'Set drop-off';
+
+  @override
+  String get bookSetBoth => 'Set both your pickup and drop-off on the map.';
+
+  @override
+  String get bookPickup => 'Pickup';
+
+  @override
+  String get bookDropoff => 'Drop-off';
+
+  @override
+  String get bookLocating => 'Finding your location…';
+
+  @override
+  String get bookSetOnMap => 'Set on map';
+
+  @override
+  String get bookYourName => 'Your name';
+
+  @override
+  String get bookEnterName => 'Enter your name';
+
+  @override
+  String get bookNumberHelper => 'So your driver can reach you.';
+
+  @override
+  String get bookNumberInvalid => 'Enter a mobile number the driver can call';
+
+  @override
+  String get bookFinding => 'Finding a driver…';
+
+  @override
+  String get bookFindDriver => 'Find a driver';
+
+  @override
+  String get bookProfile => 'Profile';
+
+  @override
+  String get bookReportProblem => 'Report a problem';
+
+  @override
+  String get bookExit => 'Exit';
+
+  @override
+  String get trackTitle => 'Live tracking';
+
+  @override
+  String get trackOnTheWay => 'On the way to your drop-off';
+
+  @override
+  String trackKmAway(String km) {
+    return '$km km away';
+  }
+
+  @override
+  String get trackWorkingRoute => 'Working out the route…';
+
+  @override
+  String get trackTrip => 'Trip';
+
+  @override
+  String trackTripSummary(String km, String minutes) {
+    return '$km km$minutes';
+  }
+
+  @override
+  String trackAboutMinutes(String minutes) {
+    return ' · about $minutes min';
+  }
+
+  @override
+  String get trackApproximate =>
+      'Approximate — could not reach the route service';
+
+  @override
+  String get trackTryAgain => 'Try again';
+
+  @override
+  String get statusSearching => 'Looking for a driver…';
+
+  @override
+  String get statusAccepted => 'Driver is on the way';
+
+  @override
+  String get statusInTransit => 'On the way to your drop-off';
+
+  @override
+  String statusAsked(String depth, String total) {
+    return 'Asked $depth of $total nearby drivers';
+  }
+
+  @override
+  String callDriver(String name) {
+    return 'Call $name';
+  }
+
+  @override
+  String get cancelRide => 'Cancel ride';
+
+  @override
+  String dialerFailed(String phone) {
+    return 'Could not open the dialler. Number: $phone';
+  }
+
+  @override
+  String get rateTitle => 'How was your ride?';
+
+  @override
+  String get ratePayCash => 'Pay the posted TODA fare in cash.';
+
+  @override
+  String get rateThanks => 'Thanks for the rating!';
+
+  @override
+  String get driverTitle => 'Driver';
+
+  @override
+  String get driverNoProfile => 'No driver profile found.';
+
+  @override
+  String get driverIdVerification => 'ID verification';
+
+  @override
+  String get driverIdSubtitle => 'Send your licence or ID to the chapter';
+
+  @override
+  String get driverVerified => 'Verified TODA driver';
+
+  @override
+  String get driverSuspended =>
+      'Your account is suspended. You cannot accept rides.';
+
+  @override
+  String get driverRejected => 'Your registration was rejected.';
+
+  @override
+  String get driverPending =>
+      'Pending verification. An admin must approve you before you can accept rides.';
+
+  @override
+  String driverNamePlate(String name, String plate) {
+    return '$name • $plate';
+  }
+
+  @override
+  String driverRating(String average, String count) {
+    return '★ $average ($count)';
+  }
+
+  @override
+  String get driverOnline => 'Online';
+
+  @override
+  String get driverOffline => 'Offline';
+
+  @override
+  String get driverOnlineSubtitle =>
+      'Your location is visible to nearby commuters';
+
+  @override
+  String get driverOfflineSubtitle => 'Go online to receive ride offers';
+
+  @override
+  String get driverCurrentRide => 'Current ride';
+
+  @override
+  String driverCallCommuter(String name) {
+    return 'Call $name';
+  }
+
+  @override
+  String get driverStartTrip => 'Start trip';
+
+  @override
+  String get driverCompleteRide => 'Complete ride';
+
+  @override
+  String get driverCancel => 'Cancel';
+
+  @override
+  String get driverWaiting => 'Waiting for a ride';
+
+  @override
+  String get driverYouAreOffline => 'You are offline';
+
+  @override
+  String get driverWaitingBody =>
+      'You will be offered the nearest booking as soon as one comes in. Keep this screen open.';
+
+  @override
+  String get driverOfflineBody =>
+      'Go online above to start receiving ride offers.';
+
+  @override
+  String get driverNewOffer => 'New ride offer';
+
+  @override
+  String driverRoute(String from, String to) {
+    return '$from  →  $to';
+  }
+
+  @override
+  String get driverDecline => 'Decline';
+
+  @override
+  String get driverAccept => 'Accept';
+
+  @override
+  String get driverReportProblem => 'Report a problem';
 }

@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:trikekoto_app/core/map/osm_map.dart';
 import 'package:trikekoto_app/core/ui/app_theme.dart';
+import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 /// The commuter's own position marker.
 ///
@@ -17,6 +18,12 @@ const _manila = LatLng(14.5995, 120.9842);
 
 Future<void> _pump(WidgetTester tester, List<Marker> markers) async {
   await tester.pumpWidget(MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
     theme: AppTheme.light,
     home: Scaffold(
       body: Builder(builder: (context) => Stack(children: [
@@ -31,6 +38,12 @@ void main() {
     testWidgets('is a plain dot, not a pin', (tester) async {
       late Marker marker;
       await tester.pumpWidget(MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
         theme: AppTheme.light,
         home: Builder(builder: (context) {
           marker = MapMarkers.you(context, _manila);
@@ -49,6 +62,12 @@ void main() {
       late Marker you;
       late Marker pickup;
       await tester.pumpWidget(MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
         theme: AppTheme.light,
         home: Builder(builder: (context) {
           you = MapMarkers.you(context, _manila);
@@ -69,6 +88,12 @@ void main() {
       late Marker you;
       late Marker driver;
       await tester.pumpWidget(MaterialApp(
+      // Pinned rather than defaulted: these tests assert English
+      // strings, so the language they run in should be stated, not
+      // inherited from whatever the app happens to default to.
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
         theme: AppTheme.light,
         home: Builder(builder: (context) {
           you = MapMarkers.you(context, _manila);
