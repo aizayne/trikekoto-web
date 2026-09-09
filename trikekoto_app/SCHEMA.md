@@ -250,6 +250,13 @@ be `pending` so a decision cannot be revisited, and requires a reason on
 rejection. Delete is the subject or an admin, which is how withdrawal and
 retention both work.
 
+**Account deletion.** A rider deleting their account triggers `onRiderDeleted`,
+which anonymises their ride history rather than removing it: `commuterUid`
+cleared, `commuterName` set to `Deleted account`, `commuterPhone`,
+`commuterPhotoUrl` and `commuterFcmToken` removed. The ride survives because
+it is the audit trail; the person does not. Rides are never deletable by
+anyone, so this is the only mechanism by which commuter PII leaves them.
+
 **Retention.** 90 days from **submission**, enforced by `purgeExpiredIds` —
 a scheduled function running daily at 03:15 Manila time. Withdrawal by the
 subject is immediate and independent of it.
