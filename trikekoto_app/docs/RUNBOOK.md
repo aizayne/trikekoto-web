@@ -140,9 +140,24 @@ Work through in order:
 2. Is their toggle **Online**? The empty state tells them, but people miss it.
 3. Is any commuter **within the search radius**? Default is 5 km. Raise it
    temporarily in **Dispatch** to test.
-4. Is the commuter's app in the **foreground**? Until the Cloud Functions are
-   deployed, the dispatch sweep stops when the commuter locks their screen.
-   This is the single most likely cause of "I booked and nothing happened".
+4. Is `requestDispatch` **healthy**? Matching moved off the commuter's device
+   at step 69, so a failing callable is now the single most likely cause of
+   "I booked and nothing happened". Check its logs:
+
+   ```
+   firebase functions:log --only requestDispatch
+   ```
+
+   A ride still gets matched if the callable is down — `sweepStaleRides` runs
+   every minute and does the same work — so the symptom is **slow offers, not
+   no offers**. If both are failing, look at `config/app`: an unreachable
+   `routingBaseUrl` does not stop dispatch, but a `searchRadiusKm` someone set
+   to a tiny value does.
+5. Is the **commuter** on an old APK? Their app is the one that used to do
+   the matching. Builds from before step 69 still try, and the rules now
+   refuse them: the commuter can still book — the sweep catches the ride —
+   but they see an error toast and the driver's offer arrives up to a minute
+   late. Have them reinstall from the download link.
 
 ### "Fares look wrong"
 
