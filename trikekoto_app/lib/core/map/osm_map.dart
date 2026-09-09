@@ -97,6 +97,7 @@ class OsmMap extends StatelessWidget {
     this.controller,
     this.interactive = true,
     this.onPositionChanged,
+    this.onTap,
   });
 
   final LatLng center;
@@ -109,6 +110,13 @@ class OsmMap extends StatelessWidget {
   final MapController? controller;
   final bool interactive;
   final void Function(MapCamera camera)? onPositionChanged;
+
+  /// A tap on the map surface, with the geographic point tapped.
+  ///
+  /// Null on every screen that only displays a map — a tracking view has
+  /// nothing to do with a tap, and silently moving something there would be
+  /// worse than ignoring it.
+  final void Function(LatLng point)? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +133,7 @@ class OsmMap extends StatelessWidget {
               : InteractiveFlag.none,
         ),
         onPositionChanged: (camera, _) => onPositionChanged?.call(camera),
+        onTap: onTap == null ? null : (_, point) => onTap!(point),
       ),
       children: [
         const OsmTiles(),

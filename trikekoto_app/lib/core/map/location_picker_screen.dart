@@ -157,6 +157,14 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             center: widget.initialCenter,
             zoom: 17,
             onPositionChanged: (camera) => _center = camera.center,
+            // Tap to place the pin. The crosshair stays the mechanism — the
+            // map animates so the tapped point lands under it — because a pin
+            // that jumps out from under the crosshair would leave two things
+            // on screen claiming to be the chosen spot.
+            onTap: (point) {
+              _controller.move(point, _controller.camera.zoom);
+              setState(() => _center = point);
+            },
           ),
 
           // The crosshair sits dead centre and does not move. Offset upward
@@ -258,20 +266,30 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             ),
           ),
 
+          // Labelled, not an icon.
+          //
+          // This was a small unlabelled FAB, and "centre the map on me" is the
+          // most likely thing a commuter setting a pickup wants — they are
+          // usually standing at it. A crosshair glyph does not say that to
+          // someone who has not used a maps app, and the people this is for
+          // include drivers and passengers who have not. Words cost one line
+          // of layout and remove the guess.
           Positioned(
             right: AppSpacing.lg,
-            bottom: 200,
-            child: FloatingActionButton.small(
+            bottom: 210,
+            child: FloatingActionButton.extended(
               heroTag: 'my-location',
-              tooltip: 'Centre on my location',
               onPressed: _locating ? null : _goToMyLocation,
-              child: _locating
+              backgroundColor: context.scheme.surface,
+              foregroundColor: context.scheme.secondary,
+              icon: _locating
                   ? const SizedBox(
                       width: AppSpacing.iconSm,
                       height: AppSpacing.iconSm,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.my_location),
+              label: Text(_locating ? 'Hinahanap…' : 'Nasa akin ngayon'),
             ),
           ),
 
@@ -299,7 +317,9 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Search above, or move the map to place the pin',
+                      'I-drag ang mapa para ilagay ang pin — o hanapin sa '
+                      'itaas, o gamitin ang lokasyon mo.',
+                      textAlign: TextAlign.center,
                       style: context.text.bodySmall,
                     ),
                     const Gap(AppSpacing.md),
