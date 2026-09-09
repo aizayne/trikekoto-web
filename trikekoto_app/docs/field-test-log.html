@@ -1,0 +1,641 @@
+<title>TrikeKoTo Field Test Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root {
+  --paper:    #EFF3F7;
+  --surface:  #FFFFFF;
+  --raised:   #F7F9FB;
+  --ink:      #101A2C;
+  --graphite: #5B6675;
+  --faint:    #8894A3;
+  --rule:     #CBD5E0;
+  --hair:     #E2E8F0;
+  --accent:   #B45309;
+  --blue:     #1D4ED8;
+  --pass:     #15803D;
+  --passbg:   #DCFCE7;
+  --fail:     #B91C1C;
+  --failbg:   #FEE2E2;
+  --tint:     #F5E9DA;
+
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --display: "Poppins", "IBM Plex Sans", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --gut: clamp(14px, 3.5vw, 36px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:    #0C131B;
+    --surface:  #131C27;
+    --raised:   #18222E;
+    --ink:      #E4EAF0;
+    --graphite: #97A5B4;
+    --faint:    #6B7A8A;
+    --rule:     #263441;
+    --hair:     #1D2833;
+    --accent:   #F5A623;
+    --blue:     #7FB9E5;
+    --pass:     #4ADE80;
+    --passbg:   #14352A;
+    --fail:     #F08A84;
+    --failbg:   #3A1D1B;
+    --tint:     #2A2013;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:    #0C131B;
+  --surface:  #131C27;
+  --raised:   #18222E;
+  --ink:      #E4EAF0;
+  --graphite: #97A5B4;
+  --faint:    #6B7A8A;
+  --rule:     #263441;
+  --hair:     #1D2833;
+  --accent:   #F5A623;
+  --blue:     #7FB9E5;
+  --pass:     #4ADE80;
+  --passbg:   #14352A;
+  --fail:     #F08A84;
+  --failbg:   #3A1D1B;
+  --tint:     #2A2013;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.58;
+  margin: 0;
+  padding: 0 var(--gut) 90px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 940px; margin: 0 auto; }
+
+/* ── Masthead ───────────────────────────────────────────── */
+.mast { padding: clamp(34px, 6vw, 62px) 0 22px; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent);
+  margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.8rem, 4.6vw, 2.6rem);
+  line-height: 1.08; letter-spacing: -0.025em;
+  text-wrap: balance; margin: 0 0 14px;
+}
+.standfirst { color: var(--graphite); max-width: 62ch; margin: 0 0 24px; }
+
+/* ── Run identity ───────────────────────────────────────── */
+.ident {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+.ident label {
+  display: flex; flex-direction: column; gap: 5px;
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint);
+}
+.ident input {
+  font-family: var(--sans); font-size: 0.92rem;
+  color: var(--ink); background: var(--raised);
+  border: 1px solid var(--hair); border-radius: 3px;
+  padding: 7px 9px;
+}
+.ident input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── Sticky scoreboard ──────────────────────────────────── */
+.board {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 22px 0 0;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgb(16 26 44 / 0.07);
+}
+.score { display: flex; align-items: baseline; gap: 7px; }
+.score b {
+  font-family: var(--display); font-size: 1.28rem; font-weight: 600;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.score span {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint);
+}
+.score.p b { color: var(--pass); }
+.score.f b { color: var(--fail); }
+.bar {
+  flex: 1 1 130px; min-width: 110px; height: 6px;
+  background: var(--hair); border-radius: 3px; overflow: hidden;
+  display: flex;
+}
+.bar i { display: block; height: 100%; transition: width .18s ease; }
+.bar .bp { background: var(--pass); }
+.bar .bf { background: var(--fail); }
+.board .acts { display: flex; gap: 8px; margin-left: auto; }
+button.act {
+  font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink); background: var(--raised);
+  border: 1px solid var(--rule); border-radius: 3px;
+  padding: 7px 11px; cursor: pointer;
+}
+button.act:hover { border-color: var(--accent); color: var(--accent); }
+button.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Phases ─────────────────────────────────────────────── */
+.phase { margin-top: 44px; }
+.phase > h2 {
+  font-family: var(--display); font-weight: 600;
+  font-size: 1.16rem; letter-spacing: -0.012em;
+  margin: 0 0 3px;
+  display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap;
+}
+.phase > h2 .pn {
+  font-family: var(--mono); font-size: 0.72rem;
+  color: var(--accent); letter-spacing: 0.09em;
+}
+.phase > p.why {
+  color: var(--graphite); font-size: 0.93rem;
+  margin: 0 0 14px; max-width: 68ch;
+}
+
+/* ── Step rows ──────────────────────────────────────────── */
+.step {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 4px 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  align-items: start;
+}
+.step[data-s="pass"] { border-color: var(--pass); background: var(--passbg); }
+.step[data-s="fail"] { border-color: var(--fail); background: var(--failbg); }
+.step[data-s="skip"] { opacity: .55; }
+
+.step .n {
+  font-family: var(--mono); font-size: 0.78rem; font-weight: 500;
+  color: var(--faint); padding-top: 2px; font-variant-numeric: tabular-nums;
+}
+.step[data-s="pass"] .n { color: var(--pass); }
+.step[data-s="fail"] .n { color: var(--fail); }
+.step .do { font-weight: 500; }
+.step .exp {
+  grid-column: 2; font-size: 0.9rem; color: var(--graphite);
+  margin-top: 3px;
+}
+.step .exp::before {
+  content: "Expect ";
+  font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--faint); margin-right: 5px;
+}
+.step .note {
+  grid-column: 2 / -1; margin-top: 9px;
+  font-family: var(--sans); font-size: 0.88rem;
+  color: var(--ink); background: var(--raised);
+  border: 1px solid var(--hair); border-radius: 3px;
+  padding: 6px 9px; width: 100%; resize: vertical; min-height: 34px;
+  display: none;
+}
+.step .note:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.step[data-s="fail"] .note, .step .note.open { display: block; }
+
+.marks { display: flex; gap: 4px; grid-row: 1 / 3; }
+.marks button {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.06em;
+  width: 34px; height: 30px; cursor: pointer;
+  background: var(--raised); color: var(--graphite);
+  border: 1px solid var(--rule); border-radius: 3px;
+}
+.marks button:hover { color: var(--ink); border-color: var(--graphite); }
+.marks button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.marks button[aria-pressed="true"][data-v="pass"] {
+  background: var(--pass); border-color: var(--pass); color: #fff;
+}
+.marks button[aria-pressed="true"][data-v="fail"] {
+  background: var(--fail); border-color: var(--fail); color: #fff;
+}
+.marks button[aria-pressed="true"][data-v="skip"] {
+  background: var(--graphite); border-color: var(--graphite); color: #fff;
+}
+
+code {
+  font-family: var(--mono); font-size: 0.86em;
+  background: var(--tint); color: var(--ink);
+  padding: 0.08em 0.34em; border-radius: 3px;
+}
+.step[data-s="pass"] code, .step[data-s="fail"] code { background: rgb(0 0 0 / 0.06); }
+
+/* ── Notes / callouts ───────────────────────────────────── */
+.note-box {
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  padding: 14px 18px; margin: 16px 0;
+  border-radius: 0 3px 3px 0;
+  font-size: 0.93rem;
+}
+.note-box p { margin: 0 0 10px; }
+.note-box p:last-child { margin: 0; }
+.note-box.warn { border-left-color: var(--fail); }
+
+h3.sub {
+  font-family: var(--display); font-weight: 500; font-size: 1rem;
+  margin: 34px 0 10px;
+}
+ul.limits { margin: 0; padding-left: 20px; }
+ul.limits li { margin-bottom: 9px; color: var(--graphite); }
+ul.limits b { color: var(--ink); font-weight: 500; }
+
+/* ── Export ─────────────────────────────────────────────── */
+#out {
+  width: 100%; min-height: 240px; margin-top: 14px;
+  font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 4px; padding: 12px;
+  display: none;
+}
+#out.open { display: block; }
+
+@media (max-width: 620px) {
+  .step { grid-template-columns: 28px 1fr; }
+  .marks { grid-row: auto; grid-column: 2; margin-top: 9px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media print {
+  .board, .acts, #out { display: none !important; }
+  .step { break-inside: avoid; border-color: var(--rule); }
+  .step .note { display: block; }
+}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Roadmap step 75 · deliverable: test log</p>
+  <h1>TrikeKoTo Field Test Log</h1>
+  <p class="standfirst">
+    The end-to-end run on real hardware. 356 automated tests prove the rules and
+    the logic; none of them prove a commuter can book a ride and a driver can
+    receive it. That is what this sheet is for.
+  </p>
+
+  <div class="ident">
+    <label>Date <input id="f-date" type="date"></label>
+    <label>Tester <input id="f-who" placeholder="Your name"></label>
+    <label>APK version <input id="f-ver" placeholder="1.0.0+1"></label>
+    <label>Driver handset <input id="f-dev" placeholder="e.g. Redmi 9A / Android 11"></label>
+  </div>
+
+  <div class="board">
+    <div class="score p"><b id="s-pass">0</b><span>pass</span></div>
+    <div class="score f"><b id="s-fail">0</b><span>fail</span></div>
+    <div class="score"><b id="s-left">0</b><span>left</span></div>
+    <div class="bar"><i class="bp" id="b-pass" style="width:0"></i><i class="bf" id="b-fail" style="width:0"></i></div>
+    <div class="acts">
+      <button class="act" id="btn-export">Export log</button>
+      <button class="act" id="btn-reset">Reset</button>
+    </div>
+  </div>
+  <textarea id="out" readonly aria-label="Exported log as Markdown"></textarea>
+</header>
+
+<div class="note-box">
+  <p><strong>How to use this.</strong> Mark every step <b>P</b> pass, <b>F</b> fail, or <b>S</b> skipped. A failure opens a notes box — write what actually happened, not just “didn’t work.” Everything saves in this browser as you go, so you can close the tab between phases.</p>
+  <p>When you finish, <b>Export log</b> produces Markdown you can paste straight into your thesis appendix.</p>
+</div>
+
+<div class="note-box warn">
+  <p><strong>Rewritten 9 September 2026.</strong> The first version of this sheet was written before commuter accounts, before the Cloud Functions were deployed, and before fares were removed. Six of its steps expected the <em>opposite</em> of what the system now does — three of them described deployed features as known limitations, so a tester following it would have recorded real successes as expected failures.</p>
+  <p>If you have a part-finished run against the old sheet, its Phase 04, 05, 07 and 08 results are not comparable to this one. <b>Reset</b> and start clean.</p>
+</div>
+
+<main id="sheet"></main>
+
+<h3 class="sub">Known limitations — record these, they are not failures</h3>
+<ul class="limits">
+  <li><b>Any signed-in user can list online drivers.</b> The greedy match runs on the commuter's device, so it must query <code>active_drivers</code>. That document deliberately carries no name, phone, plate or rating — an email and a coordinate is the whole exposure. Closing it means moving dispatch fully server-side and switching <code>canDiscoverDrivers()</code> to <code>isAdmin()</code>; the client sweep has to stop first, or no ride is ever offered (step 69).</li>
+  <li><b>App Check is unenforced on the web build.</b> Play Integrity attests the APK, but <code>providerWeb</code> is null pending a reCAPTCHA Enterprise key, so nothing distinguishes a browser from a script. The SMS region allowlist (Philippines only) is what bounds the damage meanwhile.</li>
+  <li><b>Routing runs against the public OSRM demo server.</b> Rate-limited and licensed for development only. Under throttling, dispatch silently falls back to straight-line ranking and the route line to a padded estimate — degraded, never broken. Self-host before a real pilot.</li>
+  <li><b>Search is bounded to about 55 km around the map centre.</b> Correct for a service where no trip is that long, but it means a distant place returns nothing. The message says so rather than claiming the place does not exist.</li>
+</ul>
+
+<div class="note-box warn">
+  <p><strong>If a step fails, stop and note the state.</strong> Screenshot the screen, and open the Firestore console to record what the document actually holds. A failure you can only describe from memory is one you will not be able to reproduce tomorrow.</p>
+</div>
+
+</div>
+
+<script>
+const PHASES = [
+  {
+    n: "00", t: "Before you start",
+    why: "Setup, not testing. Every one of these has caused a confusing failure two phases later.",
+    steps: [
+      ["Point the CLI at the right project — <code>firebase use</code>", "The project you intend to test, not a leftover default"],
+      ["Deploy rules and indexes, then open Firestore → Indexes", "Every composite index reads <b>Enabled</b>, not <b>Building</b>. A building index fails queries with a console link"],
+      ["Seed <code>config/app</code> with searchRadiusKm, offerTimeoutSeconds and maxDriversToTry", "Document exists. Without it dispatch falls back to compiled defaults. There are no fare fields — the app quotes no prices and stores none"],
+      ["Create the admin: Auth user, <b>verify the email address</b>, then a doc at <code>admins/{lowercased-email}</code>", "Both exist. An unverified admin is locked out of their own panel by design"],
+      ["Auth providers: <b>Phone on</b> (commuters), Email/Password on (drivers and admins), Google off", "Phone is required — every commuter verifies a number, and <code>hasVerifiedPhone()</code> refuses a booking without one. Phone sign-in needs the Blaze plan"],
+      ["Confirm the SMS region policy is an <b>allowlist</b> containing the Philippines", "A <code>+63</code> number still receives a code. Saved as a denylist, or without PH added, locks out every real user"],
+      ["Install the APK on the driver handset and note its version above", "App opens to the landing screen"],
+      ["Ready the commuter device — a second phone, or <code>trikekoto.web.app</code> in a browser", "Two independent app instances. You will need <b>two different mobile numbers</b> that can receive SMS"]
+    ]
+  },
+  {
+    n: "01", t: "Admin access and the verification boundary",
+    why: "Proves the admin gate holds. Step 5 is the one your panel is most likely to ask you to demonstrate.",
+    steps: [
+      ["Sign in as the admin at <code>/login</code>", "Lands on <code>/admin</code> — not the commuter or driver shell"],
+      ["Look at the analytics panel", "Loads. “No rides in this window.” is correct on a fresh project — not a row of zeroes"],
+      ["Open <b>Dispatch</b>", "Values match what you seeded in <code>config/app</code>. No fare fields exist"],
+      ["Open <b>Feedback</b>", "Empty state, no error"],
+      ["<b>Negative test.</b> In the console, un-verify the admin's email. Sign out, sign back in", "The panel is replaced by the verification screen, not a permission error. Re-verify afterwards and confirm access returns"]
+    ]
+  },
+  {
+    n: "02", t: "Driver registration and approval",
+    why: "The verification lifecycle, and the live-update claim: an approval must reach the driver without a re-login.",
+    steps: [
+      ["On the handset, register a new driver — name, mobile, plate, TODA chapter, email, password", "Account created, lands on <code>/driver</code>"],
+      ["Read the driver screen carefully", "Pending banner. <b>No online switch and no offer list</b> — an unverified driver cannot go online"],
+      ["On the admin device, refresh the dashboard", "The new driver appears under <b>Pending verification</b> with an Approve button"],
+      ["Tap <b>Approve</b>", "Driver moves out of the pending queue into the roster"],
+      ["Watch the driver handset — <b>do not sign out</b>", "Banner flips to verified on its own. This is the live-update claim; if it needs a restart, that is a fail"]
+    ]
+  },
+  {
+    n: "03", t: "Permissions and GPS presence",
+    why: "The part no automated test can reach. Real prompts, real GPS, real hardware — and the only phase that needs you to walk somewhere.",
+    steps: [
+      ["Toggle the driver online", "Android asks for location permission"],
+      ["On Android 13 or newer, watch for a second prompt", "Notification permission requested. This one matters now that push is deployed — deny it and you will get no offers in phase 05"],
+      ["Grant both, then open Firestore → <code>active_drivers</code>", "A document keyed by the driver's email, holding <code>position.geohash</code> and <code>position.geopoint</code>"],
+      ["Note <code>updatedAt</code>, then walk <b>at least 50 metres</b> and re-check", "<code>updatedAt</code> has moved. The distance filter is exactly 50 m, so a shorter walk legitimately writes nothing — that is cost control, not a bug"],
+      ["While still online, check <code>drivers/{email}</code>", "<code>fcmToken</code> is present. It is re-sent on every GPS ping, so a rotated token self-heals"],
+      ["Toggle the driver offline", "The <code>active_drivers</code> document is <b>deleted</b>, not just flagged. An offline driver cannot be matched at all"]
+    ]
+  },
+  {
+    n: "04", t: "Commuter account and booking",
+    why: "The commuter path up to the moment dispatch begins, including the two external services. Accounts are mandatory — there is no anonymous route through this phase.",
+    steps: [
+      ["Open the app on the commuter device and tap <b>Book a ride</b>", "Lands on phone sign-in, not on the booking form"],
+      ["Enter a mobile number and tap <b>Send code</b>", "An SMS arrives. On the web build a reCAPTCHA check may appear first"],
+      ["Enter the six digits", "Signed in. A new number goes to onboarding; a returning one goes straight to booking"],
+      ["On onboarding, enter a name and tap <b>Simulan</b>", "Lands on booking. The number is shown with a tick and is not editable"],
+      ["Watch the pickup row without touching anything", "It fills itself in: a GPS fix, reverse-geocoded to a readable address. A denied permission falls back to “Set on map” — also a pass"],
+      ["Tap the drop-off row", "Location picker opens and OSM map tiles load — proves tile access on this network"],
+      ["Type at least three characters into the search box and submit", "Nominatim returns a result list. Fewer than three characters must not call the network at all"],
+      ["Search for somewhere far outside the province", "No results, and the message says nothing was found <b>near here</b> — it must not claim the place does not exist"],
+      ["Pick a nearby result, then confirm", "Returns to booking with the drop-off label filled in"],
+      ["Watch the distance area", "“Working out the route…” then a distance and time appear — OSRM reachable. <b>No price anywhere:</b> a fare on screen would be a fail"],
+      ["Tap <b>Find a driver</b>", "Ride document created with status <code>searching</code> and a <code>pickup.geopoint</code>"]
+    ]
+  },
+  {
+    n: "05", t: "Dispatch — the core claim",
+    why: "The greedy nearest-driver search, now ranked by road distance and backed by push. The backgrounded-driver step is the one that changed most: it used to be an expected failure.",
+    steps: [
+      ["Watch the driver handset with the app <b>open</b>", "“New ride offer” appears within roughly one offer timeout (15 s by default)"],
+      ["Now <b>background</b> the driver app, book a second ride, and watch the lock screen", "A push notification arrives on the <code>rides</code> channel. This is <code>onRideOffered</code>. Nothing arriving is a real failure now, not a known limitation"],
+      ["Foreground the app and tap <b>Accept</b>", "Ride becomes <code>accepted</code>, driver sees “Current ride”"],
+      ["Look at the commuter device", "“Driver is on the way”, with the driver's name, plate and rating — and a push, if notifications are granted there too"],
+      ["Compare the plate shown to the commuter against the real driver profile", "They match. A driver cannot advertise someone else's plate — the rules enforce it"],
+      ["<b>If you have two drivers online</b>, check which one was offered first", "The nearer one <b>by road</b>, not by straight line. Hard to prove with two drivers on the same street — skip unless your geography makes the difference visible"],
+      ["On the driver screen, tap <b>Open in maps</b>", "Hands off to a navigation app, or falls back cleanly if none is installed"]
+    ]
+  },
+  {
+    n: "06", t: "Ride lifecycle",
+    why: "Accepted through to rated, with the one control that must disappear partway.",
+    steps: [
+      ["Driver taps <b>Start trip</b>", "Status <code>in_transit</code> on both devices, and a status push to the commuter"],
+      ["Look hard at the commuter screen", "“On the way to your drop-off”, and the <b>Cancel ride button is gone</b> — the passenger is in the vehicle"],
+      ["Carry the driver handset some distance", "The commuter's map marker follows"],
+      ["Driver taps <b>Complete ride</b>", "Status <code>completed</code>"],
+      ["Check the commuter screen", "Rating card: “How was your ride?” with 1–5 stars"],
+      ["Give a rating, wait a few seconds, then open <code>drivers/{email}</code>", "<code>ratingSum</code> and <code>ratingCount</code> incremented <b>once</b>. Written by <code>onRideRated</code>, not the client, so allow a moment for the function"],
+      ["Check the ride document", "<code>ratingCounted: true</code> — the idempotency guard that stops a retried delivery double-counting"]
+    ]
+  },
+  {
+    n: "07", t: "Failure paths",
+    why: "Where a demo falls apart. Test these before someone else finds them.",
+    steps: [
+      ["With every driver offline, book a ride and wait out the attempt budget", "Status becomes <code>expired</code> with <code>cancelledBy: system</code> — not <code>cancelled</code>"],
+      ["Book again, then cancel while still <code>searching</code>", "Status <code>cancelled</code>, <code>cancelledBy: commuter</code>"],
+      ["Book, let a driver accept, then cancel from the commuter side", "Driver returns to “Waiting for a ride”"],
+      ["With the driver online and idle, suspend them from the admin panel", "Driver's banner changes and the online switch disappears without a re-login"],
+      ["Put the driver handset in airplane mode mid-ride, wait, then restore", "State catches up rather than sticking or duplicating"],
+      ["Book a ride, then <b>close the commuter app</b> while it is searching. Wait two minutes", "The ride still advances — <code>sweepStaleRides</code> runs every minute and re-offers or expires it. A ride stuck in <code>searching</code> forever is a real failure now"],
+      ["<b>Negative test.</b> In the admin Dispatch screen, switch <b>accepting rides</b> off, then try to book", "The booking is refused at the rules layer, not just hidden. Switch it back on afterwards"]
+    ]
+  },
+  {
+    n: "08", t: "Analytics",
+    why: "Confirms the admin panel reflects what actually happened, against real data rather than a fixture.",
+    steps: [
+      ["Open the admin dashboard on the <b>Today</b> window and refresh", "The completed ride is counted"],
+      ["Read the headline figures", "Rides, completed, cancelled, completion rate, average rating. <b>No money anywhere</b> — the fare engine was removed"],
+      ["Read the <b>By driver</b> table", "Your test driver, with the right completed count and rating"],
+      ["Check the completion rate against what you actually did", "Cancelled and expired rides count against it; rides still in flight do not"]
+    ]
+  },
+  {
+    n: "09", t: "Access control spot checks",
+    why: "Three quick checks that the role boundaries hold from the outside.",
+    steps: [
+      ["Signed in as a commuter, try to reach the admin area", "Redirected to <code>/commuter</code>. Even if routing let you through, the rules would refuse the reads"],
+      ["Signed in as a driver, try the same", "Redirected to <code>/driver</code>"],
+      ["Signed in as a commuter, open <code>riders/{someone-else-uid}</code> from the app's own session", "Refused. Rider profiles are own-document only, with no list clause at all — the collection cannot be enumerated even by an admin"]
+    ]
+  },
+  {
+    n: "10", t: "Rider profile",
+    why: "The photo could only be set during sign-up until the profile screen existed. This is the round trip that proves upload, write and read-back.",
+    steps: [
+      ["From booking, tap the <b>person icon</b> in the top bar", "Profile opens, showing your name and your verified number"],
+      ["Tap the avatar and choose a photo from the gallery", "The avatar shows it immediately — it is held, not yet uploaded"],
+      ["Tap <b>Save</b>, then go back", "The top-bar icon has become your photo. That round trip proves the upload, the Firestore write and the read-back"],
+      ["Change the name, tap Save, reopen", "The new name persists <b>and the photo is still there</b> — a rename must not clear the picture"],
+      ["Book a ride and let a driver accept it, then look at the driver's screen", "Your photo appears with the ride. It reaches them as a URL on the ride document, never by reading your profile"],
+      ["Repeat steps 1–3 on the <b>other</b> platform", "Same result. Web and Android take different code paths here — a pass on one proves nothing about the other"]
+    ]
+  }
+];
+
+const KEY = "tk-field-test-v2";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { state = {}; }
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
+}
+
+const sheet = document.getElementById("sheet");
+let counter = 0;
+const allIds = [];
+
+PHASES.forEach(ph => {
+  const sec = document.createElement("section");
+  sec.className = "phase";
+  const h = document.createElement("h2");
+  h.innerHTML = '<span class="pn">Phase ' + ph.n + '</span>' + ph.t;
+  sec.appendChild(h);
+  const why = document.createElement("p");
+  why.className = "why";
+  why.textContent = ph.why;
+  sec.appendChild(why);
+
+  ph.steps.forEach(([doTxt, expTxt]) => {
+    counter++;
+    const id = "s" + counter;
+    allIds.push(id);
+    const cur = state[id] || { s: "", note: "" };
+
+    const row = document.createElement("div");
+    row.className = "step";
+    row.dataset.s = cur.s;
+    row.innerHTML =
+      '<div class="n">' + String(counter).padStart(2, "0") + '</div>' +
+      '<div class="do">' + doTxt + '</div>' +
+      '<div class="marks">' +
+        '<button data-v="pass" aria-pressed="' + (cur.s === "pass") + '" aria-label="Pass">P</button>' +
+        '<button data-v="fail" aria-pressed="' + (cur.s === "fail") + '" aria-label="Fail">F</button>' +
+        '<button data-v="skip" aria-pressed="' + (cur.s === "skip") + '" aria-label="Skip">S</button>' +
+      '</div>' +
+      '<div class="exp">' + expTxt + '</div>' +
+      '<textarea class="note" placeholder="What actually happened">' + (cur.note || "") + '</textarea>';
+
+    const note = row.querySelector(".note");
+    if (cur.note) note.classList.add("open");
+
+    row.querySelectorAll(".marks button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const v = btn.dataset.v;
+        const now = state[id] || { s: "", note: "" };
+        now.s = now.s === v ? "" : v;
+        state[id] = now;
+        row.dataset.s = now.s;
+        row.querySelectorAll(".marks button").forEach(b =>
+          b.setAttribute("aria-pressed", String(b.dataset.v === now.s)));
+        save(); tally();
+      });
+    });
+
+    note.addEventListener("input", () => {
+      const now = state[id] || { s: "", note: "" };
+      now.note = note.value;
+      state[id] = now;
+      save();
+    });
+
+    row.querySelector(".do").addEventListener("dblclick", () => note.classList.toggle("open"));
+
+    sec.appendChild(row);
+  });
+
+  sheet.appendChild(sec);
+});
+
+function tally() {
+  let p = 0, f = 0;
+  allIds.forEach(id => {
+    const s = (state[id] || {}).s;
+    if (s === "pass") p++;
+    else if (s === "fail") f++;
+  });
+  const total = allIds.length;
+  document.getElementById("s-pass").textContent = p;
+  document.getElementById("s-fail").textContent = f;
+  document.getElementById("s-left").textContent = total - p - f;
+  document.getElementById("b-pass").style.width = (p / total * 100) + "%";
+  document.getElementById("b-fail").style.width = (f / total * 100) + "%";
+}
+
+// Run identity fields
+["date", "who", "ver", "dev"].forEach(k => {
+  const el = document.getElementById("f-" + k);
+  if (state["_" + k]) el.value = state["_" + k];
+  el.addEventListener("input", () => { state["_" + k] = el.value; save(); });
+});
+if (!state._date) {
+  const d = new Date();
+  document.getElementById("f-date").value =
+    d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+// Export
+document.getElementById("btn-export").addEventListener("click", () => {
+  const out = document.getElementById("out");
+  const strip = h => h.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  let md = "# TrikeKoTo — End-to-end test log\n\n";
+  md += "- **Date:** " + (document.getElementById("f-date").value || "—") + "\n";
+  md += "- **Tester:** " + (document.getElementById("f-who").value || "—") + "\n";
+  md += "- **APK version:** " + (document.getElementById("f-ver").value || "—") + "\n";
+  md += "- **Driver handset:** " + (document.getElementById("f-dev").value || "—") + "\n\n";
+
+  let p = 0, f = 0, s = 0;
+  allIds.forEach(id => {
+    const v = (state[id] || {}).s;
+    if (v === "pass") p++; else if (v === "fail") f++; else if (v === "skip") s++;
+  });
+  md += "**" + p + " passed · " + f + " failed · " + s + " skipped · " +
+        (allIds.length - p - f - s) + " not run** (of " + allIds.length + ")\n\n";
+
+  let i = 0;
+  PHASES.forEach(ph => {
+    md += "## Phase " + ph.n + " — " + ph.t + "\n\n";
+    md += "| # | Step | Expected | Result | Notes |\n|---|---|---|---|---|\n";
+    ph.steps.forEach(([d, e]) => {
+      i++;
+      const st = state["s" + i] || { s: "", note: "" };
+      const label = st.s === "pass" ? "PASS" : st.s === "fail" ? "FAIL" : st.s === "skip" ? "skip" : "—";
+      md += "| " + i + " | " + strip(d) + " | " + strip(e) + " | " + label + " | " +
+            (st.note || "").replace(/\|/g, "\\|").replace(/\n/g, " ") + " |\n";
+    });
+    md += "\n";
+  });
+
+  out.value = md;
+  out.classList.add("open");
+  out.focus();
+  out.select();
+  // The text is already selected above, so a blocked clipboard just means
+  // Ctrl+C instead of an automatic copy — never an error the tester has to read.
+  try {
+    const w = navigator.clipboard && navigator.clipboard.writeText(md);
+    if (w && w.catch) w.catch(() => {});
+  } catch (e) { /* select-to-copy fallback */ }
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  if (!confirm("Clear every result and note on this sheet?")) return;
+  state = {};
+  save();
+  location.reload();
+});
+
+tally();
+</script>

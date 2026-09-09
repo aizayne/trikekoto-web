@@ -1,0 +1,919 @@
+
+<title>TrikeKoTo Build Order</title>
+<style>
+  /* ── Tokens: light is the base set ───────────────────────── */
+  :root {
+    --ground:      #F7F6F2;
+    --surface:     #FFFFFF;
+    --surface-alt: #F1EFE9;
+    --ink:         #16201F;
+    --ink-soft:    #4A5654;
+    --ink-faint:   #7C8886;
+    --rule:        #DDD9CF;
+    --rule-strong: #C3BDAF;
+
+    --accent:      #B5651D;   /* marigold — structural only, never a status */
+    --accent-soft: #F0DFC8;
+
+    --done:        #1F6F5C;
+    --done-bg:     #DCEDE6;
+    --partial:     #1D5A8A;
+    --partial-bg:  #D9E8F3;
+    --blocked:     #9E2B25;
+    --blocked-bg:  #F5DEDC;
+    --todo:        #6B7573;
+    --todo-bg:     #E7E5DE;
+
+    --font-ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #121716;
+      --surface:     #1A211F;
+      --surface-alt: #212A28;
+      --ink:         #E8E9E5;
+      --ink-soft:    #A9B3B0;
+      --ink-faint:   #7A8482;
+      --rule:        #2C3634;
+      --rule-strong: #3E4A47;
+
+      --accent:      #E39A55;
+      --accent-soft: #3A2C1D;
+
+      --done:        #6FCBAE;
+      --done-bg:     #16342C;
+      --partial:     #7FB9E5;
+      --partial-bg:  #14293A;
+      --blocked:     #E98B84;
+      --blocked-bg:  #3A1E1C;
+      --todo:        #98A2A0;
+      --todo-bg:     #262E2C;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #121716;
+    --surface:     #1A211F;
+    --surface-alt: #212A28;
+    --ink:         #E8E9E5;
+    --ink-soft:    #A9B3B0;
+    --ink-faint:   #7A8482;
+    --rule:        #2C3634;
+    --rule-strong: #3E4A47;
+
+    --accent:      #E39A55;
+    --accent-soft: #3A2C1D;
+
+    --done:        #6FCBAE;
+    --done-bg:     #16342C;
+    --partial:     #7FB9E5;
+    --partial-bg:  #14293A;
+    --blocked:     #E98B84;
+    --blocked-bg:  #3A1E1C;
+    --todo:        #98A2A0;
+    --todo-bg:     #262E2C;
+  }
+
+  /* ── Base ────────────────────────────────────────────────── */
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 clamp(16px, 4vw, 56px) 96px;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .prose { max-width: var(--measure); }
+
+  h1, h2, h3 {
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    line-height: 1.15;
+    margin: 0;
+  }
+
+  h1 { font-size: clamp(2.1rem, 5vw, 3.1rem); font-weight: 760; }
+  h2 { font-size: clamp(1.35rem, 2.6vw, 1.75rem); font-weight: 700; }
+  h3 { font-size: 1.05rem; font-weight: 680; letter-spacing: -0.01em; }
+
+  p { margin: 0; }
+  a { color: var(--accent); }
+
+  code, .mono { font-family: var(--font-mono); font-size: 0.87em; }
+
+  /* ── Masthead ────────────────────────────────────────────── */
+  header.masthead {
+    padding: clamp(40px, 7vw, 84px) 0 34px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .standfirst {
+    margin-top: 18px;
+    font-size: 1.06rem;
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+
+  /* ── Reality strip ───────────────────────────────────────── */
+  .reality {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 34px;
+  }
+
+  .reality div { background: var(--surface); padding: 16px 18px; }
+
+  .reality .n {
+    font-family: var(--font-mono);
+    font-size: 1.65rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .reality .k {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-faint);
+    margin-top: 7px;
+  }
+
+  /* ── Sections ────────────────────────────────────────────── */
+  section { margin-top: clamp(52px, 8vw, 88px); }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule-strong);
+    padding-bottom: 10px;
+    margin-bottom: 26px;
+  }
+
+  .sec-head .num {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .note {
+    background: var(--surface-alt);
+    border-left: 3px solid var(--accent);
+    padding: 15px 18px;
+    margin: 22px 0;
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+
+  .note strong { color: var(--ink); }
+
+  /* ── Tables ──────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.855rem; min-width: 900px; }
+
+  thead th {
+    background: var(--surface-alt);
+    text-align: left;
+    font-size: 0.71rem;
+    text-transform: uppercase;
+    letter-spacing: 0.075em;
+    color: var(--ink-faint);
+    font-weight: 640;
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+
+  tbody td {
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.step, td.deps {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  td.pct {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  td.task { font-weight: 600; min-width: 190px; }
+  td.desc { color: var(--ink-soft); min-width: 260px; }
+  td.deliv { color: var(--ink-soft); min-width: 180px; }
+
+  tr.phase-start td { border-top: 2px solid var(--rule-strong); }
+
+  td.phase {
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  /* ── Status chips ────────────────────────────────────────── */
+  .chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .s-done    { background: var(--done-bg);    color: var(--done); }
+  .s-partial { background: var(--partial-bg); color: var(--partial); }
+  .s-blocked { background: var(--blocked-bg); color: var(--blocked); }
+  .s-todo    { background: var(--todo-bg);    color: var(--todo); }
+
+  /* ── Cards / lists ───────────────────────────────────────── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 18px 20px;
+  }
+
+  .card h3 { margin-bottom: 9px; }
+  .card ul { margin: 0; padding-left: 17px; color: var(--ink-soft); font-size: 0.9rem; }
+  .card li { margin-bottom: 6px; }
+
+  .card.crit  { border-top: 3px solid var(--blocked); }
+  .card.high  { border-top: 3px solid var(--accent); }
+  .card.med   { border-top: 3px solid var(--partial); }
+  .card.low   { border-top: 3px solid var(--rule-strong); }
+
+  /* ── Timeline ────────────────────────────────────────────── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+
+  .tl-row {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+
+  .tl-row:last-child { border-bottom: 0; }
+
+  .tl-mark {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    font-weight: 600;
+    padding-top: 2px;
+  }
+
+  .tl-body strong { display: block; margin-bottom: 3px; }
+  .tl-body span { color: var(--ink-soft); font-size: 0.92rem; }
+
+  /* ── Tree ────────────────────────────────────────────────── */
+  pre.tree {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.62;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  pre.tree b { color: var(--ink); font-weight: 600; }
+  pre.tree i { color: var(--ink-faint); font-style: normal; }
+
+  /* ── Checklist ───────────────────────────────────────────── */
+  .check { list-style: none; padding: 0; margin: 0; }
+
+  .check li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .check li:last-child { border-bottom: 0; }
+  .check .box { font-family: var(--font-mono); color: var(--ink-faint); }
+  .check .box.on { color: var(--done); }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 22px;
+    border-top: 2px solid var(--ink);
+    color: var(--ink-faint);
+    font-size: 0.84rem;
+    max-width: var(--measure);
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">TrikeKoTo · TODA Ride-Hailing · Build Order</div>
+  <h1>From schema to signed release, in the order it has to happen</h1>
+  <p class="standfirst">
+    A 95-step roadmap for the Flutter rebuild — commuters, drivers, and TODA administrators
+    on Firebase, mapped with <span class="mono">flutter_map</span> and OpenStreetMap.
+    Status reflects what is actually in the repository today, not an idealised plan.
+  </p>
+
+  <div class="reality">
+    <div><div class="n">97</div><div class="k">Total steps</div></div>
+    <div><div class="n" style="color:var(--done)">91</div><div class="k">Complete</div></div>
+    <div><div class="n" style="color:var(--partial)">4</div><div class="k">Partial</div></div>
+    <div><div class="n" style="color:var(--blocked)">1</div><div class="k">Blocked</div></div>
+    <div><div class="n" style="color:var(--todo)">1</div><div class="k">Not started</div></div>
+  </div>
+</header>
+
+<div class="note">
+  <strong>Read the status column first.</strong> Most of this roadmap is built, deployed, and
+  covered by <strong>356 passing tests</strong> — 187 Dart and 169 against the Firestore
+  emulator.
+  <br><br>
+  <strong>The backend is finished.</strong> Blaze cleared the one dependency that had grown to
+  block four things at once, and everything behind it has since shipped: four gen-2 Cloud
+  Functions live on Node 22, the scheduled dispatch sweep firing every minute, rating
+  aggregates moved server-side and the client's write refused at the rules layer, Cloud Storage
+  provisioned, a ₱500 budget alert, and the SMS region policy narrowed to the Philippines.
+  <br><br>
+  <strong>The commuter half is real.</strong> A live phone number received a live OTP on the
+  public web build, and pickup now defaults to the commuter's own position, reverse-geocoded
+  into an address. Dispatch ranks by road distance rather than crow-flies.
+  <br><br>
+  <strong>The system is now documented as built.</strong> Step 10 closed with 38 screen
+  plates drawn from the real theme, and a re-trace of the screen flows that had to correct
+  rather than extend them — the old version described anonymous entry that mandatory
+  accounts had already removed. Drawing an app from its own source turns out to be an
+  unusually good way to find where the code and the story about it have drifted apart: it
+  surfaced two live defects, both since fixed and shipped.
+  <br><br>
+  What is left is not infrastructure. It is <strong>a complete ride on real handsets</strong>
+  (75, 78), App Check on web — the last unmitigated part of the SMS fraud surface — and
+  self-hosting OSRM, which the road-distance change made matter sooner than it did.
+</div>
+
+<!-- ══ PROGRESS ═══════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">01</span><h2>Progress</h2></div>
+
+  <div class="reality" style="margin-top:0">
+    <div><div class="n" style="color:var(--done)">94%</div><div class="k">By step count</div></div>
+    <div><div class="n" style="color:var(--partial)">85%</div><div class="k">Weighted</div></div>
+    <div><div class="n">91<span style="color:var(--ink-faint);font-size:1rem">/97</span></div><div class="k">Steps complete</div></div>
+    <div><div class="n">356</div><div class="k">Tests passing</div></div>
+  </div>
+
+  <div class="note">
+    <strong>Two numbers, because one of them would mislead.</strong> 94% counts steps, and
+    steps are not the same size. The six that remain are almost all <em>validation</em> — and
+    for a capstone, testing is a chapter rather than a coda.
+    <br><br>
+    Weighted so that proving the system counts for as much as building it, the honest figure
+    is <strong>about 85%</strong> — the mean of the six areas below, which comes to 84% and
+    is not worth pretending is more precise than that. The build is nearly finished; the
+    evidence is barely started. Quote 94% and a panel will ask what has actually been
+    demonstrated.
+    <br><br>
+    <strong>Worth noticing what did <em>not</em> move it.</strong> The security review went
+    from one open High finding to zero findings — App Check enforced on both platforms, keys
+    restricted, region policy, budget alert — and the headline barely shifted. That is the
+    point: the gap is not security, and it is not code. It is that nobody outside this
+    project has used the thing.
+  </div>
+
+  <div class="scroll" style="margin-top:22px">
+  <table>
+    <thead>
+      <tr><th>Area</th><th>Done</th><th style="min-width:110px"></th><th>Basis</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="task">Backend &amp; security</td>
+        <td class="pct">~100%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
+        <td class="desc">Rules deployed and cut over, four gen-2 functions live, Storage provisioned, budget alert and SMS region policy set. App Check <strong>enforced</strong> on both platforms and verified by a real sign-in after enforcement; API keys restricted. Security review: zero High, zero Medium.</td>
+      </tr>
+      <tr>
+        <td class="task">Feature build, three roles</td>
+        <td class="pct">~98%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:98%;background:var(--done)"></i></div></td>
+        <td class="desc">Every journey works end to end in code. Step 69 is prepared rather than cut over, because the client sweep has to stop first.</td>
+      </tr>
+      <tr>
+        <td class="task">Automated testing</td>
+        <td class="pct">~100%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:var(--done)"></i></div></td>
+        <td class="desc">356 passing — 187 Dart, 169 against the emulator, including a whole ride through the deployed ruleset and four concurrency races.</td>
+      </tr>
+      <tr>
+        <td class="task">Documentation</td>
+        <td class="pct">~95%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:95%;background:var(--done)"></i></div></td>
+        <td class="desc">Runbook, three role guides, 38 screen plates, re-traced flows, a rewritten field-test sheet. The Filipino copy still wants a native-speaker read (91).</td>
+      </tr>
+      <tr>
+        <td class="task">Release engineering</td>
+        <td class="pct">~95%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:95%;background:var(--done)"></i></div></td>
+        <td class="desc">Signed APK verified with apksigner, CI on every push, Crashlytics with role tags, LAN distribution. No Play Store listing — not needed for the pilot.</td>
+      </tr>
+      <tr style="background:var(--blocked-bg)">
+        <td class="task">Real-world validation</td>
+        <td class="pct" style="color:var(--blocked)">~15%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:15%;background:var(--blocked)"></i></div></td>
+        <td class="desc"><strong>This is the gap.</strong> One admin created, one driver approved, one commuter signed in, one pickup auto-filled. <strong>Not one complete ride has run between two people on two phones.</strong> Every piece is deployed and individually verified; none of it has been proven together by anyone other than the author, on hardware they do not control.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note" style="border-left-color:var(--blocked)">
+    <strong>What would move the number most.</strong> Step 75 phase 03 — real permission
+    prompts, real GPS, a fifty-metre walk — needs two numbers that can receive SMS and about
+    fifteen minutes. It is the cheapest large gain on this roadmap, and nothing else has to be
+    built before it can happen.
+  </div>
+</section>
+
+<!-- ══ ROADMAP TABLE ══════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">02</span><h2>Development roadmap</h2></div>
+
+  <div class="scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Phase</th><th>Step</th><th>Task</th><th>Description</th>
+        <th>Dependencies</th><th>Deliverable</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr class="phase-start"><td class="phase" rowspan="4">0 · Discovery</td><td class="step">1</td><td class="task">Requirement gathering</td><td class="desc">Capture the three roles, ride lifecycle, and TODA verification policy from stakeholders.</td><td class="deps">None</td><td class="deliv">Requirements document</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">2</td><td class="task">Role &amp; permission analysis</td><td class="desc">Define what commuter, driver, and admin may each read and write.</td><td class="deps">1</td><td class="deliv">Role matrix</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">3</td><td class="task">Constraint analysis</td><td class="desc">No Google Maps billing, serverless only, single signed APK, low-end Android devices.</td><td class="deps">1</td><td class="deliv">Constraints register</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">4</td><td class="task">Tech stack selection</td><td class="desc">Flutter + Riverpod + GoRouter; Firebase Auth/Firestore/FCM; flutter_map + OSM; Geolocator.</td><td class="deps">3</td><td class="deliv">Stack decision record</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="7">1 · Architecture</td><td class="step">5</td><td class="task">System architecture</td><td class="desc">Three-tier serverless topology; client-owned dispatch loop; trust boundary definition.</td><td class="deps">4</td><td class="deliv">Architecture diagram</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">6</td><td class="task">Firestore schema design</td><td class="desc">Six collections; email-as-document-ID for drivers/admins; anonymous UID ownership for rides.</td><td class="deps">5</td><td class="deliv">SCHEMA.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">7</td><td class="task">Security model design</td><td class="desc">Server-side role enforcement; <span class="mono">email_verified</span> gate on admin; denormalised driver snapshot to keep PII private.</td><td class="deps">6</td><td class="deliv">Threat model</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">8</td><td class="task">Dispatch algorithm design</td><td class="desc">Greedy nearest-driver: 5 km radius, sort by distance, 15 s per offer, cap at 10 candidates.</td><td class="deps">5</td><td class="deliv">Algorithm spec</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">9</td><td class="task">Query &amp; index planning</td><td class="desc">Enumerate every query, then derive the composite indexes and GPS field exclusions.</td><td class="deps">6</td><td class="deliv">Index plan</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">10</td><td class="task">UI/UX wireframes</td><td class="desc"><strong>38 screen plates</strong> across commuter, driver and admin, on a pan-and-zoom canvas with three pages. Drawn against the real design system rather than invented — amber on navy, stone neutrals, Poppins, 48dp targets, 12px radii, all lifted from <span class="mono">app_theme.dart</span> — so the plates document what shipped instead of what was imagined. <span class="mono">screen-flows.md</span> was re-traced at the same time and had to be corrected, not merely extended: it still described the anonymous entry that mandatory accounts removed, and omitted three screens that exist. Drawing from source also surfaced a live defect (see 34). Note the honest limit: these are records of a built system, not designs drawn beforehand.</td><td class="deps">2</td><td class="deliv">Screen plates canvas · screen-flows.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">11</td><td class="task">Design system</td><td class="desc">Brand amber on navy, taken from the launcher icon. Warm stone neutrals, 4dp grid, motion and icon tokens, light and dark schemes.</td><td class="deps">10</td><td class="deliv">app_theme.dart</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="9">2 · Backend</td><td class="step">12</td><td class="task">Firebase project setup</td><td class="desc">Reused the existing <span class="mono">trikekoto</span> project rather than provisioning a new one.</td><td class="deps">4</td><td class="deliv">Live project</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">13</td><td class="task">Enable Email/Password auth</td><td class="desc">Driver and administrator sign-in.</td><td class="deps">12</td><td class="deliv">Auth provider on</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">14</td><td class="task">Enable Anonymous auth</td><td class="desc">Gives every ride an owner without asking commuters to register. Enabled 21 Aug and verified against the live Identity Toolkit API.</td><td class="deps">12</td><td class="deliv">Auth provider on</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">15</td><td class="task">Provision Firestore</td><td class="desc">Native mode, <span class="mono">asia-southeast1</span>. Region is permanent once chosen.</td><td class="deps">12</td><td class="deliv">Database</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">16</td><td class="task">Security rules v2</td><td class="desc">Per-transition grants, default deny, atomic-accept pre-image guard.</td><td class="deps">7, 15</td><td class="deliv">firestore.rules</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">17</td><td class="task">Composite indexes</td><td class="desc">Seven indexes plus four field exclusions on hot GPS paths.</td><td class="deps">9</td><td class="deliv">firestore.indexes.json</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">18</td><td class="task">Rules test suite</td><td class="desc">102 emulator tests: per-clause rules, a full lifecycle, four concurrency races, 19 adversarial attacks, and the admin analytics query shape.</td><td class="deps">16</td><td class="deliv">rules.test.mjs</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">19</td><td class="task">Deploy rules &amp; indexes</td><td class="desc">Released to production. Broke the legacy React web client, as anticipated.</td><td class="deps">18</td><td class="deliv">Live ruleset</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">20</td><td class="task">Admin bootstrap script</td><td class="desc"><strong>Superseded for the common case.</strong> The Firebase console can neither send a verification email nor mark an address verified, so bootstrapping the first admin used to need a service-account key. <span class="mono">verify_email_screen.dart</span> now does it in the app: sign in, send, click the link, and it force-refreshes the ID token so the rules see the claim. An admin was created and verified this way against production. The script remains useful for bulk seeding and still awaits a key.</td><td class="deps">16</td><td class="deliv">verify_email_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="8">3 · Data layer</td><td class="step">21</td><td class="task">Flutter scaffold</td><td class="desc">Project created around the existing data-layer sources without overwriting them.</td><td class="deps">4</td><td class="deliv">Flutter project</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">22</td><td class="task">Dependency setup</td><td class="desc">firebase_core/auth/firestore, riverpod, go_router, geolocator.</td><td class="deps">21</td><td class="deliv">pubspec.yaml</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">23</td><td class="task">FlutterFire configuration</td><td class="desc">Android and web apps registered; real credentials generated.</td><td class="deps">12, 22</td><td class="deliv">firebase_options.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">24</td><td class="task">Collection paths &amp; enums</td><td class="desc">Single source of truth for names the rules also reference; email normalisation.</td><td class="deps">6</td><td class="deliv">collection_paths.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">25</td><td class="task">Typed models</td><td class="desc">Driver, ActiveDriver, Ride, FeedbackReport with Firestore converters.</td><td class="deps">24</td><td class="deliv">Model classes</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">26</td><td class="task">Write payload builders</td><td class="desc">One builder per allowed rule clause, so client writes cannot drift from the ruleset.</td><td class="deps">16, 25</td><td class="deliv">RideWrites</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">27</td><td class="task">Typed refs &amp; queries</td><td class="desc">Every canonical query in one class, each provably permitted and index-backed.</td><td class="deps">25</td><td class="deliv">firestore_refs.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">28</td><td class="task">Geo utilities</td><td class="desc">Haversine distance and geohash encoding for future radius queries.</td><td class="deps">8</td><td class="deliv">geo_utils.dart</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="6">4 · App shell</td><td class="step">29</td><td class="task">Provider graph</td><td class="desc">Riverpod roots for auth, Firestore, and typed refs.</td><td class="deps">27</td><td class="deliv">providers.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">30</td><td class="task">Session &amp; role resolution</td><td class="desc">Derives role from Firestore exactly as the rules do, so the UI cannot claim power the server refuses.</td><td class="deps">29</td><td class="deliv">session_controller.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">31</td><td class="task">Role-based routing</td><td class="desc">GoRouter redirect keyed on resolved role; single place deciding which shell loads.</td><td class="deps">30</td><td class="deliv">app_router.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">32</td><td class="task">Shared UI kit</td><td class="desc">Theme, spacing primitive, snackbars.</td><td class="deps">11</td><td class="deliv">Shared widgets</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">32a</td><td class="task">Design system rollout</td><td class="desc">ui-ux-pro-max skill installed and applied, then rethemed to the icon’s brand amber on navy. Amber is a fill only — 2.03:1 on white — so text uses a darkened orange at 5.02:1. 16 automated WCAG checks guard it.</td><td class="deps">11, 32</td><td class="deliv">app_theme.dart + screens</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">33</td><td class="task">Error translation</td><td class="desc">Turns <span class="mono">permission-denied</span> into language a driver can act on.</td><td class="deps">32</td><td class="deliv">describeError()</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="7">5 · Commuter</td><td class="step">34</td><td class="task">Landing &amp; entry</td><td class="desc">One tap to start. <em>"Anonymous entry"</em> is gone — the button now leads to phone sign-in, since booking requires a verified number. A dead control survived that change and was only caught while drawing the plates for step 10: the sign-in screen still offered <span class="mono">"Mag-book na lang nang walang account"</span>, which sent people to the landing screen, whose own button sent them straight back. A loop under a label promising something the rules refuse. Removed, along with a class comment still claiming sign-in was optional.</td><td class="deps">31</td><td class="deliv">landing_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">35</td><td class="task">Booking form</td><td class="desc">Name, phone, pickup and drop-off. <strong>Pickup now defaults to where the commuter is standing</strong> — a GPS fix on load, reverse-geocoded into an address a driver can act on. This row claimed a "GPS-derived pickup point" for months and was wrong: the fix was only ever used to centre the picker map and then discarded, so the field sat empty asking people to state something the phone already knew. Every step fails safe — denied permission, disabled location services, or an unreachable Nominatim all leave the original tap-to-set behaviour untouched — and a late-arriving fix never overwrites a point the commuter set by hand. <strong>Verified on the live web build and the signed APK.</strong></td><td class="deps">34, 55</td><td class="deliv">commuter_booking_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">36</td><td class="task">Dispatch controller</td><td class="desc">Client-side greedy sweep: offer, widen every 15 s, expire at 10. <strong>Ranking is now road distance, not crow-flies.</strong> Two stages — haversine to apply the radius and cut a shortlist of 8, then one OSRM <span class="mono">/table</span> request with <span class="mono">sources=0</span> to pick the winner among them. Asking <span class="mono">/route</span> per driver would have multiplied the request rate by the number of candidates and got the app throttled long before it got accurate. Straight-line order stands whenever routing is unavailable: a worse ordering beats a dispatch loop that stalls. Mirrored in <span class="mono">sweepStaleRides</span> so the server never ranks differently from the client.</td><td class="deps">8, 28, 35</td><td class="deliv">dispatch_controller.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">37</td><td class="task">Ride status tracking</td><td class="desc">Live card driven by a snapshot listener on the commuter's own ride document, with the driver's marker following their GPS. The commuter now also sees <strong>their own position</strong> as a dot beside the trike — read on the device and drawn on the device, <strong>never written to Firestore</strong>. The driver already has the agreed pickup point; streaming a passenger's live position to the server would create a standing record of where an anonymous person is, for no operational gain. It also costs nothing: no writes, no reads, no rules change.</td><td class="deps">36</td><td class="deliv">commuter_location.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">38</td><td class="task">Cancellation flow</td><td class="desc">Commuter cancel while searching or accepted; system expiry when candidates run out.</td><td class="deps">37</td><td class="deliv">Cancel action</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">37a</td><td class="task">Commuter accounts</td><td class="desc">Phone + OTP sign-in, onboarding, and <span class="mono">riders/{uid}</span> profiles with saved addresses and a photo. Keyed by uid rather than phone number: a driver's email is their working identity, a rider's number is personal data and would be a guessable key. Own-document access only, with no list clause at all — the collection cannot be enumerated even by an admin. Accounts are <strong>required</strong>, enforced server-side by <span class="mono">hasVerifiedPhone()</span> on ride creation rather than by a client screen. App Check wired with Play Integrity. <strong>Verified end to end on the web build:</strong> a real number received a real OTP and reached the onboarding screen — twice, the second time after the SMS region policy was narrowed to Philippines only, which confirms the allowlist admits legitimate users rather than silently locking everyone out. Blaze on, Storage provisioned in asia-southeast1, <span class="mono">storage.rules</span> deployed. Profile-photo upload on web was broken by a stale plugin registrant and is fixed but not yet re-confirmed by hand.</td><td class="deps">31, 65</td><td class="deliv">rider_sign_in · riders rules</td><td><span class="chip s-done">Working</span></td></tr>
+      <tr><td class="step">37b</td><td class="task">Rider profile</td><td class="desc">The photo could previously be set <em>only</em> during sign-up — on a screen that invites skipping it — so anyone who skipped could never add one and anyone who added one could never replace it. Meanwhile <span class="mono">setRiderPhoto()</span> sat in the session controller with no caller, written for a screen that did not exist. This is that screen: avatar, name, the verified number shown but not editable. Name and photo save <strong>independently</strong>, because they finish at different moments — the name on tap, the photo only once an upload returns — so a failed upload cannot discard a good rename, and the error says which half landed. Building it also defused <span class="mono">updateProfile()</span>, which writes <span class="mono">profilePhotoUrl</span> unconditionally and would have <em>deleted a rider's picture</em> on rename; <span class="mono">updateName()</span> now exists and the trap is documented with a test asserting it.</td><td class="deps">37a</td><td class="deliv">rider_profile_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">38a</td><td class="task">Fare engine — <em>removed</em></td><td class="desc"><strong>Built, then deliberately taken out.</strong> TODA tariffs are set by ordinance and posted at the terminal; a second figure on a phone could only ever disagree with the board, and the disagreement would land on the driver at the drop-off. Removed end to end — calculator, stored <span class="mono">fareEstimate</span> and <span class="mono">distanceKm</span>, admin fare table, analytics money box, and the rules clauses. Completion now permits only <span class="mono">status</span> and <span class="mono">completedAt</span>, so a modified client writing a fare is <em>refused</em> rather than validated. Distance and ETA stayed: they are not pricing.</td><td class="deps">28, 36</td><td class="deliv">Removed in full</td><td><span class="chip s-done">Removed</span></td></tr>
+      <tr><td class="step">39</td><td class="task">Rating flow</td><td class="desc">Write-once 1–5 stars plus a rules-verified aggregate increment on the driver.</td><td class="deps">37</td><td class="deliv">Rating card</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="8">6 · Driver</td><td class="step">40</td><td class="task">Driver registration</td><td class="desc">Account creation then profile write, forced to <span class="mono">pending</span> by rule.</td><td class="deps">31</td><td class="deliv">Register screen</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">41</td><td class="task">Staff sign-in</td><td class="desc">Shared form for drivers and admins; destination decided by resolved role.</td><td class="deps">30</td><td class="deliv">Login screen</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">42</td><td class="task">Verification status banner</td><td class="desc">Pending, approved, suspended, rejected — updates live without re-login.</td><td class="deps">41</td><td class="deliv">Status banner</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">43</td><td class="task">Presence &amp; GPS stream</td><td class="desc">Writes <span class="mono">active_drivers</span> with a 20 m distance filter to bound write cost.</td><td class="deps">28, 42</td><td class="deliv">PresenceController</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">44</td><td class="task">Online/offline toggle</td><td class="desc">Deletes the presence document when off shift.</td><td class="deps">43</td><td class="deliv">Toggle widget</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">45</td><td class="task">Offer inbox</td><td class="desc">Live query on rides offered to this driver; hidden while carrying a passenger.</td><td class="deps">36, 43</td><td class="deliv">Offers section</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">46</td><td class="task">Transactional accept</td><td class="desc">Firestore transaction plus a rule requiring an unassigned pre-image — neither load-bearing alone.</td><td class="deps">45</td><td class="deliv">RideActions.accept</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">47</td><td class="task">Lifecycle controls</td><td class="desc">Start, complete, cancel; GPS mirrored onto the ride for commuter tracking.</td><td class="deps">46</td><td class="deliv">Ride controls</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="5">7 · Admin</td><td class="step">48</td><td class="task">Admin gate</td><td class="desc">Requires an admins document and a verified email address.</td><td class="deps">30</td><td class="deliv">Admin route</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">49</td><td class="task">Verification queue</td><td class="desc">Approve or suspend drivers; the only path that writes <span class="mono">status</span>.</td><td class="deps">48</td><td class="deliv">Queue UI</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">50</td><td class="task">Ride analytics</td><td class="desc">Window-scoped panel — Today, 7 days, 30 days — computed in Dart from one query rather than from counter documents, so there is nothing to backfill, nothing to drift, and no Cloud Function in the way. Completion and expiry rates that exclude rides still in flight, a stacked daily chart, and a per-driver table ranked by trips finished. Money was removed from the panel entirely along with the fare engine — the app quotes no prices and stores none. Bounded at 2,000 documents, and it says so when it truncates.</td><td class="deps">48</td><td class="deliv">ride_analytics.dart · ride_analytics_panel.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">51</td><td class="task">Feedback moderation</td><td class="desc">Admin inbox split into open and resolved, with mark-resolved and reopen. A submit sheet was added to the commuter and driver screens too — without it the queue could never receive anything.</td><td class="deps">48</td><td class="deliv">feedback_inbox_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">52</td><td class="task">Runtime config editor</td><td class="desc">Edits <span class="mono">config/app</span> live. Dispatch was rewired to actually read it — it previously used compile-time constants, so the editor would have written values nothing consumed. Depth clamps to the rules cap of 10.</td><td class="deps">48</td><td class="deliv">config_editor_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="7">8 · Mapping</td><td class="step">53</td><td class="task">Add flutter_map + OSM</td><td class="desc">Shared tile layer with mandatory attribution, identifying user-agent, and dimmed tiles in dark mode.</td><td class="deps">22</td><td class="deliv">osm_map.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">54</td><td class="task">Pickup/drop-off picker</td><td class="desc">Fixed-crosshair picker; the map moves under a stationary pin so a thumb never covers the target.</td><td class="deps">53</td><td class="deliv">location_picker_screen.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">55</td><td class="task">Geocoding &amp; search</td><td class="desc">Nominatim search-on-submit, bounded to the map area and the Philippines. Autocomplete is forbidden by the usage policy, so it is never wired per keystroke; the 1 req/sec cap is enforced in the client and now covers <strong>reverse</strong> geocoding too, which runs on booking-screen load. The reverse label is assembled from address <em>parts</em> rather than <span class="mono">display_name</span>, which trails through province, region, postcode and country — none of which help a driver, all of which crowd out the part that does. Nominatim also returns its <span class="mono">error</span> body with HTTP 200, so a point in the sea would otherwise label a pickup <em>"Unable to geocode"</em> and send a driver to find it. Search is bounded to about <strong>55 km around the current map centre</strong>, which is right for a service where no trip is a hundred kilometres — but the empty-result message used to read <em>"No place found for X"</em>, which is false: the place exists, it is simply out of range. It now says nothing was found <em>near here</em> and names the recovery that actually works, since the search box follows the map: pan toward the destination, then search again.</td><td class="deps">54</td><td class="deliv">geocoding_service.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">56</td><td class="task">Live driver marker</td><td class="desc">Tracking map on the active-ride card, fed by the mirrored ride coordinates; tap opens full screen.</td><td class="deps">47, 53</td><td class="deliv">Tracking map</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">57</td><td class="task">Driver navigation view</td><td class="desc">Map on the active-ride card whose destination follows the ride state — pickup while heading out, drop-off once aboard — plus a hand-off to whichever navigation app the driver already uses.</td><td class="deps">56</td><td class="deliv">driver_ride_map.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">58</td><td class="task">Route line &amp; ETA</td><td class="desc">OSRM road distance, duration, and polyline. Falls back to a padded straight line on any failure and says so, so a routing outage never blocks a booking.</td><td class="deps">56</td><td class="deliv">route_service.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">59</td><td class="task">Tile caching</td><td class="desc">30-day on-disk tile cache in the OS cache directory, so the map survives signal loss and honours the OSM policy on re-requests.</td><td class="deps">53</td><td class="deliv">http_cache_file_store</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="5">9 · Notifications</td><td class="step">60</td><td class="task">Add FCM</td><td class="desc">Token registered when a driver goes online and re-sent on every GPS ping, so a rotated token self-heals. Commuter tokens ride on the ride document.</td><td class="deps">43</td><td class="deliv">push_service.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">61</td><td class="task">Notification permission</td><td class="desc">POST_NOTIFICATIONS declared and requested at the moment a driver goes online, so the prompt attaches to an action they just took.</td><td class="deps">60</td><td class="deliv">Manifest + prompt</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">62</td><td class="task">Offer push function</td><td class="desc">Written and typechecked; fires on <span class="mono">dispatch.offeredTo</span> change and prunes revoked tokens. <strong>Deployed</strong> to asia-southeast1 on Node 22, gen 2.</td><td class="deps">60, 65, 66</td><td class="deliv">onRideOffered</td><td><span class="chip s-done">Deployed</span></td></tr>
+      <tr><td class="step">63</td><td class="task">Foreground/background handling</td><td class="desc">Background isolate handler registered before runApp; a dedicated <span class="mono">rides</span> channel so terminated-app offers are not silent.</td><td class="deps">60</td><td class="deliv">Handlers + channel</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">64</td><td class="task">Ride status notifications</td><td class="desc">Written and typechecked: accepted, in transit, and completed pushes to the commuter token stored on the ride. <strong>Deployed.</strong></td><td class="deps">62, 65</td><td class="deliv">onRideStatusChanged</td><td><span class="chip s-done">Deployed</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="5">10 · Hardening</td><td class="step">65</td><td class="task">Upgrade to Blaze plan</td><td class="desc"><strong>Enabled.</strong> It had become the single blocker on four fronts at once: phone verification for the mandatory commuter accounts — which failed with <em>billing not enabled</em>, taking the whole commuter half down — plus Cloud Functions (62, 64, 67, 68), Cloud Storage for profile photos, and the write volume a pilot needs. One switch cleared all four. The follow-up is a <strong>₱500/month budget alert</strong>: Blaze has no spending ceiling, and a budget alerts rather than caps. The actual hard stop stays <span class="mono">acceptingRides=false</span>, which refuses new rides at the rules layer.</td><td class="deps">12</td><td class="deliv">Billing enabled</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">66</td><td class="task">Functions project</td><td class="desc">TypeScript workspace, strict mode, wired into firebase.json with an emulator port. <span class="mono">tsc --noEmit</span> clean.</td><td class="deps">4</td><td class="deliv">functions/</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">67</td><td class="task">Server-side dispatch sweep</td><td class="desc">Written and typechecked: every minute, re-offers rides the client loop abandoned and expires them at the candidate cap. <strong>Deployed and firing</strong> — the Cloud Scheduler job was provisioned by <span class="mono">firebase deploy</span> itself, so no Pub/Sub topic was created by hand. Logs show clean minute-by-minute runs.</td><td class="deps">65, 66</td><td class="deliv">sweepStaleRides</td><td><span class="chip s-done">Deployed</span></td></tr>
+      <tr><td class="step">68</td><td class="task">Rating aggregation function</td><td class="desc">Written and typechecked. Derives the increment from the ride, idempotent via a <span class="mono">ratingCounted</span> guard so a retried delivery cannot double-count. <strong>Deployed, and the rules cut over behind it.</strong> <span class="mono">validRatingIncrement()</span> is gone, so no client may write <span class="mono">ratingSum</span> or <span class="mono">ratingCount</span> at all — the function owns them via the Admin SDK. Order mattered in both directions: tightening first would have counted nothing, and leaving both in place counted <em>every rating twice</em>, because the function's <span class="mono">ratingCounted</span> guard cannot see a client increment. The tripwire that asserted the gap was open now asserts it is shut. No app release needed — the client's write fails silently by design.</td><td class="deps">65, 66</td><td class="deliv">onRideRated</td><td><span class="chip s-done">Deployed</span></td></tr>
+      <tr><td class="step">69</td><td class="task">Lock the driver index</td><td class="desc">The exact one-line change and its ordering are documented beside <span class="mono">canDiscoverDrivers()</span> in the rules. <strong>Now unblocked</strong> — <span class="mono">sweepStaleRides</span> is deployed, which was the prerequisite. But the client sweep must stop <em>first</em>: tightening while commuters still match means no ride is ever offered. That is a client change plus an APK release, so it is a bigger cutover than the rating one.</td><td class="deps">67</td><td class="deliv">Prepared in firestore.rules</td><td><span class="chip s-partial">Prepared</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="9">11 · Testing</td><td class="step">70</td><td class="task">Unit tests</td><td class="desc">187 passing: normalisation, distance, geohash, dispatch, payloads, model parsing, runtime config, routing, reverse geocoding, the OSRM distance table, WCAG contrast, plus two widget suites. Caught two legacy-data crashes. The newest cases are mostly failure paths, including the one that would have hurt in the field: Nominatim returns its <span class="mono">error</span> body with HTTP 200.</td><td class="deps">28</td><td class="deliv">widget_test.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">71</td><td class="task">Security-rules tests</td><td class="desc">169 passing against the emulator, including an admin-override regression guard and the inverted rating tripwire — the case that used to assert the inflation gap was open now asserts it is shut.</td><td class="deps">16</td><td class="deliv">Rules suite</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">72</td><td class="task">Widget tests</td><td class="desc">23 tests over the driver dashboard and admin panel via Riverpod overrides — including the gate that keeps unapproved drivers off the road.</td><td class="deps">47, 49</td><td class="deliv">*_dashboard_test.dart</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">73</td><td class="task">Integration tests</td><td class="desc">A whole ride driven through the deployed ruleset against the emulator: book, dispatch, accept, drive, complete, rate.</td><td class="deps">72</td><td class="deliv">lifecycle.test.mjs</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">74</td><td class="task">Concurrency test</td><td class="desc">Four real races: double-tap accept, un-offered driver, accept-versus-cancel, and double rating. Exactly one writer wins each.</td><td class="deps">73</td><td class="deliv">Race-condition tests</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">75</td><td class="task">Manual end-to-end run</td><td class="desc"><strong>Unblocked and underway.</strong> Admin verified, rules deployed, driver registered and approved, signed APK installing over the LAN. The log was <strong>rewritten on 10 September</strong> and the old results are not comparable. It had been written before commuter accounts, before the functions were deployed and before fares were removed, so six steps expected the <em>opposite</em> of current behaviour — three of them described deployed features as known limitations, meaning a tester would have recorded real successes as expected failures, and one instruction (<span class="mono">Phone off</span>) would have locked every commuter out. Now 56 steps across 11 phases, with the account flow, GPS pickup, push, the server sweep, the kill switch and a profile phase added. <strong>Phase 03 — real permission prompts, real GPS, a 50 m walk — remains the part nothing else can cover</strong>, and its expectations are now verified against the code rather than assumed.</td><td class="deps">20</td><td class="deliv">Field test log</td><td><span class="chip s-partial">In progress</span></td></tr>
+      <tr><td class="step">76</td><td class="task">Security review</td><td class="desc">19 adversarial tests covering data harvesting, privilege escalation and ride hijacking, plus an APK secret scan. Three accepted gaps carry tripwire tests. <strong>Every finding is now closed — zero High, zero Medium.</strong> The HIGH was overtaken by events twice over: an enabled-but-unused Phone provider became load-bearing, so the mitigation changed from <em>disable it</em> to <em>attest it</em>, and App Check is now enforced on both platforms. Key restrictions are applied but recorded with a caveat rather than a clean close — the web key was still accepted from a foreign origin across three Firebase endpoints, so they are defence in depth rather than a control worth claiming. <strong>The review itself is due a re-run</strong>: rider accounts, mandatory sign-in and the rating cutover all postdate it.</td><td class="deps">71</td><td class="deliv">SECURITY_REVIEW.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">77</td><td class="task">Performance &amp; cost test</td><td class="desc">Operation model built from the code. Finding: presence GPS is 93.5% of all writes and even an 8-driver pilot exceeds the free write tier. Distance filter widened to 50 m, cutting writes 2.5x.</td><td class="deps">73</td><td class="deliv">COST_AND_PERFORMANCE.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">78</td><td class="task">User acceptance testing</td><td class="desc">Real TODA drivers and commuters on their own handsets, in Filipino.</td><td class="deps">75</td><td class="deliv">UAT sign-off</td><td><span class="chip s-todo">Not started</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="7">12 · Release</td><td class="step">79</td><td class="task">Android permissions audit</td><td class="desc">INTERNET and location moved into the main manifest — absent from release builds by default.</td><td class="deps">21</td><td class="deliv">AndroidManifest</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">80</td><td class="task">App icon &amp; splash</td><td class="desc">The "tk" wordmark, rebuilt as vector from the supplied reference and set in Poppins: every Android density, adaptive foreground inset for launcher masking, Android 13 themed icon, and a splash on the same navy field.</td><td class="deps">11</td><td class="deliv">icon_source.svg + generator</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">81</td><td class="task">Release keystore</td><td class="desc">Created and verified. Certificate <span class="mono">CN=Jelo Jian Sabroso, O=PRMSU-SM, C=PH</span>, SHA256withRSA, valid to 2054. <span class="mono">scripts/make-keystore.ps1</span> and the bash twin read the password from the terminal and pass it to keytool through the environment, generate key.properties to match, read the certificate back, and refuse to overwrite an existing key.</td><td class="deps">79</td><td class="deliv">trikekoto-release.jks</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">82</td><td class="task">Signed release build</td><td class="desc">Built and verified: 56.9 MB, R8 shrinking and resource stripping on, signed with the owner's key. <span class="mono">apksigner</span> confirms the V2 signer DN is the real certificate, not <span class="mono">CN=Android Debug</span>. This APK can be distributed and updated.</td><td class="deps">81</td><td class="deliv">app-release.apk</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">83</td><td class="task">Versioning policy</td><td class="desc">Semantic version by hand in pubspec; build number overridden in CI with the workflow run number, which only ever increases — Android refuses an update whose versionCode did not rise.</td><td class="deps">84</td><td class="deliv">Documented in README</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">84</td><td class="task">CI/CD pipeline</td><td class="desc">Four jobs on every push: analyze with --fatal-infos, 132 Dart tests, 102 emulator tests, functions typecheck, then a release APK artifact gated on all of them. <strong>scripts/verify.sh</strong> runs the same four locally in one command, applying the TEMP workaround automatically and reporting every failure rather than stopping at the first.</td><td class="deps">73</td><td class="deliv">trikekoto-app.yml · verify.sh</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">85</td><td class="task">Crash &amp; performance monitoring</td><td class="desc">Crashlytics with the Gradle symbol-upload plugin, global Flutter and isolate handlers, a Riverpod observer for provider failures, and role tags. Off in debug so field reports are not drowned by development noise.</td><td class="deps">23</td><td class="deliv">crash_reporter.dart</td><td><span class="chip s-done">Done</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="4">13 · Deployment</td><td class="step">86</td><td class="task">APK distribution</td><td class="desc">LAN HTTP server with a QR code; nothing is uploaded to a third party and the link dies with the server. Exercised end to end with the signed 56.9 MB APK.</td><td class="deps">82</td><td class="deliv">serve_apk.mjs</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">87</td><td class="task">Web deployment</td><td class="desc"><strong>Live at <span class="mono">trikekoto.web.app</span>.</strong> Replaced the legacy React app, which was already non-functional — its booking form writes <span class="mono">pickup</span> as a bare string with no <span class="mono">commuterUid</span>, refused by the deployed rules on four counts. SPA rewrite added so GoRouter deep links resolve instead of 404ing. HTTPS unlocks browser geolocation, which a LAN address could not. <strong>Commuters only:</strong> a browser tab cannot stream background GPS or receive a reliable push, so drivers still need the APK — which is also the honest answer for iOS.</td><td class="deps">84</td><td class="deliv">trikekoto.web.app</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">88</td><td class="task">Legacy data migration</td><td class="desc">Now covered by <strong>23 emulator tests</strong>, which caught a live bug: <span class="mono">Active</span> was missing from the status map, and an unmapped status falls through to <span class="mono">pending</span> — a run would have silently demoted every working driver in the chapter. Also asserts idempotency, that a dry run writes nothing, and that <span class="mono">isOnline</span> survives the presence reshape. Script refactored to be importable. Still awaits a service-account key to run.</td><td class="deps">19</td><td class="deliv">migrate_from_web.mjs + tests</td><td><span class="chip s-blocked">Blocked</span></td></tr>
+      <tr><td class="step">89</td><td class="task">Pilot rollout</td><td class="desc">Plan written, and the rollback it assumed now exists. An APK passed around over Wi-Fi cannot be recalled, so <span class="mono">config/app.acceptingRides</span> is a server-side stop button enforced by the rules — one switch in the admin panel halts new bookings on every phone within seconds, with no app update, while rides already in progress finish normally. Entry criteria, daily monitoring, stop thresholds and report structure in <span class="mono">docs/pilot-plan.md</span>. Awaits UAT and a live system.</td><td class="deps">78, 85</td><td class="deliv">pilot-plan.md · kill switch</td><td><span class="chip s-partial">Prepared</span></td></tr>
+
+      <tr class="phase-start"><td class="phase" rowspan="4">14 · Docs &amp; ops</td><td class="step">90</td><td class="task">Technical documentation</td><td class="desc">Schema reference, rationale, and known limits.</td><td class="deps">6</td><td class="deliv">SCHEMA.md, README.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">91</td><td class="task">End-user manuals</td><td class="desc">Three role guides, reconciled against the shipped app rather than the code they were written from. Closed three gaps that would have cost a pilot: the admin guide described a service-account bootstrap that no longer applies and never mentioned the stop button; the driver guide did not say <strong>the app must stay open to receive offers</strong>; the commuter guide did not say that closing the app stops the driver search. Driver and commuter lead in Filipino with English beneath; admin in English since the work touches the Firebase console. <strong>Native-speaker review of the Filipino is still outstanding</strong>, and the phone-readable page now trails the Markdown.</td><td class="deps">4</td><td class="deliv">docs/*-guide.md</td><td><span class="chip s-partial">Draft</span></td></tr>
+      <tr><td class="step">92</td><td class="task">Operations runbook</td><td class="desc">Nine incident playbooks written from failure modes actually hit during the build, plus access prerequisites, rollback speeds, and backup gaps. Symptom-first, not architecture-first.</td><td class="deps">4</td><td class="deliv">docs/RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
+      <tr><td class="step">93</td><td class="task">Maintenance cycle</td><td class="desc">Per-release, quarterly, and outgrow-the-chapter checklists, plus a register of debt carried deliberately with the reason each is acceptable now.</td><td class="deps">92</td><td class="deliv">RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
+
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══ TIMELINE ═══════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">03</span><h2>System development timeline</h2></div>
+  <p class="prose" style="margin-bottom:22px;color:var(--ink-soft)">
+    Order of execution. Stages A–D are behind you; E is where work resumes.
+  </p>
+
+  <div class="timeline">
+    <div class="tl-row"><div class="tl-mark">A · done</div><div class="tl-body"><strong>Discovery &amp; architecture</strong><span>Steps 1–11. Requirements, roles, constraints, schema, security model, dispatch algorithm.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">B · done</div><div class="tl-body"><strong>Backend foundation</strong><span>Steps 12–20. Rules, indexes, 61-test suite, production deployment.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">C · done</div><div class="tl-body"><strong>Data layer &amp; shell</strong><span>Steps 21–33. Models, typed queries, session, role routing.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">D · done</div><div class="tl-body"><strong>Three role journeys</strong><span>Steps 34–50. Booking, dispatch, presence, atomic accept, verification queue.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">E · done</div><div class="tl-body"><strong>Design system</strong><span>Steps 11, 32a. Route-blue on slate, light and dark, tokens and 48dp targets across every screen.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">F · done</div><div class="tl-body"><strong>Mapping &amp; live tracking</strong><span>Steps 53, 54, 56. OSM tiles, crosshair pin picker, live trike marker, and the commuter's own dot.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">G · done</div><div class="tl-body"><strong>Automated lifecycle &amp; races</strong><span>Steps 73, 74. A whole ride through the deployed ruleset, plus four concurrency races. Covers the server half of the blocked manual run.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">H · next</div><div class="tl-body"><strong>Unblock on real devices</strong><span>Steps 20, 75, 88. Seed the verified admin, migrate legacy drivers, run it on a handset with real GPS and permission prompts. Needs a service-account key.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">I · done</div><div class="tl-body"><strong>Push, caching, routing, widget tests</strong><span>Steps 58–64, 66, 67, 72. FCM registration, tile cache, road routing with ETA, 23 widget tests; three Cloud Functions typechecked and waiting on billing.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">J · done</div><div class="tl-body"><strong>Blaze enabled, functions deployed</strong><span>Steps 65, 62, 64, 67, 68. Four gen-2 functions live on Node 22 in asia-southeast1; the sweep fires every minute. Node was bumped from 20, which is decommissioned on 2026-10-30.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">J1 · done</div><div class="tl-body"><strong>Rating cutover closed</strong><span>Step 68's second half. Rules tightened, tripwire inverted, 169 emulator tests passing, rules deployed. Rating aggregates are now server-only.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">J2 · done</div><div class="tl-body"><strong>Commuter accounts work</strong><span>A real number got a real code on the public web build, and again after the SMS region allowlist. Storage provisioned, budget alert set, Google sign-in disabled. The commuter half is no longer hypothetical.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">J3 · done</div><div class="tl-body"><strong>Screen plates &amp; flow re-trace</strong><span>Step 10. 38 plates on a design canvas, drawn from the real theme; screen-flows.md corrected where it described an app that no longer exists. Found and fixed two defects on the way.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">K1 · done</div><div class="tl-body"><strong>App Check enforced on web</strong><span>reCAPTCHA Enterprise wired and enforced, verified by a real sign-in <em>after</em> enforcement went on — the only proof that tokens are actually accepted. The security review's HIGH finding is closed.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">K2 · next</div><div class="tl-body"><strong>A whole ride on two handsets</strong><span>Steps 75, 78. Every piece is deployed and none of it has been run end to end by two people on two phones. This is the demo, and the only remaining unknown of consequence.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">J2</div><div class="tl-body"><strong>Remaining test depth</strong><span>Steps 76, 77. Security review, performance and cost at 50 drivers.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">K</div><div class="tl-body"><strong>Release engineering</strong><span>Steps 80–85. Done. Icon, keystore, signed build verified with apksigner, CI, crash reporting.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">L</div><div class="tl-body"><strong>UAT &amp; pilot</strong><span>Steps 78, 86–89. Real drivers, one chapter, daily monitoring.</span></div></div>
+    <div class="tl-row"><div class="tl-mark">M</div><div class="tl-body"><strong>Documentation &amp; maintenance</strong><span>Steps 90–93. Manuals, runbook, quarterly re-audit.</span></div></div>
+  </div>
+</section>
+
+<!-- ══ MILESTONES ═════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">04</span><h2>Development milestones</h2></div>
+  <div class="cards">
+    <div class="card"><h3>M1 · Schema frozen <span class="chip s-done">Done</span></h3><ul><li>Rules deployed and passing 61 tests</li><li>Indexes live</li><li>Steps 1–20</li></ul></div>
+    <div class="card"><h3>M2 · App shell runs <span class="chip s-done">Done</span></h3><ul><li>Role routing verified</li><li>Analyzer clean, 15 unit tests pass</li><li>Steps 21–33</li></ul></div>
+    <div class="card"><h3>M3 · Installable build <span class="chip s-done">Done</span></h3><ul><li>Release APK, permissions verified</li><li>QR distribution over LAN</li><li>Steps 34–50, 79</li></ul></div>
+    <div class="card"><h3>M4 · Map release <span class="chip s-done">Done</span></h3><ul><li>OSM tiles, crosshair pin picker</li><li>Live trike tracking, route line</li><li>Road distance and ETA before booking</li></ul></div>
+    <div class="card"><h3>M5 · Flow proven <span class="chip s-done">Done</span></h3><ul><li>Whole ride automated against the ruleset</li><li>Four concurrency races, one winner each</li><li>356 tests passing — 187 Dart, 169 emulator</li></ul></div>
+    <div class="card"><h3>M6 · First real ride <span class="chip s-partial">In progress</span></h3><ul><li>Admin created and email-verified in the app</li><li>Driver registered and approved against production</li><li>Commuter phone sign-in verified on the live web build</li><li>Signed APK installing; real GPS still to confirm</li></ul></div>
+    <div class="card"><h3>M7 · Reliable dispatch <span class="chip s-done">Done</span></h3><ul><li>Four gen-2 functions live, Node 22, asia-southeast1</li><li>Scheduled sweep firing cleanly every minute</li><li>Rating aggregates now server-only; 169 rules tests pass</li></ul></div>
+    <div class="card"><h3>M8 · Release candidate <span class="chip s-partial">Mostly done</span></h3><ul><li>Icon, splash, crash reporting, CI all done</li><li>Keystore created; APK signed and verifiable</li><li>Waits on push (65) before UAT is worth running</li></ul></div>
+    <div class="card"><h3>M9 · Pilot live</h3><ul><li>One TODA chapter in production</li><li>Runbook and manuals delivered</li></ul></div>
+  </div>
+</section>
+
+<!-- ══ RISK ═══════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">05</span><h2>Risk assessment</h2></div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Phase</th><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td class="phase">Backend</td><td class="task">Rules deployment broke the live React client</td><td class="desc">Already occurred. The old commuter flow was unauthenticated and is now refused.</td><td class="deliv">Backup preserved at <span class="mono">firestore.rules.web-backup</span>; retire the web client or restore it on a separate project.</td></tr>
+      <tr><td class="phase">Backend</td><td class="task">Rules approach the 1000-expression evaluation ceiling</td><td class="desc">A legitimate write matching a late clause could be silently denied.</td><td class="deliv">Verified the admin override still passes and locked it with a regression test. Restructure before adding clauses.</td></tr>
+      <tr><td class="phase">Backend</td><td class="task">Firestore region is permanent</td><td class="desc">A wrong region means latency for every user, forever.</td><td class="deliv">Already provisioned in <span class="mono">asia-southeast1</span>.</td></tr>
+      <tr><td class="phase">Auth</td><td class="task">Admin locked out by the email_verified gate</td><td class="desc">Console-created admins authenticate but fail every admin rule.</td><td class="deliv"><span class="mono">seed_admin.mjs</span> sets the flag via the Admin SDK.</td></tr>
+      <tr><td class="phase">Dispatch</td><td class="task">Sweep dies when the commuter backgrounds the app</td><td class="desc">Ride sits in <span class="mono">searching</span> forever; no driver is ever pinged.</td><td class="deliv">Move to a scheduled function (step 67). State already lives in the ride document.</td></tr>
+      <tr><td class="phase">Dispatch</td><td class="task">Offers unnoticed without push</td><td class="desc">A driver only sees offers with the app in the foreground.</td><td class="deliv">FCM via Cloud Function (step 62). Cannot be done from the client.</td></tr>
+      <tr><td class="phase">Data</td><td class="task">Rating inflation by a modified client</td><td class="desc">Rules could verify the arithmetic but never tie it to a completed ride, so any signed-in user could manufacture a reputation.</td><td class="deliv"><strong>Closed.</strong> <span class="mono">onRideRated</span> deployed, then the client clause deleted from the rules. Order mattered both ways: tightening first counts nothing, and leaving both active counts everything twice.</td></tr>
+      <tr><td class="phase">Auth</td><td class="task">SMS toll fraud on phone sign-in</td><td class="desc">An SMS provider is the standard toll-fraud vector: verification texts driven at premium-rate numbers, billed to the project. This stopped being theoretical when commuter accounts made Phone sign-in load-bearing — and Blaze means the bill now lands rather than being refused. The public web build is the exposed surface.</td><td class="deliv"><strong>Closed.</strong> SMS region policy narrowed to the Philippines, which removes the profit motive at no cost in reach; Google sign-in disabled; ₱500 budget alert as detection; and App Check now <strong>enforced on both platforms</strong> — Play Integrity on Android, reCAPTCHA Enterprise on web. Enforced rather than merely activated is the distinction that matters: activated offers a token, enforced <em>refuses the request without one</em>.</td></tr>
+      <tr><td class="phase">Cost</td><td class="task">A pilot does not fit the Firestore free tier</td><td class="desc">Presence GPS is 93.5% of all writes. As built, 20 drivers produce 64k writes/day against a 20k free allowance; even 8 drivers exceed it. Writes fail silently rather than producing a bill.</td><td class="deliv">Blaze is mandatory for the pilot, not optional — but the cost is ~PHP 138/month. Distance filter widened to 50 m (2.5x fewer writes). Realtime Database for presence is the answer past one chapter.</td></tr>
+      <tr><td class="phase">Mapping</td><td class="task">Public OSRM demo server is development-only</td><td class="desc">Routing runs against <span class="mono">router.project-osrm.org</span>, which is rate-limited and not licensed for production traffic.</td><td class="deliv">Self-host OSRM and Nominatim, then set <span class="mono">routingBaseUrl</span> and <span class="mono">geocodingBaseUrl</span> in <span class="mono">config/app</span> — no app release needed. Both degrade quietly rather than failing.</td></tr>
+      <tr><td class="phase">Mapping</td><td class="task">OSM tile usage policy breach</td><td class="desc">Heavy unattributed use can get the app's traffic blocked.</td><td class="deliv">Correct attribution, a real user-agent, and client-side tile caching.</td></tr>
+      <tr><td class="phase">Release</td><td class="task">No visibility into field failures</td><td class="desc">Drivers report "the app closed" and nothing more; nobody on the project owns their handsets.</td><td class="deliv">Crashlytics installed with breadcrumbs and role tags. Reports only appear once a release build actually crashes on a device — verify during the pilot rather than assuming it works.</td></tr>
+      <tr><td class="phase">Release</td><td class="task">Debug signing key</td><td class="desc">Switching to a release key later forces every driver to uninstall and reinstall.</td><td class="deliv">Signing config is wired and warns on every debug-signed build. Run the keytool command in the README, then back the key up offline — losing it means never updating an installed app.</td></tr>
+      <tr><td class="phase">Release</td><td class="task">Keystore loss</td><td class="desc">Permanent inability to ship updates to existing installs.</td><td class="deliv">Back it up somewhere other than the project folder.</td></tr>
+      <tr><td class="phase">Platform</td><td class="task">iOS cannot be built on Windows</td><td class="desc">Native iOS is unreachable without macOS and a paid Apple account.</td><td class="deliv">Ship the Flutter web build over HTTPS; iOS Safari blocks geolocation on plain HTTP.</td></tr>
+      <tr><td class="phase">Process</td><td class="task">Rules edits reaching production untested</td><td class="desc">The emulator suite is the only thing between a rules change and a data leak, and it needs a machine-specific workaround to run locally.</td><td class="deliv">CI runs all 102 emulator tests on Linux on every push, and the APK build is gated on them passing. Locally, <span class="mono">scripts/verify.sh</span> runs them alongside the other three checks and sets the workaround itself, so the awkwardness that made them skippable is gone.</td></tr>
+      <tr><td class="phase">Environment</td><td class="task">AF_UNIX failure inside the user temp directory</td><td class="desc">Silently broke Gradle, the emulator, and the rules suite with an unrelated-looking error.</td><td class="deliv">Diagnosed; <span class="mono">TEMP=C:\Temp</span> applied in gradle.properties and documented.</td></tr>
+      <tr><td class="phase">UAT</td><td class="task">Low-end handsets and weak rural signal</td><td class="desc">Test devices are not representative of TODA drivers' phones.</td><td class="deliv">Test on a genuine low-end device with throttled connectivity before the pilot.</td></tr>
+      <tr><td class="phase">Adoption</td><td class="task">Android 11 package visibility hides other apps</td><td class="desc">Launching the dialler or a maps app silently returns false unless the intents are declared, so a driver with three maps apps installed is told there are none.</td><td class="deliv">tel, geo and https intents declared in the manifest queries block. Needs confirming on a real Android 11+ handset.</td></tr>
+      <tr><td class="phase">Adoption</td><td class="task">Drivers do not keep the app open</td><td class="desc">No online drivers means no rides, and commuters leave first.</td><td class="deliv">Push notifications, battery-conscious GPS, and onboarding with the TODA chapter.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══ FOLDER STRUCTURE ═══════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">06</span><h2>Recommended folder structure</h2></div>
+  <p class="prose" style="margin-bottom:20px;color:var(--ink-soft)">
+    Feature-first, with a shared core. Directories marked <i>planned</i> do not exist yet.
+  </p>
+
+<pre class="tree">trikekoto_app/
+├── <b>android/</b>                      <i>gradle.properties carries the TEMP workaround</i>
+├── <b>web/</b>
+├── <b>firestore.rules</b>               <i>deployed ruleset</i>
+├── <b>firestore.indexes.json</b>
+├── <b>SCHEMA.md</b>                     <i>field reference and rationale</i>
+├── <b>lib/</b>
+│   ├── main.dart
+│   ├── firebase_options.dart
+│   ├── <b>core/</b>
+│   │   ├── auth/session_controller.dart
+│   │   ├── firestore/collection_paths.dart
+│   │   ├── firestore/firestore_refs.dart
+│   │   ├── geo/geo_utils.dart
+│   │   ├── router/app_router.dart
+│   │   ├── ui/app_theme.dart
+│   │   ├── config/                   <i>planned — runtime tunables</i>
+│   │   └── notifications/            <i>planned — FCM</i>
+│   ├── <b>features/</b>
+│   │   ├── landing/presentation/
+│   │   ├── commuter/
+│   │   │   ├── application/dispatch_controller.dart
+│   │   │   └── presentation/
+│   │   ├── drivers/
+│   │   │   ├── application/driver_controllers.dart
+│   │   │   ├── data/                 <i>driver, active_driver</i>
+│   │   │   └── presentation/
+│   │   ├── rides/data/ride.dart
+│   │   ├── admin/presentation/
+│   │   ├── feedback/data/
+│   │   └── mapping/                  <i>planned — flutter_map layers</i>
+│   └── <b>shared/</b>                     <i>planned — reusable widgets</i>
+├── <b>test/</b>                           <i>15 unit tests</i>
+├── <b>integration_test/</b>               <i>planned</i>
+├── <b>test_rules/</b>                     <i>61 emulator tests</i>
+├── <b>assets/</b>
+│   ├── fonts/                     <i>bundled Poppins</i>
+│   └── icon/icon_source.svg       <i>"tk" wordmark, rasterised by script</i>
+├── <b>functions/</b>                      <i>dispatch sweep, FCM — ready to deploy</i>
+├── <b>scripts/</b>
+│   ├── generate_icon.mjs
+│   ├── seed_admin.mjs
+│   ├── migrate_from_web.mjs
+│   └── serve_apk.mjs
+└── <b>docs/</b>
+    ├── driver-guide.md            <i>Filipino, with English beneath</i>
+    ├── commuter-guide.md
+    ├── admin-guide.md
+    └── RUNBOOK.md                 <i>incidents, rollbacks, maintenance</i></pre>
+</section>
+
+<!-- ══ PRIORITY MATRIX ════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">07</span><h2>Development priority matrix</h2></div>
+
+  <div class="note">
+    <strong>Nothing here is engineering any more.</strong> Every item that was Critical or
+    High on this list a week ago has shipped — the admin seed, the keystore, the functions,
+    App Check, the key restrictions. What is left needs two phones and a person, not more code.
+  </div>
+
+  <div class="cards">
+    <div class="card crit">
+      <h3>Critical</h3>
+      <ul>
+        <li><strong>Field test, phase 03 onward (75)</strong> — real permission prompts, real GPS, a 50&nbsp;m walk. Needs two SMS-capable numbers and about fifteen minutes</li>
+        <li><strong>A whole ride between two handsets</strong> — every piece is deployed and none of it has been run together</li>
+        <li>User acceptance testing with real TODA drivers (78)</li>
+      </ul>
+    </div>
+    <div class="card high">
+      <h3>High priority</h3>
+      <ul>
+        <li>Re-run the security review (76) — the rider collection, mandatory accounts, the rating cutover and App Check enforcement all postdate it</li>
+        <li>Native-speaker read of the Filipino copy (91) — the one deliverable still marked Draft</li>
+        <li>Self-host OSRM before the pilot (58) — the road-distance change put a routing call on the dispatch path, so throttling now degrades ranking, not just a map line</li>
+      </ul>
+    </div>
+    <div class="card med">
+      <h3>Medium priority</h3>
+      <ul>
+        <li>Lock the driver index (69) — prepared, but the client sweep must stop first, so it needs a code change and a release</li>
+        <li>Legacy driver migration (88) — still wants a service-account key, and may not be worth running at all</li>
+        <li>Delete the <span class="mono">com.example.trikekoto</span> placeholder apps — harmless, but the project looks half-configured with them there</li>
+      </ul>
+    </div>
+    <div class="card low">
+      <h3>Low priority</h3>
+      <ul>
+        <li>Play Store listing — not needed for a pilot distributed over Wi-Fi</li>
+        <li>Scheduled rides</li>
+        <li>Saved addresses — the field exists on the rider document and nothing writes it yet</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TESTING CHECKLIST ══════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="num">08</span><h2>Testing checklist</h2></div>
+  <p class="prose" style="margin-bottom:24px;color:var(--ink-soft)">
+    Filled boxes are passing today. Everything else is outstanding.
+  </p>
+
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+
+    <div class="card">
+      <h3>Unit testing</h3>
+      <ul class="check">
+        <li><span class="box on">[x]</span><span>Email normalisation matches the rules' <span class="mono">.lower()</span> comparison</span></li>
+        <li><span class="box on">[x]</span><span>Haversine distance and nearest-first ordering</span></li>
+        <li><span class="box on">[x]</span><span>Geohash precision and shared prefixes</span></li>
+        <li><span class="box on">[x]</span><span>Dispatch state machine: offer, decline, exhaustion at 10</span></li>
+        <li><span class="box on">[x]</span><span>Write payloads start unassigned and unrated</span></li>
+        <li><span class="box on">[x]</span><span>Ride status wire values round-trip</span></li>
+        <li><span class="box on">[x]</span><span>Model serialisation tolerates missing, null, and legacy-shaped fields</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Integration testing</h3>
+      <ul class="check">
+        <li><span class="box done">[x]</span><span>Registration writes a pending profile</span></li>
+        <li><span class="box on">[x]</span><span>Approval flips the driver banner without re-login</span></li>
+        <li><span class="box">[ ]</span><span>Going online publishes a presence document</span></li>
+        <li><span class="box on">[x]</span><span>Booking creates a ride and offers the nearest driver</span></li>
+        <li><span class="box">[ ]</span><span>Decline advances to the next candidate</span></li>
+        <li><span class="box on">[x]</span><span>Search expires after 10 candidates</span></li>
+        <li><span class="box on">[x]</span><span>GPS ping reaches the commuter's ride document</span></li>
+        <li><span class="box on">[x]</span><span>Rating updates the driver aggregate</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>System testing</h3>
+      <ul class="check">
+        <li><span class="box">[ ]</span><span>Full lifecycle across two real devices</span></li>
+        <li><span class="box on">[x]</span><span>Two drivers accept simultaneously — exactly one wins</span></li>
+        <li><span class="box">[ ]</span><span>App killed mid-ride restores the active ride</span></li>
+        <li><span class="box on">[x]</span><span>Routing outage degrades to an estimate, never blocks booking</span></li>
+        <li><span class="box">[ ]</span><span>Location permission denied, then granted</span></li>
+        <li><span class="box">[ ]</span><span>Suspension takes effect on the next accept attempt</span></li>
+        <li><span class="box">[ ]</span><span>Role routing survives deep links and restarts</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>User acceptance testing</h3>
+      <ul class="check">
+        <li><span class="box">[ ]</span><span>A driver completes registration unaided, using only the guide</span></li>
+        <li><span class="box">[ ]</span><span>A commuter books within 60 seconds, first try</span></li>
+        <li><span class="box">[ ]</span><span>Filipino-language copy reviewed by a native speaker — guides drafted, review outstanding</span></li>
+        <li><span class="box">[ ]</span><span>Readable in direct sunlight (needs a real handset)</span></li>
+        <li><span class="box">[ ]</span><span>Usable one-handed on a low-end handset</span></li>
+        <li><span class="box">[ ]</span><span>Admin approves a driver without written instructions</span></li>
+        <li><span class="box">[ ]</span><span>TODA officers accept the verification workflow</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Security testing</h3>
+      <ul class="check">
+        <li><span class="box on">[x]</span><span>Unverified email cannot act as admin</span></li>
+        <li><span class="box on">[x]</span><span>Driver cannot self-approve or un-suspend</span></li>
+        <li><span class="box on">[x]</span><span>Commuter cannot read another commuter's ride or phone number</span></li>
+        <li><span class="box on">[x]</span><span>Non-offered driver cannot accept</span></li>
+        <li><span class="box on">[x]</span><span>Assigned ride cannot be stolen without a transaction</span></li>
+        <li><span class="box on">[x]</span><span>Driver cannot advertise another driver's plate</span></li>
+        <li><span class="box on">[x]</span><span>Ratings are write-once and range-bound</span></li>
+        <li><span class="box on">[x]</span><span>No client path can mint an admin</span></li>
+        <li><span class="box on">[x]</span><span>Unmatched collections are denied by default</span></li>
+        <li><span class="box">[ ]</span><span>API key restrictions applied in Google Cloud console</span></li>
+        <li><span class="box">[ ]</span><span>App Check enabled against modified clients</span></li>
+        <li><span class="box on">[x]</span><span>Decompiled APK exposes no secret beyond public config</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Performance testing</h3>
+      <ul class="check">
+        <li><span class="box">[ ]</span><span>Cold start under 3 s on a low-end device</span></li>
+        <li><span class="box">[ ]</span><span>Nearest-driver sweep with 50 online drivers</span></li>
+        <li><span class="box on">[x]</span><span>Firestore reads and writes per completed ride</span></li>
+        <li><span class="box on">[x]</span><span>Projected monthly cost at pilot volume</span></li>
+        <li><span class="box">[ ]</span><span>Battery drain over an 8-hour driver shift</span></li>
+        <li><span class="box">[ ]</span><span>Mobile data consumed per shift, tiles included</span></li>
+        <li><span class="box">[ ]</span><span>Offer latency from booking to driver's screen</span></li>
+        <li><span class="box">[ ]</span><span>Map remains smooth while GPS streams</span></li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  Status verified against the working tree on 23 August 2026 — 72 emulator tests (rules,
+  lifecycle, concurrency) and 79 Dart tests passing, analyzer clean, release APK at
+  54.7&nbsp;MB carrying the "tk" launcher icon at all six densities, with the app
+  rethemed to match it and Crashlytics wired in. Rules and indexes deployed to the <span class="mono">trikekoto</span> project.
+  Steps 32a and 38a were inserted rather than renumbered, so existing dependency references still
+  resolve. Step counts describe scope, not effort; the Cloud Functions phase carries the most
+  uncertainty.
+</footer>
+
+</div>
+
