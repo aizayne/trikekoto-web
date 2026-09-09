@@ -21,7 +21,7 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 |---|---|
 | Critical issues | **0** |
 | High | **0** — the SMS toll-fraud finding is closed; App Check is enforced on both platforms |
-| Medium | **1** — unrestricted API key |
+| Medium | **0** — key restrictions applied; see the caveat on what they actually enforce |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Accepted by design | **3** — documented below with tripwire tests |
 
@@ -160,12 +160,38 @@ Both platforms now attest and both are enforced: Play Integrity on Android,
 reCAPTCHA Enterprise on web. The remaining gaps still exist, but reaching them
 now requires a genuine build of this app rather than a shell script.
 
-### MEDIUM — API key restrictions not applied
+### ~~MEDIUM — API key restrictions not applied~~ — APPLIED, WITH A CAVEAT
 
-The Android and Web API keys are unrestricted in Google Cloud. Restricting the
-Android key to your package name and SHA-1, and the Web key to your hosting
-domain, limits reuse of the key elsewhere. This matters more once a release
-keystore exists (step 81), since the SHA-1 changes with it.
+Both keys now carry application restrictions: the web key to
+`trikekoto.web.app`, `trikekoto.firebaseapp.com` and `localhost`; the Android
+key to `ph.trikekoto.trikekoto_app` with the release certificate's SHA-1
+(`06:2A:…:94:6D`). API restrictions were already in place — Firebase sets them
+when it mints the keys.
+
+**A note on what this actually buys, because the common advice oversells it.**
+The restrictions were verified working in the direction that matters: the web
+key is accepted from `trikekoto.web.app`. But the same key, complete and
+correct, was *also* accepted from `https://example.com` — tested against
+Identity Toolkit, Firestore and Firebase Installations, none of which refused
+it on referrer grounds, several minutes after the restriction was confirmed
+saved in the console.
+
+So for these Firebase endpoints the referrer restriction should be treated as
+defence in depth, not as a control that prevents key reuse. That is consistent
+with Google's own position that a Firebase API key identifies a project rather
+than authorising access, and that access is controlled by Security Rules.
+
+**The control that does hold is App Check enforcement**, which was verified end
+to end: a request without a valid attestation token is refused regardless of
+which origin it comes from. If a claim about key security appears in the
+thesis, it should rest on App Check and the Security Rules rather than on
+these restrictions.
+
+A misleading label is worth recording too: Google Cloud lists the key the
+**Android** app uses under the name *"Browser key"*, because `flutterfire
+configure` reused the project's earliest key rather than minting a new one.
+Restricting by the console's row name rather than by the key value would have
+broken Android.
 
 ---
 
@@ -218,8 +244,9 @@ before deploying.
 2. ~~**App Check on web**~~ — done. reCAPTCHA Enterprise, wired and
    **enforced**, verified by a real sign-in after enforcement was switched on.
 3. ~~**A budget alert**~~ — done, ₱500/month scoped to the project.
-4. **Restrict API keys** — the release keystore now exists, so this is
-   unblocked.
+4. ~~**Restrict API keys**~~ — applied to both keys. Read the caveat in that
+   section before relying on them: they were not observed to block a foreign
+   origin on the Firebase endpoints tested.
 5. ~~**Blaze plan** → server-side rating aggregation (68) and dispatch (67)~~
    — done. Both functions are deployed.
 6. Re-run this review after any rules change. **It is due one now:** the rider
