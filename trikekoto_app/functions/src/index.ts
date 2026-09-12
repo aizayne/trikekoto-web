@@ -626,6 +626,60 @@ function emptyDispatch(): RideDispatch {
 
 
 // ════════════════════════════════════════════════════════════
+// 39b · ID gate — record THAT someone is verified, not who they are.
+// ════════════════════════════════════════════════════════════
+/**
+ * Writes `id_verified/{uid}` the moment a submission is approved.
+ *
+ * Using the system requires a verified ID — booking, for a commuter; going
+ * online and accepting, for a driver — and the security rules check this
+ * marker rather than the submission. It has to be a separate document for
+ * two reasons:
+ *
+ * - **Retention.** `purgeExpiredIds` deletes a submission 90 days after it
+ *   arrives, approval included. Gating on the submission would lock every
+ *   user out of the app on day 91.
+ * - **Trust.** Only functions write the marker. The rules refuse every client
+ *   write to it, admins included, so a modified app cannot verify itself and
+ *   an approval always has a reviewed submission behind it.
+ *
+ * The marker holds no identity data — no ID type, number or image path. It
+ * is the fact of verification, which is the only part that must outlive the
+ * ID.
+ */
+export const onIdReviewed = onDocumentUpdated(
+  { document: 'id_submissions/{subjectUid}', region: REGION },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!after) return;
+    // Only the transition into approved. A rejection writes nothing, and a
+    // duplicate delivery of an old approval is harmless but pointless.
+    if (before?.status === 'approved' || after.status !== 'approved') return;
+
+    await markVerified(event.params.subjectUid, after);
+    // The role, never the uid — same reasoning as the retention job's log.
+    logger.info(`ID approved; verification recorded for a ${after.role}`);
+  },
+);
+
+/** Idempotent: a retry re-sets the same fields. */
+async function markVerified(
+  uid: string,
+  submission: FirebaseFirestore.DocumentData,
+) {
+  await db.collection('id_verified').doc(uid).set(
+    {
+      role: submission.role ?? null,
+      verifiedBy: submission.reviewedBy ?? null,
+      verifiedAt: submission.reviewedAt ?? FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+
+// ════════════════════════════════════════════════════════════
 // 39a · ID retention — delete what there is no longer a reason to hold.
 // ════════════════════════════════════════════════════════════
 /**
@@ -652,11 +706,12 @@ function emptyDispatch(): RideDispatch {
  * delete fails the document stays, so the pair is retried tomorrow rather
  * than being silently half-removed.
  *
- * **The verification outcome is deleted too**, deliberately. Nothing in the
- * app gates on ID status, so keeping "this person was verified in September"
- * would mean retaining a record of a check for a permission that does not
- * exist. If gating is ever added, a boolean on the subject's own document is
- * the thing to keep — not the ID.
+ * **The verification outcome survives; the ID does not.** Using the app
+ * requires a verified ID, so the fact of approval is kept in
+ * `id_verified/{uid}` — a document holding no identity data at all —
+ * while the submission and its image are deleted. When this job was
+ * first written nothing gated on ID status, and this paragraph said: if
+ * gating is ever added, keep the fact, not the ID. That is what happened.
  *
  * Daily, not hourly: the deadline is 90 days, so a few hours of imprecision
  * costs nothing and 24× fewer invocations do.
@@ -686,6 +741,14 @@ export const purgeExpiredIds = onSchedule(
       const uid = snap.id;
       const path = (snap.data().idPhotoPath as string | undefined)
         ?? `ids/${uid}/card`;
+
+      // Retention deletes the ID, never the verification. If the approval
+      // trigger ever failed — a deploy gap, a dropped event — record it now,
+      // before the only evidence of the approval is gone, rather than
+      // silently locking someone out of an app they were cleared to use.
+      if (snap.data().status === 'approved') {
+        await markVerified(uid, snap.data());
+      }
 
       try {
         // ignoreNotFound: an already-absent object is the desired end state,
@@ -743,6 +806,12 @@ export const onRiderDeleted = onDocumentDeleted(
   { document: 'riders/{riderUid}', region: REGION },
   async (event) => {
     const uid = event.params.riderUid;
+
+    // The verification marker goes with the person. It holds no ID data, but
+    // it is still a record that this uid was a verified individual, and an
+    // erased account should leave nothing that says so. Done before the ride
+    // query, which returns early for someone who never rode.
+    await db.collection('id_verified').doc(uid).delete();
 
     // Bounded per run. A rider with an implausible number of rides should not
     // turn one deletion into a multi-minute write storm; the tail is picked

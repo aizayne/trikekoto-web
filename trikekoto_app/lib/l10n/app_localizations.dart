@@ -2058,6 +2058,24 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Walang maps app. Destinasyon: {lat}, {lng}'**
   String mapNoMapsApp(String lat, String lng);
+
+  /// No description provided for @idGateTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng verified na ID'**
+  String get idGateTitle;
+
+  /// No description provided for @idGateBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Para protektahan ang mga pasahero at driver laban sa scam at troll, kinukumpirma ng TODA chapter ang ID mo bago magamit ang TrikeKoTo. Kapag naaprubahan, may lalabas na Magpatuloy dito.'**
+  String get idGateBody;
+
+  /// No description provided for @idContinue.
+  ///
+  /// In fil, this message translates to:
+  /// **'Magpatuloy'**
+  String get idContinue;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

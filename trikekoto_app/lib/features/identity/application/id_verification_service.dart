@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../data/id_submission.dart';
+import '../../../core/auth/session_controller.dart';
 
 /// Submitting and reviewing government IDs.
 ///
@@ -181,4 +182,24 @@ final myIdSubmissionProvider = StreamProvider<IdSubmission?>((ref) {
 final pendingIdSubmissionsProvider =
     StreamProvider<List<IdSubmission>>((ref) {
   return ref.watch(idVerificationServiceProvider).watchPending();
+});
+
+/// Whether the signed-in person's ID has been approved.
+///
+/// Reads `id_verified/{uid}`, never the submission. Retention deletes the
+/// submission after 90 days; the marker stays, and it is what the security
+/// rules check — so this is what the router must check too, or the app and
+/// the server would disagree about who is allowed in.
+///
+/// Keyed on the session's uid rather than `currentUser`, so it re-subscribes
+/// when a different person signs in on the same phone.
+final myIdVerifiedProvider = StreamProvider<bool>((ref) {
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
+  if (uid == null) return Stream.value(false);
+  return ref
+      .watch(firestoreProvider)
+      .collection(FsCollections.idVerified)
+      .doc(uid)
+      .snapshots()
+      .map((snap) => snap.exists);
 });

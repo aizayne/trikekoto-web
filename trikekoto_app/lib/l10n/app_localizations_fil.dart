@@ -1117,4 +1117,14 @@ class LFil extends L {
   String mapNoMapsApp(String lat, String lng) {
     return 'Walang maps app. Destinasyon: $lat, $lng';
   }
+
+  @override
+  String get idGateTitle => 'Kailangan ng verified na ID';
+
+  @override
+  String get idGateBody =>
+      'Para protektahan ang mga pasahero at driver laban sa scam at troll, kinukumpirma ng TODA chapter ang ID mo bago magamit ang TrikeKoTo. Kapag naaprubahan, may lalabas na Magpatuloy dito.';
+
+  @override
+  String get idContinue => 'Magpatuloy';
 }

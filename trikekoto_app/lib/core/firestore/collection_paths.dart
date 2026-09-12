@@ -40,6 +40,10 @@ class FsCollections {
   /// grant an admin needs and the blast radius of a mistake in either rule.
   static const idSubmissions = 'id_submissions';
 
+  /// The fact that someone's ID was approved, and nothing else. Written
+  /// only by the onIdReviewed function; it outlives the submission.
+  static const idVerified = 'id_verified';
+
   /// The singleton runtime-config document: `config/app`.
   static const configAppDoc = 'app';
 }

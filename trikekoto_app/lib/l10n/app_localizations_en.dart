@@ -1108,4 +1108,14 @@ class LEn extends L {
   String mapNoMapsApp(String lat, String lng) {
     return 'No maps app available. Destination: $lat, $lng';
   }
+
+  @override
+  String get idGateTitle => 'A verified ID is required';
+
+  @override
+  String get idGateBody =>
+      'To protect passengers and drivers from scams and trolls, the TODA chapter confirms your ID before you can use TrikeKoTo. Once it is approved, a Continue button appears here.';
+
+  @override
+  String get idContinue => 'Continue';
 }

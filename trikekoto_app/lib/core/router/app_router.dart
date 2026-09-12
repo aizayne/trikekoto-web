@@ -17,6 +17,7 @@ import '../../features/drivers/presentation/driver_register_screen.dart';
 import '../../features/landing/presentation/landing_screen.dart';
 import '../../features/landing/presentation/staff_login_screen.dart';
 import '../auth/session_controller.dart';
+import '../../features/identity/application/id_verification_service.dart';
 
 /// Role-based routing.
 ///
@@ -27,6 +28,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.onDispose(refresh.dispose);
   ref.listen(sessionProvider, (_, _) => refresh.value++);
+  // Approval arrives while the person waits on the ID screen, so the
+  // router has to hear about it without a sign-in event to prompt it.
+  ref.listen(myIdVerifiedProvider, (_, _) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/',
@@ -36,6 +40,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
 
       if (session.loading) return null;
+
+      // Read once, used by both roles that the ID gate covers. Until the
+      // first answer arrives, stay put — the same way a loading session
+      // does — rather than flash a screen the person may not be allowed.
+      final idCheck = ref.read(myIdVerifiedProvider);
+      final idPending = !idCheck.hasValue && !idCheck.hasError;
+      // An error reads as unverified. Showing the ID screen by mistake is
+      // recoverable; the rules would refuse the booking regardless.
+      final idVerified = idCheck.value == true;
 
       final signedIn = session.isSignedIn;
       // `/rider-signin` is public: a commuter reaches it before they have an
@@ -62,10 +75,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (session.needsRiderOnboarding) {
             return loc == '/rider-onboarding' ? null : '/rider-onboarding';
           }
+          // The ID gate, after onboarding so there is a name on the account.
+          // An unverified commuter can reach exactly two screens: the one that
+          // submits an ID, and their profile — so an account can always be
+          // deleted, including one that was never verified.
+          //
+          // This is the honest-client half of the gate. What stops a modified
+          // app is the rules refusing the booking itself.
+          if (idPending) return null;
+          if (!idVerified) {
+            const open = {'/commuter/id', '/commuter/profile'};
+            return open.contains(loc) ? null : '/commuter/id';
+          }
           // Sending a signed-in rider back to sign-in would trap them there.
           if (loc == '/rider-signin') return '/commuter';
           return loc.startsWith('/commuter') ? null : '/commuter';
         case AppRole.driver:
+          // Same gate. A dashboard with an Online switch the rules will refuse
+          // would be a promise the server does not keep.
+          if (idPending) return null;
+          if (!idVerified) return loc == '/driver/id' ? null : '/driver/id';
           return loc.startsWith('/driver') ? null : '/driver';
         case AppRole.admin:
           return loc.startsWith('/admin') ? null : '/admin';

@@ -95,6 +95,11 @@ beforeEach(async () => {
   await testEnv.clearFirestore();
   await seed(async (db) => {
     await setDoc(doc(db, 'admins', ADMIN_EMAIL), { email: ADMIN_EMAIL });
+    // Verified by default: these tests attack other controls, and an
+    // unverified attacker would be refused for the wrong reason.
+    for (const uid of [ATTACKER_UID, COMMUTER_UID, OTHER_COMMUTER, 'uid-' + VICTIM]) {
+      await setDoc(doc(db, 'id_verified', uid), { role: 'test' });
+    }
     await setDoc(doc(db, 'drivers', VICTIM), profileOf(VICTIM));
     await setDoc(doc(db, 'drivers', ATTACKER), profileOf(ATTACKER));
     await setDoc(doc(db, 'rides', 'victim-ride'), {

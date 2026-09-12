@@ -9,6 +9,8 @@ import '../../../core/ui/app_theme.dart';
 import '../application/id_verification_service.dart';
 import '../data/id_submission.dart';
 import '../../../core/ui/locale_controller.dart';
+import '../../../core/auth/session_controller.dart';
+import '../../../core/ui/theme_controller.dart';
 
 /// Submitting a government ID, for either role.
 ///
@@ -165,14 +167,34 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final mine = ref.watch(myIdSubmissionProvider);
+    final verified = ref.watch(myIdVerifiedProvider).value == true;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l.idTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        // No back arrow when this is the gate: the router brought the person
+        // here with `go`, there is nothing behind it to pop to, and an arrow
+        // that does nothing reads as a broken app.
+        automaticallyImplyLeading: false,
+        leading: context.canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              )
+            : null,
+        // The gate is the first screen a new user meets after signing in, so
+        // it carries the language switch — the landing screen taught that —
+        // and a way out: someone unwilling to hand over an ID must still be
+        // able to leave.
+        actions: [
+          const LanguageToggleButton(),
+          const ThemeToggleButton(),
+          IconButton(
+            tooltip: context.l.signOut,
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -180,12 +202,21 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: mine.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (_, _) => _form(context),
-                data: (sub) =>
-                    sub == null ? _form(context) : _status(context, sub),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!verified) ...[
+                    _gateNotice(context),
+                    const Gap(AppSpacing.xl),
+                  ],
+                  mine.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => _form(context),
+                    data: (sub) =>
+                        sub == null ? _form(context) : _status(context, sub),
+                  ),
+                ],
               ),
             ),
           ),
@@ -193,6 +224,41 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
       ),
     );
   }
+
+  // ── The gate ────────────────────────────────────────────────
+  /// Says why this screen is in the way, before asking for anything.
+  ///
+  /// Someone sent here straight after signing in did not choose to open an ID
+  /// screen. Without a reason on it they meet a demand for a government ID out
+  /// of nowhere — which is exactly what a scam looks like.
+  Widget _gateNotice(BuildContext context) => Card(
+        color: context.scheme.secondaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.shield_outlined,
+                  color: context.scheme.onSecondaryContainer),
+              const Gap(AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l.idGateTitle,
+                        style: context.text.titleSmall?.copyWith(
+                            color: context.scheme.onSecondaryContainer)),
+                    const Gap(AppSpacing.xs),
+                    Text(context.l.idGateBody,
+                        style: context.text.bodySmall?.copyWith(
+                            color: context.scheme.onSecondaryContainer)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 
   // ── Already submitted ───────────────────────────────────────
   Widget _status(BuildContext context, IdSubmission sub) {
@@ -230,6 +296,21 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
             style: context.text.bodyMedium
                 ?.copyWith(color: context.scheme.onSurfaceVariant)),
         const Gap(AppSpacing.xxl),
+
+        // The way out of the gate. Keyed on the marker, not the submission:
+        // between an admin approving and the function writing the marker
+        // there is a short gap, and a button that led straight back into the
+        // gate during it would look like the approval had failed.
+        if (sub.isApproved &&
+            ref.watch(myIdVerifiedProvider).value == true) ...[
+          FilledButton.icon(
+            onPressed: () => context.go(
+                widget.role == IdRole.driver ? '/driver' : '/commuter'),
+            icon: const Icon(Icons.arrow_forward),
+            label: Text(context.l.idContinue),
+          ),
+          const Gap(AppSpacing.xxl),
+        ],
 
         Card(
           child: Padding(

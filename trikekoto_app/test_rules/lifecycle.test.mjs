@@ -170,6 +170,15 @@ after(async () => {
 beforeEach(async () => {
   await testEnv.clearFirestore();
   await seedDrivers();
+  // Every actor in this file is ID-verified by default, so each existing
+  // test keeps testing what it was written for. The ID gate has its own
+  // tests, which remove the marker to prove the gate holds.
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    for (const uid of [DRIVER_UID, RIVAL_UID, COMMUTER_UID]) {
+      await setDoc(doc(db, 'id_verified', uid), { role: 'test' });
+    }
+  });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -415,5 +424,26 @@ describe('concurrency', () => {
     const results = await Promise.allSettled([rate(5), rate(1)]);
     const accepted = results.filter((r) => r.status === 'fulfilled');
     assert.equal(accepted.length, 1, 'a ride is rated once');
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+describe('ID gate on accepting', () => {
+  it('an offered driver whose ID is not verified cannot accept', async () => {
+    // Unverified drivers cannot go online, so dispatch never finds them. This
+    // covers the ways an offer can still reach one: a presence document from
+    // before the gate existed, or a modified commuter client writing an
+    // accomplice into dispatch.offeredTo.
+    const { deleteDoc } = await import('firebase/firestore');
+    const rider = commuter();
+    const juan = driver();
+    const rideRef = await addDoc(collection(rider, 'rides'), newRide());
+    await updateDoc(doc(rider, 'rides', rideRef.id), offerTo(DRIVER));
+
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await deleteDoc(doc(ctx.firestore(), 'id_verified', DRIVER_UID));
+    });
+
+    await assertFails(acceptRide(juan, rideRef.id, DRIVER));
   });
 });

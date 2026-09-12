@@ -64,6 +64,19 @@ service cloud.firestore {
         && request.auth.token.get('phone_number', '') != '';
     }
 
+    // Scam and troll protection: nobody books, goes online, or accepts a ride
+    // until a TODA officer has confirmed a government ID. A phone number
+    // alone is cheap — prepaid SIMs cost less than a tricycle fare.
+    //
+    // Checks the id_verified marker, never the submission. Retention deletes
+    // submissions after 90 days, and gating on one would lock every user out
+    // on day 91. Only a Cloud Function can write the marker; see the match
+    // block near the end of this file.
+    function isIdVerified() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/id_verified/$(request.auth.uid));
+    }
+
     function emailVerified() {
       return isSignedIn() && request.auth.token.get('email_verified', false) == true;
     }
@@ -216,7 +229,12 @@ service cloud.firestore {
       }
 
       allow read: if canDiscoverDrivers();
-      allow create, update: if isSelf(driverEmail) && validPresence();
+      // Going online requires a verified ID; staying online does not re-check.
+      // Presence is deleted on going offline, so create happens once per
+      // shift and its single exists() is cheap. Updates arrive on every GPS
+      // ping and stay read-free, as the note above promises.
+      allow create: if isSelf(driverEmail) && validPresence() && isIdVerified();
+      allow update: if isSelf(driverEmail) && validPresence();
       allow delete: if isSelf(driverEmail) || isAdmin();
     }
 
@@ -323,9 +341,11 @@ service cloud.firestore {
       // full lifecycle, so pressing stop never strands a passenger who is
       // sitting in a tricycle.
       //
-      // Two document reads per ride created, and none on any other path. At
-      // pilot volume that is ~100 reads a day against a 50,000 allowance.
-      allow create: if hasVerifiedPhone() && ridesAreOpen() && validNewRide();
+      // Three document reads per ride created — the kill switch and the ID
+      // marker — and none on any other path. At pilot volume that is ~150
+      // reads a day against a 50,000 allowance.
+      allow create: if hasVerifiedPhone() && isIdVerified()
+        && ridesAreOpen() && validNewRide();
 
       allow update: if
         // ── 1. Commuter widens the greedy search ──────────────
@@ -364,6 +384,7 @@ service cloud.firestore {
         // aborts if that pre-image changed underneath it.
         (isOfferedDriver()
           && isApprovedSelfDriver()
+          && isIdVerified()
           && resource.data.status == 'searching'
           && resource.data.assignedDriver == null
           && request.resource.data.status == 'accepted'
@@ -613,6 +634,24 @@ service cloud.firestore {
       // image — the Storage rule admits that separately, and both are done
       // together by the client.
       allow delete: if isSelfSubject() || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  id_verified/{subjectUid}
+    // ═══════════════════════════════════════════════════════
+    // The fact that a person's ID was approved — and nothing else. No ID
+    // type, no number, no image path. It exists so verification can be
+    // REQUIRED without the ID being KEPT: purgeExpiredIds deletes the
+    // submission after 90 days, and this outlives it.
+    //
+    // Written only by the onIdReviewed function. A client able to create
+    // this document could verify itself, which is the one thing it exists
+    // to prevent — so not even an admin client may write it. An admin's
+    // power is to approve a submission; the function turns that into this.
+    match /id_verified/{subjectUid} {
+      allow get: if (isSignedIn() && subjectUid == uid()) || isAdmin();
+      allow list: if isAdmin();
+      allow write: if false;
     }
 
     // ═══════════════════════════════════════════════════════

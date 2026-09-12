@@ -326,5 +326,8 @@
   "mapDropOffAt": "Drop off at {place}",
   "mapKm": "{km} km",
   "mapOpenInMaps": "Open in maps",
-  "mapNoMapsApp": "No maps app available. Destination: {lat}, {lng}"
+  "mapNoMapsApp": "No maps app available. Destination: {lat}, {lng}",
+  "idGateTitle": "A verified ID is required",
+  "idGateBody": "To protect passengers and drivers from scams and trolls, the TODA chapter confirms your ID before you can use TrikeKoTo. Once it is approved, a Continue button appears here.",
+  "idContinue": "Continue"
 }

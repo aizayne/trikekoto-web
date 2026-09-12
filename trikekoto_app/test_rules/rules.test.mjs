@@ -159,6 +159,15 @@ after(async () => {
 
 beforeEach(async () => {
   await testEnv.clearFirestore();
+  // Every actor in this file is ID-verified by default, so each existing
+  // test keeps testing what it was written for. The ID gate has its own
+  // tests, which remove the marker to prove the gate holds.
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    for (const uid of [COMMUTER_UID, OTHER_COMMUTER_UID, DRIVER_UID, OTHER_DRIVER_UID]) {
+      await setDoc(doc(db, 'id_verified', uid), { role: 'test' });
+    }
+  });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -1227,5 +1236,104 @@ describe('acceptingRides kill switch', () => {
     await assertSucceeds(
       updateDoc(doc(admin(), 'config', 'app'), { acceptingRides: false }),
     );
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+describe('ID gate — nobody uses the system unverified', () => {
+  async function unverify(uid) {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await deleteDoc(doc(ctx.firestore(), 'id_verified', uid));
+    });
+  }
+
+  const booking = () => ({ ...rideDoc(), createdAt: serverTimestamp() });
+
+  // A local copy: the one in the active_drivers block is scoped to it.
+  const presence = (email) => ({
+    email,
+    isOnline: true,
+    availability: 'idle',
+    position: {
+      geohash: 'wdw2q1abc',
+      geopoint: new GeoPoint(14.5995, 120.9842),
+    },
+    updatedAt: serverTimestamp(),
+  });
+
+  it('an unverified commuter cannot book', async () => {
+    await unverify(COMMUTER_UID);
+    await assertFails(setDoc(doc(commuter(), 'rides', 'r-gate'), booking()));
+  });
+
+  it('the same commuter can book once verified', async () => {
+    await assertSucceeds(setDoc(doc(commuter(), 'rides', 'r-gate'), booking()));
+  });
+
+  it('a pending submission is not verification', async () => {
+    // Submitting must not be enough. Otherwise a troll uploads a photo of
+    // anything at all and books before anyone has looked at it.
+    await unverify(COMMUTER_UID);
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'id_submissions', COMMUTER_UID), {
+        subjectUid: COMMUTER_UID, role: 'rider', status: 'pending',
+      });
+    });
+    await assertFails(setDoc(doc(commuter(), 'rides', 'r-gate'), booking()));
+  });
+
+  it('an approved submission without the marker is not enough either', async () => {
+    // The rules read the marker only. This pins that down: if someone later
+    // "simplifies" the gate to read the submission, day-91 lockouts return.
+    await unverify(COMMUTER_UID);
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'id_submissions', COMMUTER_UID), {
+        subjectUid: COMMUTER_UID, role: 'rider', status: 'approved',
+      });
+    });
+    await assertFails(setDoc(doc(commuter(), 'rides', 'r-gate'), booking()));
+  });
+
+  it('nobody can verify themselves', async () => {
+    await unverify(COMMUTER_UID);
+    await assertFails(
+      setDoc(doc(commuter(), 'id_verified', COMMUTER_UID), { role: 'rider' }));
+    await unverify(DRIVER_UID);
+    await assertFails(
+      setDoc(doc(driver(), 'id_verified', DRIVER_UID), { role: 'driver' }));
+  });
+
+  it('not even an admin client can write a marker', async () => {
+    // An admin approves a submission; the function turns that into a marker.
+    // A direct write would be a verification with no reviewed ID behind it.
+    await seedAdmin();
+    await unverify(OTHER_COMMUTER_UID);
+    await assertFails(
+      setDoc(doc(admin(), 'id_verified', OTHER_COMMUTER_UID), { role: 'rider' }));
+  });
+
+  it("nobody can delete someone else's marker", async () => {
+    await assertFails(
+      deleteDoc(doc(commuter(OTHER_COMMUTER_UID), 'id_verified', COMMUTER_UID)));
+  });
+
+  it('a person can read their own marker, and nobody else can', async () => {
+    await assertSucceeds(getDoc(doc(commuter(), 'id_verified', COMMUTER_UID)));
+    await assertFails(
+      getDoc(doc(commuter(OTHER_COMMUTER_UID), 'id_verified', COMMUTER_UID)));
+  });
+
+  it('an unverified driver cannot go online', async () => {
+    await seedDriver(DRIVER_EMAIL);
+    await unverify(DRIVER_UID);
+    await assertFails(
+      setDoc(doc(driver(), 'active_drivers', DRIVER_EMAIL), presence(DRIVER_EMAIL)));
+  });
+
+  it('a verified driver can, and keeps pinging without a re-check', async () => {
+    await seedDriver(DRIVER_EMAIL);
+    const ref = doc(driver(), 'active_drivers', DRIVER_EMAIL);
+    await assertSucceeds(setDoc(ref, presence(DRIVER_EMAIL)));
+    await assertSucceeds(setDoc(ref, presence(DRIVER_EMAIL)));
   });
 });
