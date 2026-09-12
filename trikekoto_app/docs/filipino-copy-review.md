@@ -351,6 +351,12 @@ driver hits at a terminal.
       - *en:* • Only a TODA chapter officer looks at it, to confirm who you are. ⏎ • No other passenger and no driver of yours can see it. ⏎ • It is deleted 90 days after review, or immediately if you withdraw it. ⏎ • You can delete it at any time from this screen.
 - [ ] **`[shipped]`** Pumapayag ako na iproseso ang ID ko para sa pagkumpirma.
       - *en:* I agree to my ID being processed for verification.
+- [ ] **`[new]`** Kailangan ng verified na ID
+      - *en:* A verified ID is required
+- [ ] **`[new]`** Para protektahan ang mga pasahero at driver laban sa scam at troll, kinukumpirma ng TODA chapter ang ID mo bago magamit ang TrikeKoTo. Kapag naaprubahan, may lalabas na Magpatuloy dito.
+      - *en:* To protect passengers and drivers from scams and trolls, the TODA chapter confirms your ID before you can use TrikeKoTo. Once it is approved, a Continue button appears here.
+- [ ] **`[new]`** Magpatuloy
+      - *en:* Continue
 
 ## ID review (admin)
 
@@ -727,7 +733,7 @@ driver hits at a terminal.
 
 ---
 
-**327 strings.** 69 already shipped and field-tested, **258 new and unread
+**330 strings.** 69 already shipped and field-tested, **261 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate

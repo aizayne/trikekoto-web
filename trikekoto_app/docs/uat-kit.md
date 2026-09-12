@@ -89,6 +89,12 @@ which takes the whole of RA 10173 off your shoulders for an afternoon. You are
 testing whether somebody can complete the flow, not whether their licence is
 genuine. A blank loyalty card photographs exactly as well.
 
+**The dummy card is no longer optional, and neither is an admin.** Since
+2026-09-13 nobody reaches the booking screen or the driver dashboard until an
+ID is approved. Bring a second phone signed in as admin and approve each
+dummy submission live, during the session. Deleting the participant's account
+at the end removes their verification along with everything else.
+
 **Delete their data the same day.** Account deletion is in the app now
 (Profile → Burahin ang account), and it anonymises their rides server-side.
 Doing it in front of them, at the end, is also the most reassuring thing you
@@ -133,20 +139,22 @@ abandoned, or five minutes elapsed.
 | # | Task (say this) | Done when |
 |---|---|---|
 | 1 | "Bago po tayo magsimula — buksan ninyo ang app at tingnan ninyo muna. Ano sa palagay ninyo ang magagawa dito?" | They describe it. A first-impression probe, not a task |
-| 2 | "Gusto ninyong mag-book. Simulan ninyo po." | **They reach the booking screen.** This is now sign-in, an SMS code, and a name — three steps before anything a passenger came for. Time it, and note every place they hesitate |
-| 3 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it |
-| 4 | "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
-| 5 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
-| 6 | *(after a completed ride)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
-| 7 | *(hand them the dummy card)* "May bahagi po ang app para kumpirmahin kung sino kayo. Subukan ninyo po." | They find Profile → ID verification and complete it. **Watch what they do at the consent tick** |
-| 8 | "Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?" | They find it, or do not. Do not help |
+| 2 | "Gusto ninyong mag-book. Simulan ninyo po." | **They reach the ID screen.** Sign-in, an SMS code, a name — and now a government ID — before anything a passenger came for. Time it, and note every place they hesitate |
+| 3 | *(hand them the dummy card)* "Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala." | Submission pending. **Watch what they do at the consent tick**, and whether the notice saying *why* an ID is needed reassures them or alarms them |
+| 4 | *(approve it from the admin phone, without saying so)* "May nagbago po ba?" | They find **Magpatuloy** and reach the booking screen unprompted |
+| 5 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it |
+| 6 | "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
+| 7 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
+| 8 | *(after a completed ride)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
+| 9 | "Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?" | They find it, or do not. Do not help |
 
-**Task 2 is the one to watch.** It did not exist in August, when booking was
-one tap. A passenger now proves a phone number before seeing a map, and that
-is the highest-friction moment in the product — the point where a real user
+**Task 2 is the one to watch, and it is longer than it was.** It did not exist
+in August, when booking was one tap. A passenger now proves a phone number
+*and hands over a government ID* before seeing a map, and that is the
+highest-friction moment in the product — the point where a real user
 who is late for something gives up. Time it with a watch, not an impression.
 
-**Task 7 tests the consent tick, not the upload.** The submit button is
+**Task 3 tests the consent tick, not the upload.** The submit button is
 disabled until the box is ticked. Watch whether they read the notice, tick it
 blind, or ask what it means. If everyone ticks without reading, the consent is
 technically recorded and practically meaningless, and that is worth knowing
@@ -166,19 +174,19 @@ rating coverage in production will be poor and the driver averages unreliable.
 | # | Task (say this) | Done when |
 |---|---|---|
 | 1 | "Gumawa po kayo ng account bilang driver." | Registration submitted |
-| 2 | "Ano po ang nakikita ninyo ngayon? Puwede na po ba kayong tumanggap ng pasahero?" | They correctly read the pending state |
-| 3 | *(after approval)* "May nagbago po ba?" | They notice the banner changed without being told |
-| 4 | "Ipakita ninyo pong available na kayo." | Online, `active_drivers` document exists |
-| 5 | "May pasahero po. Kunin ninyo." | Offer accepted |
-| 6 | "Nasa inyo na po ang pasahero." | Trip started |
-| 7 | "Nakarating na po kayo." | Ride completed |
-| 8 | *(with their phone locked and in a pocket, send them an offer)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
-| 9 | *(hand them the dummy card)* "Hihingin po ng chapter ang ID ninyo. Subukan ninyo pong ipadala." | They complete ID verification. Note whether they hesitate — a driver being asked for a licence by an app is a different feeling from being asked by a person they know |
+| 2 | *(hand them the dummy card)* "Hihingin po ng chapter ang ID ninyo bago gamitin ang app. Subukan ninyo pong ipadala." | ID submitted — they cannot reach the dashboard without it. Note whether they hesitate: a driver asked for a licence by an app feels different from one asked by a person they know |
+| 3 | "Ano po ang nakikita ninyo ngayon? Puwede na po ba kayong tumanggap ng pasahero?" | They correctly read that they are waiting on the chapter |
+| 4 | *(approve the ID, then the driver, from the admin phone)* "May nagbago po ba?" | They find **Magpatuloy**, then notice the dashboard banner changed without being told |
+| 5 | "Ipakita ninyo pong available na kayo." | Online, `active_drivers` document exists |
+| 6 | "May pasahero po. Kunin ninyo." | Offer accepted |
+| 7 | "Nasa inyo na po ang pasahero." | Trip started |
+| 8 | "Nakarating na po kayo." | Ride completed |
+| 9 | *(with their phone locked and in a pocket, send them an offer)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
 
-Task 3 tests the live approval update, which no participant will notice if you
+Task 4 tests the live approval update, which no participant will notice if you
 tell them to look.
 
-**Task 8 changed.** In August it was a question — *would you know?* — because
+**Task 9 changed.** In August it was a question — *would you know?* — because
 the honest answer was no: offers only arrived with the app open. Push is
 deployed now, so it is a real task, and it is still the single most important
 thing you will learn. A driver who does not notice the notification cannot use

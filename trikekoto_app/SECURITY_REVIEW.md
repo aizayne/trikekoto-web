@@ -237,10 +237,25 @@ all attach.
 - **Not reviewed by anyone qualified.** I am not a lawyer and this is not
   legal advice. PRMSU will likely have an ethics review process; this belongs
   in it before a single real ID is collected.
-- **Nothing gates on it.** Booking and going online do not check ID status, so
-  today the feature collects data without yet changing who may do what. That
-  is the safest possible starting state, and it is worth being deliberate
-  about when to change it.
+- **It is now required, and that changes the consent question.** Since
+  2026-09-13 an approved ID is a precondition of use: the rules refuse a ride
+  from, and presence or acceptance by, anyone without an `id_verified`
+  marker. The owner chose this deliberately, for scam and troll protection.
+  The cost is on the legal side. RA 10173 wants consent to be *freely given*,
+  and consent that is a condition of using a service is weaker than consent
+  to an optional feature. The checkbox on the ID screen is still worth
+  having, but it can no longer carry the justification alone; the honest
+  basis is closer to the service's legitimate interest in knowing who is
+  getting into whose tricycle. Defensible — and exactly the argument an
+  ethics review should see written down before a single real ID is collected.
+- **Every new user now waits for a human.** Nobody's first ride can happen
+  until a TODA officer approves an ID. One admin, asleep, is a service that
+  cannot onboard anyone until morning. Decide before the pilot who reviews,
+  and how quickly.
+- **The marker outlives the ID, by design.** `id_verified/{uid}` holds no ID
+  type, number or image — only that approval happened, by whom, and when. It
+  is what lets retention delete the ID at 90 days without un-verifying the
+  person, and it is removed when the account is.
 
 ---
 
