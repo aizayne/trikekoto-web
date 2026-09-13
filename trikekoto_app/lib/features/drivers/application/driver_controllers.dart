@@ -55,6 +55,39 @@ final myActiveRideProvider = StreamProvider<Ride?>((ref) {
 /// search reads. While on a ride it *also* mirrors position onto the ride
 /// document, which is how the commuter tracks the trike without ever being
 /// able to read the driver index.
+/// Why going online failed, for the dashboard to put into words.
+///
+/// The controller has no BuildContext, so it names the failure and the screen
+/// chooses the language. The old `Exception('Location permission denied')`
+/// reached a Filipino-speaking driver in English, and a server refusal read
+/// as "You may not be approved yet" whatever the actual reason.
+enum PresenceFailure { locationOff, permissionDenied, permissionBlocked, refused }
+
+class PresenceException implements Exception {
+  const PresenceException(this.failure);
+
+  final PresenceFailure failure;
+
+  @override
+  String toString() => 'PresenceException(${failure.name})';
+}
+
+/// How long going online waits for a push token before carrying on without.
+const pushTokenWait = Duration(seconds: 6);
+
+/// A push token if one arrives in time, otherwise null — never a hang.
+///
+/// Push is not required to be online: offers still reach an open dashboard.
+/// So a token request that fails, or never finishes, may cost a driver a few
+/// seconds and must not cost them the shift.
+Future<String?> tokenOrNull(
+  Future<String?> token, {
+  Duration limit = pushTokenWait,
+}) =>
+    token
+        .timeout(limit, onTimeout: () => null)
+        .catchError((Object _) => null);
+
 class PresenceController extends Notifier<bool> {
   StreamSubscription<Position>? _gpsSub;
 
@@ -65,14 +98,20 @@ class PresenceController extends Notifier<bool> {
   }
 
   Future<void> goOnline() async {
-    final permission = await _ensurePermission();
-    if (!permission) throw Exception('Location permission denied');
+    // Throws a PresenceException the dashboard can put into words: phone
+    // location off, permission refused, or permission blocked for good.
+    await _ensureLocation();
 
     // Registered on going online rather than at launch: the notification
     // prompt then arrives attached to an action the driver just took, which
     // is the moment it makes sense. Declining is not fatal — in-app offers
     // still arrive while the dashboard is open.
-    await ref.read(fcmTokenProvider.future).catchError((_) => null);
+    //
+    // Bounded. This used to await the token with no limit, and catchError
+    // only handles a failure — a request that never finishes is not one. A
+    // stuck token request left the switch off with no message at all, the
+    // worst way to fail: the driver cannot tell that anything is wrong.
+    await tokenOrNull(ref.read(fcmTokenProvider.future));
 
     state = true;
     _gpsSub?.cancel();
@@ -90,18 +129,61 @@ class PresenceController extends Notifier<bool> {
         // See COST_AND_PERFORMANCE.md.
         distanceFilter: 50,
       ),
-    ).listen(_publish, onError: (_) {});
+    ).listen(
+      // An async listener's failure never reaches onError — it escapes as an
+      // uncaught error — so each ping handles its own.
+      (pos) => _publish(pos)
+          .catchError((Object e, StackTrace s) => _onPingFailed(e, s)),
+      onError: (Object e, StackTrace s) =>
+          CrashReporter.recordNonFatal(e, s, context: 'gps stream'),
+    );
 
-    // Publish once immediately so the driver appears without having to move.
+    // Publish once immediately so the driver appears without having to move,
+    // and so a refusal is found now — while the driver is looking at the
+    // switch — rather than never.
+    final Position pos;
     try {
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high),
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
       );
-      await _publish(pos);
     } catch (_) {
-      // The stream will catch up.
+      // No fix yet: indoors, or a cold GPS. Stay online; the stream publishes
+      // as soon as a position arrives.
+      return;
     }
+
+    try {
+      await _publish(pos);
+    } on FirebaseException catch (e) {
+      // Anything but a refusal is transient, and the stream retries it.
+      if (e.code != 'permission-denied') return;
+      // The server refused presence — for a driver, almost always an ID not
+      // yet approved. Leaving the switch on over a refusal would show a
+      // driver as on shift whom no commuter can ever be offered.
+      await _stop();
+      throw const PresenceException(PresenceFailure.refused);
+    }
+  }
+
+  /// A ping after the driver is already online. Nobody is watching the switch
+  /// by then, so a refusal turns it off — visibly offline beats invisibly
+  /// offline — and anything transient simply waits for the next ping.
+  Future<void> _onPingFailed(Object e, StackTrace s) async {
+    if (e is FirebaseException && e.code == 'permission-denied') {
+      await _stop();
+    }
+    await CrashReporter.recordNonFatal(e, s, context: 'presence ping');
+  }
+
+  /// Offline without deleting presence: for when the write that failed was the
+  /// one that would have created it, so there is nothing to delete.
+  Future<void> _stop() async {
+    await _gpsSub?.cancel();
+    _gpsSub = null;
+    state = false;
   }
 
   Future<void> goOffline() async {
@@ -153,13 +235,25 @@ class PresenceController extends Notifier<bool> {
     }
   }
 
-  Future<bool> _ensurePermission() async {
+  Future<void> _ensureLocation() async {
+    // Checked first. With location services off the permission check still
+    // passes, and the driver would be "online" at no position at all.
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      throw const PresenceException(PresenceFailure.locationOff);
+    }
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    return permission == LocationPermission.always ||
-        permission == LocationPermission.whileInUse;
+    if (permission == LocationPermission.deniedForever) {
+      // Android will not show the prompt again; only Settings can undo it,
+      // so the message has to say Settings rather than "try again".
+      throw const PresenceException(PresenceFailure.permissionBlocked);
+    }
+    if (permission != LocationPermission.always &&
+        permission != LocationPermission.whileInUse) {
+      throw const PresenceException(PresenceFailure.permissionDenied);
+    }
   }
 }
 

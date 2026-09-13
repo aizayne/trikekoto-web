@@ -1127,4 +1127,20 @@ class LFil extends L {
 
   @override
   String get idContinue => 'Magpatuloy';
+
+  @override
+  String get presenceLocationOff =>
+      'Naka-off ang location ng phone. I-on ito para mag-online.';
+
+  @override
+  String get presenceLocationDenied =>
+      'Kailangan ng location permission para mag-online.';
+
+  @override
+  String get presenceLocationBlocked =>
+      'Naka-block ang location permission. I-allow ito sa Settings ng phone para mag-online.';
+
+  @override
+  String get presenceRefused =>
+      'Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.';
 }

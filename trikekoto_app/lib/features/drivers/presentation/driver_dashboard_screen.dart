@@ -194,6 +194,21 @@ class _OnlineToggle extends ConsumerWidget {
             } else {
               await controller.goOffline();
             }
+          } on PresenceException catch (e) {
+            if (context.mounted) {
+              showSnack(
+                context,
+                switch (e.failure) {
+                  PresenceFailure.locationOff => context.l.presenceLocationOff,
+                  PresenceFailure.permissionDenied =>
+                    context.l.presenceLocationDenied,
+                  PresenceFailure.permissionBlocked =>
+                    context.l.presenceLocationBlocked,
+                  PresenceFailure.refused => context.l.presenceRefused,
+                },
+                error: true,
+              );
+            }
           } catch (e) {
             if (context.mounted) {
               showSnack(context, describeError(e), error: true);

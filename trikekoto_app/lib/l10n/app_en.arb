@@ -329,5 +329,9 @@
   "mapNoMapsApp": "No maps app available. Destination: {lat}, {lng}",
   "idGateTitle": "A verified ID is required",
   "idGateBody": "To protect passengers and drivers from scams and trolls, the TODA chapter confirms your ID before you can use TrikeKoTo. Once it is approved, a Continue button appears here.",
-  "idContinue": "Continue"
+  "idContinue": "Continue",
+  "presenceLocationOff": "Your phone's location is off. Turn it on to go online.",
+  "presenceLocationDenied": "Location permission is needed to go online.",
+  "presenceLocationBlocked": "Location permission is blocked. Allow it in your phone's Settings to go online.",
+  "presenceRefused": "The server refused to put you online. Check that your ID has been approved."
 }

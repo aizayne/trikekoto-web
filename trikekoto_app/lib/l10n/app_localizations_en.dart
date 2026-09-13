@@ -1118,4 +1118,20 @@ class LEn extends L {
 
   @override
   String get idContinue => 'Continue';
+
+  @override
+  String get presenceLocationOff =>
+      'Your phone\'s location is off. Turn it on to go online.';
+
+  @override
+  String get presenceLocationDenied =>
+      'Location permission is needed to go online.';
+
+  @override
+  String get presenceLocationBlocked =>
+      'Location permission is blocked. Allow it in your phone\'s Settings to go online.';
+
+  @override
+  String get presenceRefused =>
+      'The server refused to put you online. Check that your ID has been approved.';
 }

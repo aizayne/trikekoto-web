@@ -2076,6 +2076,30 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Magpatuloy'**
   String get idContinue;
+
+  /// No description provided for @presenceLocationOff.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naka-off ang location ng phone. I-on ito para mag-online.'**
+  String get presenceLocationOff;
+
+  /// No description provided for @presenceLocationDenied.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng location permission para mag-online.'**
+  String get presenceLocationDenied;
+
+  /// No description provided for @presenceLocationBlocked.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naka-block ang location permission. I-allow ito sa Settings ng phone para mag-online.'**
+  String get presenceLocationBlocked;
+
+  /// No description provided for @presenceRefused.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.'**
+  String get presenceRefused;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

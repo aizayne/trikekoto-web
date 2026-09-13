@@ -40,6 +40,19 @@ Driver _driver(String status) => Driver.fromMap({
       'ratingCount': 5,
     }, 'juan@toda.ph');
 
+/// Going online fails for a named reason, the way the real controller does
+/// when location is off or the server refuses presence.
+class _FailingPresence extends PresenceController {
+  _FailingPresence(this.failure);
+  final PresenceFailure failure;
+
+  @override
+  bool build() => false;
+
+  @override
+  Future<void> goOnline() async => throw PresenceException(failure);
+}
+
 /// Theme pinned to light, so widget tests never touch SharedPreferences.
 class _FixedTheme extends ThemeController {
   @override
@@ -51,6 +64,7 @@ Widget _harness({
   bool online = false,
   List<Ride> offers = const [],
   Ride? activeRide,
+  PresenceController Function()? presence,
 }) {
   return ProviderScope(
     overrides: [
@@ -58,7 +72,8 @@ Widget _harness({
       myDriverProfileProvider.overrideWith((ref) => Stream.value(driver)),
       myOffersProvider.overrideWith((ref) => Stream.value(offers)),
       myActiveRideProvider.overrideWith((ref) => Stream.value(activeRide)),
-      presenceProvider.overrideWith(() => _FakePresence(online: online)),
+      presenceProvider
+          .overrideWith(presence ?? () => _FakePresence(online: online)),
     ],
     child: MaterialApp(
       // Pinned rather than defaulted: these tests assert English
@@ -272,6 +287,44 @@ void main() {
 
       expect(find.text('09181234567'), findsOneWidget);
       expect(find.text('Maria'), findsOneWidget);
+    });
+  });
+
+  group('going online fails out loud', () {
+    // The switch used to stay off with no message when going online failed
+    // before the switch flipped, and to show "Online" over a refusal that
+    // happened after. Both left a driver unable to tell anything was wrong.
+    Future<void> tapOnline(WidgetTester tester, PresenceFailure failure) async {
+      await tester.pumpWidget(_harness(
+        driver: _driver(DriverStatus.approved),
+        presence: () => _FailingPresence(failure),
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a server refusal says to check the ID, and stays offline',
+        (tester) async {
+      await tapOnline(tester, PresenceFailure.refused);
+      expect(
+          find.text('The server refused to put you online. '
+              'Check that your ID has been approved.'),
+          findsOneWidget);
+      expect(find.text('Offline'), findsOneWidget);
+    });
+
+    testWidgets('location switched off on the phone is named as such',
+        (tester) async {
+      await tapOnline(tester, PresenceFailure.locationOff);
+      expect(find.text("Your phone's location is off. Turn it on to go online."),
+          findsOneWidget);
+    });
+
+    testWidgets('a blocked permission points to Settings, not "try again"',
+        (tester) async {
+      await tapOnline(tester, PresenceFailure.permissionBlocked);
+      expect(find.textContaining('Settings'), findsOneWidget);
     });
   });
 }

@@ -731,9 +731,20 @@ driver hits at a terminal.
 - [ ] **`[new]`** Rating
       - *en:* Rating
 
+## Everything else
+
+- [ ] **`[new]`** Naka-off ang location ng phone. I-on ito para mag-online.
+      - *en:* Your phone's location is off. Turn it on to go online.
+- [ ] **`[new]`** Kailangan ng location permission para mag-online.
+      - *en:* Location permission is needed to go online.
+- [ ] **`[new]`** Naka-block ang location permission. I-allow ito sa Settings ng phone para mag-online.
+      - *en:* Location permission is blocked. Allow it in your phone's Settings to go online.
+- [ ] **`[new]`** Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.
+      - *en:* The server refused to put you online. Check that your ID has been approved.
+
 ---
 
-**330 strings.** 69 already shipped and field-tested, **261 new and unread
+**334 strings.** 69 already shipped and field-tested, **265 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate
