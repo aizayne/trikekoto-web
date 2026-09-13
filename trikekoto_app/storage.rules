@@ -74,11 +74,15 @@ service firebase.storage {
     // The subject may delete their own, so withdrawing consent is something
     // they can actually do rather than something they have to ask for.
     match /ids/{uid}/card {
+      // Lowercased, to match how the admins collection is keyed. Firestore
+      // rules normalise the token email with lower() before this lookup;
+      // this rule did not, so an admin whose address carries any capital
+      // letter passed every Firestore check and was still refused the photo.
       function isAdminReviewer() {
         return request.auth != null
           && request.auth.token.email_verified == true
           && firestore.exists(
-               /databases/(default)/documents/admins/$(request.auth.token.email));
+               /databases/(default)/documents/admins/$(request.auth.token.email.lower()));
       }
 
       allow read: if isSelf(uid) || isAdminReviewer();
