@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -200,12 +201,26 @@ class PresenceController extends Notifier<bool> {
   Future<Position> _firstFix() async {
     try {
       return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 20),
-        ),
+        locationSettings: kIsWeb
+            // Browsers have no "last known position" call, and geolocator_web
+            // throws UnsupportedError for getLastKnownPosition. The browser's
+            // equivalent is maximumAge: accept a position it already holds
+            // from the last few minutes rather than waiting for a fresh one.
+            ? WebSettings(
+                accuracy: LocationAccuracy.high,
+                maximumAge: const Duration(minutes: 5),
+                timeLimit: const Duration(seconds: 20),
+              )
+            : const LocationSettings(
+                accuracy: LocationAccuracy.high,
+                timeLimit: Duration(seconds: 20),
+              ),
       );
     } on TimeoutException {
+      // On web the cached position was already accepted above, so there is
+      // nothing left to fall back to — and calling getLastKnownPosition there
+      // would throw instead of reporting "no fix".
+      if (kIsWeb) throw const PresenceException(PresenceFailure.noFix);
       final last = await Geolocator.getLastKnownPosition();
       if (last != null) return last;
       throw const PresenceException(PresenceFailure.noFix);
