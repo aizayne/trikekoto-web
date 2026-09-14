@@ -1169,4 +1169,8 @@ class LFil extends L {
 
   @override
   String get reviewViewFirst => 'Buksan muna ang ID bago aprubahan.';
+
+  @override
+  String get idUploadRefused =>
+      'Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.';
 }

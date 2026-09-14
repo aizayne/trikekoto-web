@@ -1160,4 +1160,8 @@ class LEn extends L {
 
   @override
   String get reviewViewFirst => 'Open the ID before approving it.';
+
+  @override
+  String get idUploadRefused =>
+      'The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue.';
 }

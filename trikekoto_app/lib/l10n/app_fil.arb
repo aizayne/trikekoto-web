@@ -666,5 +666,6 @@
   },
   "idVerifiedBadge": "Beripikado ang ID",
   "idVerifiedOnceBody": "Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.",
-  "reviewViewFirst": "Buksan muna ang ID bago aprubahan."
+  "reviewViewFirst": "Buksan muna ang ID bago aprubahan.",
+  "idUploadRefused": "Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy."
 }

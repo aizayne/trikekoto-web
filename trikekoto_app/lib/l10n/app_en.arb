@@ -340,5 +340,6 @@
   "presenceIssue": "Details for support: {write} · {code}",
   "idVerifiedBadge": "ID verified",
   "idVerifiedOnceBody": "Your ID is confirmed. You never need to send it again, even after the photo is deleted.",
-  "reviewViewFirst": "Open the ID before approving it."
+  "reviewViewFirst": "Open the ID before approving it.",
+  "idUploadRefused": "The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue."
 }

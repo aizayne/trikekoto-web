@@ -11,6 +11,8 @@ import '../data/id_submission.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/theme_controller.dart';
+import '../../../core/ui/build_stamp.dart';
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 
 /// Submitting a government ID, for either role.
 ///
@@ -114,6 +116,21 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
       if (mounted) {
         showSnack(context, context.l.idSubmitted);
       }
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      // Storage refuses the photo for an account that is already verified.
+      // "User is not authorized to perform the desired action" tells the
+      // person holding the phone nothing, so say what it most likely means.
+      showSnack(
+        context,
+        e.code == 'unauthorized'
+            ? context.l.idUploadRefused
+            : describeError(e),
+        error: true,
+      );
+      // Ask again. If this account is verified, the screen switches to the
+      // verified view instead of leaving the form up to be refused twice.
+      ref.invalidate(myIdVerifiedProvider);
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
     } finally {
@@ -167,7 +184,12 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final mine = ref.watch(myIdSubmissionProvider);
-    final verified = ref.watch(myIdVerifiedProvider).value == true;
+    final verifiedState = ref.watch(myIdVerifiedProvider);
+    final verified = verifiedState.value == true;
+    // Unknown is not "no". Until the check answers, nothing is offered to fill
+    // in: a verified person shown the form fills it in, and the server then
+    // refuses the photo with a message that explains nothing.
+    final verifiedKnown = verifiedState.hasValue || verifiedState.hasError;
 
     return Scaffold(
       appBar: AppBar(
@@ -205,7 +227,7 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (!verified) ...[
+                  if (verifiedKnown && !verified) ...[
                     _gateNotice(context),
                     const Gap(AppSpacing.xl),
                   ],
@@ -216,14 +238,17 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
                     // submission after 90 days and a withdrawal deletes it at
                     // once; neither un-verifies anyone, so neither may put the
                     // upload form back in front of them.
-                    error: (_, _) =>
-                        verified ? _verifiedOnly(context) : _form(context),
+                    error: (_, _) => verified
+                        ? _verifiedOnly(context)
+                        : _formOrWait(context, verifiedKnown),
                     data: (sub) => sub != null
                         ? _status(context, sub)
                         : verified
                             ? _verifiedOnly(context)
-                            : _form(context),
+                            : _formOrWait(context, verifiedKnown),
                   ),
+                  const Gap(AppSpacing.xxl),
+                  const BuildStamp(),
                 ],
               ),
             ),
@@ -232,6 +257,14 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
       ),
     );
   }
+
+  /// The form, once it is known that this person needs it.
+  Widget _formOrWait(BuildContext context, bool known) => known
+      ? _form(context)
+      : const Padding(
+          padding: EdgeInsets.all(AppSpacing.xxl),
+          child: Center(child: CircularProgressIndicator()),
+        );
 
   // ── The gate ────────────────────────────────────────────────
   /// Says why this screen is in the way, before asking for anything.

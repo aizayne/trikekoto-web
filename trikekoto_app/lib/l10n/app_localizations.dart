@@ -2142,6 +2142,12 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Buksan muna ang ID bago aprubahan.'**
   String get reviewViewFirst;
+
+  /// No description provided for @idUploadRefused.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.'**
+  String get idUploadRefused;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

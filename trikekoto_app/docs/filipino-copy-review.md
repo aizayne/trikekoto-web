@@ -361,6 +361,8 @@ driver hits at a terminal.
       - *en:* ID verified
 - [ ] **`[new]`** Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.
       - *en:* Your ID is confirmed. You never need to send it again, even after the photo is deleted.
+- [ ] **`[new]`** Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.
+      - *en:* The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue.
 
 ## ID review (admin)
 
@@ -758,7 +760,7 @@ driver hits at a terminal.
 
 ---
 
-**341 strings.** 69 already shipped and field-tested, **272 new and unread
+**342 strings.** 69 already shipped and field-tested, **273 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate

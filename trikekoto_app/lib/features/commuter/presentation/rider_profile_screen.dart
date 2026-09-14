@@ -11,6 +11,7 @@ import '../application/commuter_location.dart';
 import 'profile_photo_picker.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../identity/application/id_verification_service.dart';
+import '../../../core/ui/build_stamp.dart';
 
 /// The rider's own profile — the only place a photo can be changed after
 /// sign-up.
@@ -316,6 +317,11 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                           label: Text(context.l.deleteAccount,
                               style: TextStyle(color: context.scheme.error)),
                         ),
+                        // The only screen a signed-in commuter can reach that
+                        // shows the build. Without it, "which version is on
+                        // this phone?" had no answer on the commuter side.
+                        const Gap(AppSpacing.lg),
+                        const BuildStamp(),
                       ],
                     ),
                   ),
