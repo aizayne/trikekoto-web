@@ -1,5 +1,8 @@
 # TrikeKoTo — Administrator Guide
 
+> **Superseded (2026-09-14) by `user-manual.md`.** Kept for history only. Much of this guide describes the app before accounts, ID verification, server-side dispatch and push notifications, and is no longer accurate.
+
+
 For the TODA officer who verifies drivers and keeps the service running.
 Written in English, since admin work involves the Firebase console.
 

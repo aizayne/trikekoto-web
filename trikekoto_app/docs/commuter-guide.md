@@ -1,5 +1,8 @@
 # TrikeKoTo — Guide para sa Pasahero
 
+> **Superseded (2026-09-14) by `user-manual.md`.** Kept for history only. Much of this guide describes the app before accounts, ID verification, server-side dispatch and push notifications, and is no longer accurate.
+
+
 *Commuter's guide. Bawat hakbang ay may Filipino at English.*
 
 ---
