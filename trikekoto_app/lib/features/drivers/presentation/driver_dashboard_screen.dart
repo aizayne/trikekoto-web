@@ -13,6 +13,7 @@ import '../application/driver_controllers.dart';
 import '../data/driver.dart';
 import 'driver_ride_map.dart';
 import '../../../core/ui/locale_controller.dart';
+import '../../../core/ui/build_stamp.dart';
 
 class DriverDashboardScreen extends ConsumerWidget {
   const DriverDashboardScreen({super.key});
@@ -76,6 +77,8 @@ class DriverDashboardScreen extends ConsumerWidget {
                 const Gap(AppSpacing.lg),
                 const _OffersSection(),
               ],
+              const Gap(AppSpacing.xl),
+              const BuildStamp(),
             ],
           );
         },
@@ -175,49 +178,83 @@ class _OnlineToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final online = ref.watch(presenceProvider);
+    final status = ref.watch(presenceStatusProvider);
+    final issue = status.issue;
 
     return Card(
-      child: SwitchListTile(
-        value: online,
-        title: Text(
-            online ? context.l.driverOnline : context.l.driverOffline),
-        subtitle: Text(
-          online
-              ? context.l.driverOnlineSubtitle
-              : context.l.driverOfflineSubtitle,
-        ),
-        onChanged: (want) async {
-          final controller = ref.read(presenceProvider.notifier);
-          try {
-            if (want) {
-              await controller.goOnline();
-            } else {
-              await controller.goOffline();
-            }
-          } on PresenceException catch (e) {
-            if (context.mounted) {
-              showSnack(
-                context,
-                switch (e.failure) {
-                  PresenceFailure.locationOff => context.l.presenceLocationOff,
-                  PresenceFailure.permissionDenied =>
-                    context.l.presenceLocationDenied,
-                  PresenceFailure.permissionBlocked =>
-                    context.l.presenceLocationBlocked,
-                  PresenceFailure.refused => context.l.presenceRefused,
-                },
-                error: true,
-              );
-            }
-          } catch (e) {
-            if (context.mounted) {
-              showSnack(context, describeError(e), error: true);
-            }
-          }
-        },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SwitchListTile(
+            value: online,
+            // A spinner where the driver is looking. Going online takes a few
+            // seconds, and with nothing on screen for that long drivers tapped
+            // again — which started a second attempt or undid the first.
+            secondary: status.connecting
+                ? const SizedBox(
+                    width: AppSpacing.iconSm,
+                    height: AppSpacing.iconSm,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            title: Text(status.connecting
+                ? context.l.presenceConnecting
+                : online
+                    ? context.l.driverOnline
+                    : context.l.driverOffline),
+            subtitle: Text(online
+                ? context.l.driverOnlineSubtitle
+                : context.l.driverOfflineSubtitle),
+            onChanged: status.connecting
+                ? null
+                : (want) async {
+                    final controller = ref.read(presenceProvider.notifier);
+                    try {
+                      if (want) {
+                        await controller.goOnline();
+                      } else {
+                        await controller.goOffline();
+                      }
+                    } on PresenceException catch (e) {
+                      if (context.mounted) {
+                        showSnack(context, _describe(context, e.failure),
+                            error: true);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        showSnack(context, describeError(e), error: true);
+                      }
+                    }
+                  },
+          ),
+          // Stays until the next attempt. A snack is gone in four seconds, and
+          // "it went back off" with nothing else was all a driver could report
+          // the first time this failed.
+          if (issue != null && !online)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+              child: Text(
+                context.l.presenceIssue(issue.write, issue.code),
+                style: context.text.bodySmall
+                    ?.copyWith(color: context.scheme.error),
+              ),
+            ),
+        ],
       ),
     );
   }
+
+  static String _describe(BuildContext context, PresenceFailure f) =>
+      switch (f) {
+        PresenceFailure.locationOff => context.l.presenceLocationOff,
+        PresenceFailure.permissionDenied => context.l.presenceLocationDenied,
+        PresenceFailure.permissionBlocked => context.l.presenceLocationBlocked,
+        PresenceFailure.noFix => context.l.presenceNoFix,
+        PresenceFailure.refused => context.l.presenceRefused,
+        PresenceFailure.writeFailed => context.l.presenceWriteFailed,
+      };
 }
 
 class _ActiveRideSection extends ConsumerWidget {

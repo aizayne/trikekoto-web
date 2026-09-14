@@ -649,5 +649,19 @@
   "presenceLocationOff": "Naka-off ang location ng phone. I-on ito para mag-online.",
   "presenceLocationDenied": "Kailangan ng location permission para mag-online.",
   "presenceLocationBlocked": "Naka-block ang location permission. I-allow ito sa Settings ng phone para mag-online.",
-  "presenceRefused": "Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo."
+  "presenceRefused": "Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.",
+  "presenceConnecting": "Kumokonekta…",
+  "presenceNoFix": "Hindi makakuha ng location. Pumunta sa lugar na nakikita ang langit, tapos subukan ulit.",
+  "presenceWriteFailed": "Hindi naisave sa server ang location mo. Tingnan ang connection, tapos subukan ulit.",
+  "presenceIssue": "Detalye para sa suporta: {write} · {code}",
+  "@presenceIssue": {
+    "placeholders": {
+      "write": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  }
 }

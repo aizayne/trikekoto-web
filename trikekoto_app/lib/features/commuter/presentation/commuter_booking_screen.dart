@@ -223,8 +223,9 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
             // Null for anonymous commuters, which is most of them.
             commuterPhotoUrl:
                 ref.read(myRiderProfileProvider).value?.profilePhotoUrl,
-            commuterFcmToken: await ref.read(fcmTokenProvider.future)
-                .catchError((_) => null),
+            // Bounded, like going online: a booking must never wait on push.
+            commuterFcmToken:
+                await tokenOrNull(ref.read(fcmTokenProvider.future)),
           ));
 
       await ref.read(dispatchControllerProvider).start(doc.id);

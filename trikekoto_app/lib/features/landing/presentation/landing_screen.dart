@@ -5,6 +5,7 @@ import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../core/ui/trike_icon.dart';
+import '../../../core/ui/build_stamp.dart';
 
 /// Both buttons only navigate, so this holds no state.
 ///
@@ -101,6 +102,8 @@ class LandingScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall,
                   ),
+                  const Gap(AppSpacing.md),
+                  const BuildStamp(),
                 ],
               ),
             ),

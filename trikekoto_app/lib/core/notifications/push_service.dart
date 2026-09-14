@@ -101,3 +101,19 @@ class PushData {
   static const typeRideArrived = 'ride_arrived';
   static const typeRideCompleted = 'ride_completed';
 }
+
+/// How long a caller waits for a push token before carrying on without one.
+const pushTokenWait = Duration(seconds: 6);
+
+/// A push token if one arrives in time, otherwise null — never a hang.
+///
+/// Push is never required: offers still reach an open app. So a token request
+/// that fails, or never finishes, may cost a few seconds and must not cost a
+/// driver their shift or a commuter their booking.
+Future<String?> tokenOrNull(
+  Future<String?> token, {
+  Duration limit = pushTokenWait,
+}) =>
+    token
+        .timeout(limit, onTimeout: () => null)
+        .catchError((Object _) => null);

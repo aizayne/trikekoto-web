@@ -1134,4 +1134,20 @@ class LEn extends L {
   @override
   String get presenceRefused =>
       'The server refused to put you online. Check that your ID has been approved.';
+
+  @override
+  String get presenceConnecting => 'Connecting…';
+
+  @override
+  String get presenceNoFix =>
+      'Cannot get a location fix. Move somewhere with a view of the sky, then try again.';
+
+  @override
+  String get presenceWriteFailed =>
+      'Your location could not be saved to the server. Check your connection, then try again.';
+
+  @override
+  String presenceIssue(String write, String code) {
+    return 'Details for support: $write · $code';
+  }
 }

@@ -53,6 +53,16 @@ class _FailingPresence extends PresenceController {
   Future<void> goOnline() async => throw PresenceException(failure);
 }
 
+/// A presence status fixed at build, to show what the driver sees mid-attempt
+/// or after a failure without driving the real controller.
+class _FixedStatus extends PresenceStatusController {
+  _FixedStatus(this.initial);
+  final PresenceStatus initial;
+
+  @override
+  PresenceStatus build() => initial;
+}
+
 /// Theme pinned to light, so widget tests never touch SharedPreferences.
 class _FixedTheme extends ThemeController {
   @override
@@ -65,6 +75,7 @@ Widget _harness({
   List<Ride> offers = const [],
   Ride? activeRide,
   PresenceController Function()? presence,
+  PresenceStatus? status,
 }) {
   return ProviderScope(
     overrides: [
@@ -74,6 +85,8 @@ Widget _harness({
       myActiveRideProvider.overrideWith((ref) => Stream.value(activeRide)),
       presenceProvider
           .overrideWith(presence ?? () => _FakePresence(online: online)),
+      if (status != null)
+        presenceStatusProvider.overrideWith(() => _FixedStatus(status)),
     ],
     child: MaterialApp(
       // Pinned rather than defaulted: these tests assert English
@@ -325,6 +338,43 @@ void main() {
         (tester) async {
       await tapOnline(tester, PresenceFailure.permissionBlocked);
       expect(find.textContaining('Settings'), findsOneWidget);
+    });
+  });
+
+  group('connecting and failure stay visible', () {
+    testWidgets('while connecting, the switch is disabled and says so',
+        (tester) async {
+      await tester.pumpWidget(_harness(
+        driver: _driver(DriverStatus.approved),
+        status: const PresenceStatus(connecting: true),
+      ));
+      // The spinner animates forever, so pump frames rather than settle.
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Connecting…'), findsOneWidget);
+      // Disabled, so a second gesture cannot start a second attempt or undo
+      // the first — which is what "it went back off" turned out to allow.
+      expect(
+          tester
+              .widget<SwitchListTile>(find.byType(SwitchListTile))
+              .onChanged,
+          isNull);
+    });
+
+    testWidgets('the failed write and its code stay under the switch',
+        (tester) async {
+      await tester.pumpWidget(_harness(
+        driver: _driver(DriverStatus.approved),
+        status: const PresenceStatus(
+          issue: PresenceIssue(write: 'presence', code: 'permission-denied'),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Details for support: presence · permission-denied'),
+          findsOneWidget);
+      expect(find.text('Offline'), findsOneWidget);
     });
   });
 }

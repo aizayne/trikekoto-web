@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:trikekoto_app/features/drivers/application/driver_controllers.dart';
+import 'package:trikekoto_app/core/notifications/push_service.dart';
 
 /// Going online must never wait on push.
 ///

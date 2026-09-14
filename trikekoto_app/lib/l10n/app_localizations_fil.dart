@@ -1143,4 +1143,20 @@ class LFil extends L {
   @override
   String get presenceRefused =>
       'Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.';
+
+  @override
+  String get presenceConnecting => 'Kumokonekta…';
+
+  @override
+  String get presenceNoFix =>
+      'Hindi makakuha ng location. Pumunta sa lugar na nakikita ang langit, tapos subukan ulit.';
+
+  @override
+  String get presenceWriteFailed =>
+      'Hindi naisave sa server ang location mo. Tingnan ang connection, tapos subukan ulit.';
+
+  @override
+  String presenceIssue(String write, String code) {
+    return 'Detalye para sa suporta: $write · $code';
+  }
 }

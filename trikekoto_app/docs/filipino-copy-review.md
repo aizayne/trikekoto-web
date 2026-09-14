@@ -741,10 +741,18 @@ driver hits at a terminal.
       - *en:* Location permission is blocked. Allow it in your phone's Settings to go online.
 - [ ] **`[new]`** Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.
       - *en:* The server refused to put you online. Check that your ID has been approved.
+- [ ] **`[new]`** Kumokonekta…
+      - *en:* Connecting…
+- [ ] **`[new]`** Hindi makakuha ng location. Pumunta sa lugar na nakikita ang langit, tapos subukan ulit.
+      - *en:* Cannot get a location fix. Move somewhere with a view of the sky, then try again.
+- [ ] **`[new]`** Hindi naisave sa server ang location mo. Tingnan ang connection, tapos subukan ulit.
+      - *en:* Your location could not be saved to the server. Check your connection, then try again.
+- [ ] **`[new]`** Detalye para sa suporta: {write} · {code}
+      - *en:* Details for support: {write} · {code}
 
 ---
 
-**334 strings.** 69 already shipped and field-tested, **265 new and unread
+**338 strings.** 69 already shipped and field-tested, **269 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate

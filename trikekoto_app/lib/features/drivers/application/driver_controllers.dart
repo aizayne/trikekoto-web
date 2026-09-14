@@ -49,19 +49,18 @@ final myActiveRideProvider = StreamProvider<Ride?>((ref) {
       .map((s) => s.docs.isEmpty ? null : s.docs.first.data());
 });
 
-/// Owns the driver's online presence and the GPS stream.
-///
-/// While online it writes `active_drivers/{email}`, which is what the greedy
-/// search reads. While on a ride it *also* mirrors position onto the ride
-/// document, which is how the commuter tracks the trike without ever being
-/// able to read the driver index.
 /// Why going online failed, for the dashboard to put into words.
 ///
 /// The controller has no BuildContext, so it names the failure and the screen
-/// chooses the language. The old `Exception('Location permission denied')`
-/// reached a Filipino-speaking driver in English, and a server refusal read
-/// as "You may not be approved yet" whatever the actual reason.
-enum PresenceFailure { locationOff, permissionDenied, permissionBlocked, refused }
+/// chooses the language.
+enum PresenceFailure {
+  locationOff,
+  permissionDenied,
+  permissionBlocked,
+  noFix,
+  refused,
+  writeFailed,
+}
 
 class PresenceException implements Exception {
   const PresenceException(this.failure);
@@ -72,48 +71,148 @@ class PresenceException implements Exception {
   String toString() => 'PresenceException(${failure.name})';
 }
 
-/// How long going online waits for a push token before carrying on without.
-const pushTokenWait = Duration(seconds: 6);
-
-/// A push token if one arrives in time, otherwise null — never a hang.
+/// Exactly which write failed, and the code the server gave.
 ///
-/// Push is not required to be online: offers still reach an open dashboard.
-/// So a token request that fails, or never finishes, may cost a driver a few
-/// seconds and must not cost them the shift.
-Future<String?> tokenOrNull(
-  Future<String?> token, {
-  Duration limit = pushTokenWait,
-}) =>
-    token
-        .timeout(limit, onTimeout: () => null)
-        .catchError((Object _) => null);
+/// Exists because "the switch turned on then went back off" was all a driver
+/// could report, and nothing on the phone said why. The dashboard keeps this
+/// on screen under the switch until the next attempt.
+class PresenceIssue {
+  const PresenceIssue({required this.write, required this.code});
 
+  /// `presence` (active_drivers) or `ride` (the live ride's driver location).
+  final String write;
+
+  /// The Firebase error code, e.g. `permission-denied` or `unavailable`.
+  final String code;
+
+  @override
+  String toString() => '$write: $code';
+}
+
+/// A failed write inside a ping, naming which write it was.
+class PresenceWriteException implements Exception {
+  const PresenceWriteException(this.issue, this.cause);
+
+  final PresenceIssue issue;
+  final Object cause;
+
+  @override
+  String toString() => 'PresenceWriteException($issue): $cause';
+}
+
+class PresenceStatus {
+  const PresenceStatus({this.connecting = false, this.issue});
+
+  /// Between the tap and the first accepted write. The switch is disabled and
+  /// shows a spinner for this long.
+  final bool connecting;
+
+  /// The last failure, kept until the next attempt or going offline.
+  final PresenceIssue? issue;
+}
+
+class PresenceStatusController extends Notifier<PresenceStatus> {
+  @override
+  PresenceStatus build() => const PresenceStatus();
+
+  void connecting() => state = const PresenceStatus(connecting: true);
+
+  /// Ends a connecting phase without discarding a failure recorded during it.
+  void settled() => state = PresenceStatus(issue: state.issue);
+
+  void failed(PresenceIssue issue) => state = PresenceStatus(issue: issue);
+
+  void clear() => state = const PresenceStatus();
+}
+
+final presenceStatusProvider =
+    NotifierProvider<PresenceStatusController, PresenceStatus>(
+        PresenceStatusController.new);
+
+/// Owns the driver's online presence and the GPS stream.
+///
+/// While online it writes `active_drivers/{email}`, which is what the greedy
+/// search reads. While on a ride it *also* mirrors position onto the ride
+/// document, which is how the commuter tracks the trike without ever being
+/// able to read the driver index.
 class PresenceController extends Notifier<bool> {
   StreamSubscription<Position>? _gpsSub;
+  StreamSubscription<String>? _tokenSub;
+
+  /// Filled in by push registration after going online, and kept current by
+  /// token refreshes. Read on every ping.
+  String? _pushToken;
 
   @override
   bool build() {
-    ref.onDispose(() => _gpsSub?.cancel());
+    ref.onDispose(() {
+      _gpsSub?.cancel();
+      _tokenSub?.cancel();
+    });
     return false;
   }
 
+  /// Goes online only once the server has accepted this driver's position.
+  ///
+  /// The order is the fix. The previous version turned the switch on, started
+  /// the GPS stream, and only then made its first write — so the stream's own
+  /// write could be refused first and switch the driver off, after which the
+  /// first write saw "offline", skipped itself, and the refusal was never
+  /// reported. A driver saw the switch come on and go back off, and nothing
+  /// else. Now: location, a position, one awaited write, and only then the
+  /// switch, the stream, and push.
   Future<void> goOnline() async {
-    // Throws a PresenceException the dashboard can put into words: phone
-    // location off, permission refused, or permission blocked for good.
-    await _ensureLocation();
+    final status = ref.read(presenceStatusProvider.notifier);
+    // One attempt at a time. Without this a second tap during the wait began
+    // a second attempt, and a slide after the switch flipped sent goOffline.
+    if (state || ref.read(presenceStatusProvider).connecting) return;
+    status.connecting();
 
-    // Registered on going online rather than at launch: the notification
-    // prompt then arrives attached to an action the driver just took, which
-    // is the moment it makes sense. Declining is not fatal — in-app offers
-    // still arrive while the dashboard is open.
-    //
-    // Bounded. This used to await the token with no limit, and catchError
-    // only handles a failure — a request that never finishes is not one. A
-    // stuck token request left the switch off with no message at all, the
-    // worst way to fail: the driver cannot tell that anything is wrong.
-    await tokenOrNull(ref.read(fcmTokenProvider.future));
+    try {
+      await _ensureLocation();
+      final pos = await _firstFix();
 
-    state = true;
+      // _publish will not write while offline, so the flag goes up first and
+      // comes straight back down if the write fails.
+      state = true;
+      try {
+        await _publish(pos);
+      } on PresenceWriteException catch (e) {
+        await _stop();
+        status.failed(e.issue);
+        throw PresenceException(e.issue.code == 'permission-denied'
+            ? PresenceFailure.refused
+            : PresenceFailure.writeFailed);
+      }
+
+      _startStream();
+      status.clear();
+      // Not awaited. Being online does not need push, so push must not be able
+      // to delay it or block it — waiting on the token is what hung the switch.
+      unawaited(_registerPush());
+    } finally {
+      if (ref.read(presenceStatusProvider).connecting) status.settled();
+    }
+  }
+
+  /// A position to go online with: a fresh fix, or the last one the phone
+  /// knows while a cold GPS warms up indoors.
+  Future<Position> _firstFix() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+    } on TimeoutException {
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) return last;
+      throw const PresenceException(PresenceFailure.noFix);
+    }
+  }
+
+  void _startStream() {
     _gpsSub?.cancel();
     _gpsSub = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
@@ -137,45 +236,46 @@ class PresenceController extends Notifier<bool> {
       onError: (Object e, StackTrace s) =>
           CrashReporter.recordNonFatal(e, s, context: 'gps stream'),
     );
+  }
 
-    // Publish once immediately so the driver appears without having to move,
-    // and so a refusal is found now — while the driver is looking at the
-    // switch — rather than never.
-    final Position pos;
-    try {
-      pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 20),
-        ),
-      );
-    } catch (_) {
-      // No fix yet: indoors, or a cold GPS. Stay online; the stream publishes
-      // as soon as a position arrives.
-      return;
-    }
+  /// Asks for notification permission and a token, after the driver is
+  /// already online, and attaches the token to presence when it arrives.
+  ///
+  /// Talks to the push service directly rather than through fcmTokenProvider:
+  /// a one-off read of that provider is not guaranteed to deliver, and this
+  /// path must not depend on one.
+  Future<void> _registerPush() async {
+    final push = ref.read(pushServiceProvider);
+    final token = await tokenOrNull(push.registerForOffers(),
+        limit: const Duration(seconds: 30));
+    if (token == null || !state) return;
+    _pushToken = token;
+    _tokenSub?.cancel();
+    _tokenSub = push.tokenRefreshes.listen((t) => _pushToken = t);
 
+    final email = ref.read(driverEmailProvider);
+    if (email.isEmpty) return;
     try {
-      await _publish(pos);
-    } on FirebaseException catch (e) {
-      // Anything but a refusal is transient, and the stream retries it.
-      if (e.code != 'permission-denied') return;
-      // The server refused presence — for a driver, almost always an ID not
-      // yet approved. Leaving the switch on over a refusal would show a
-      // driver as on shift whom no commuter can ever be offered.
-      await _stop();
-      throw const PresenceException(PresenceFailure.refused);
+      // updatedAt rides along: the presence rule validates the whole merged
+      // document, and it requires updatedAt to equal request.time.
+      await ref.read(refsProvider).activeDriver(email).update({
+        'fcmToken': token,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e, s) {
+      await CrashReporter.recordNonFatal(e, s, context: 'presence push token');
     }
   }
 
-  /// A ping after the driver is already online. Nobody is watching the switch
-  /// by then, so a refusal turns it off — visibly offline beats invisibly
-  /// offline — and anything transient simply waits for the next ping.
+  /// A ping after the driver is online. A refusal turns the switch off and
+  /// leaves the reason on screen under it; anything transient waits for the
+  /// next ping.
   Future<void> _onPingFailed(Object e, StackTrace s) async {
-    if (e is FirebaseException && e.code == 'permission-denied') {
-      await _stop();
-    }
     await CrashReporter.recordNonFatal(e, s, context: 'presence ping');
+    if (e is PresenceWriteException && e.issue.code == 'permission-denied') {
+      await _stop();
+      ref.read(presenceStatusProvider.notifier).failed(e.issue);
+    }
   }
 
   /// Offline without deleting presence: for when the write that failed was the
@@ -183,13 +283,14 @@ class PresenceController extends Notifier<bool> {
   Future<void> _stop() async {
     await _gpsSub?.cancel();
     _gpsSub = null;
+    await _tokenSub?.cancel();
+    _tokenSub = null;
     state = false;
   }
 
   Future<void> goOffline() async {
-    await _gpsSub?.cancel();
-    _gpsSub = null;
-    state = false;
+    ref.read(presenceStatusProvider.notifier).clear();
+    await _stop();
 
     final email = ref.read(driverEmailProvider);
     if (email.isEmpty) return;
@@ -206,32 +307,42 @@ class PresenceController extends Notifier<bool> {
 
     final activeRide = ref.read(myActiveRideProvider).value;
 
-    await ref
-        .read(firestoreProvider)
-        .collection(FsCollections.activeDrivers)
-        .doc(email)
-        .set(ActiveDriver.presencePayload(
-          email: email,
-          isOnline: true,
-          availability: activeRide == null
-              ? DriverAvailability.idle
-              : DriverAvailability.onRide,
-          latitude: pos.latitude,
-          longitude: pos.longitude,
-          geohash: encodeGeohash(pos.latitude, pos.longitude),
-          accuracy: pos.accuracy,
-          heading: pos.heading,
-          speed: pos.speed,
-          currentRideId: activeRide?.id,
-          // Carried on every ping so a rotated token self-heals on the next
-          // GPS update rather than leaving the driver unreachable.
-          fcmToken: ref.read(fcmTokenProvider).value,
-        ));
+    try {
+      await ref
+          .read(firestoreProvider)
+          .collection(FsCollections.activeDrivers)
+          .doc(email)
+          .set(ActiveDriver.presencePayload(
+            email: email,
+            isOnline: true,
+            availability: activeRide == null
+                ? DriverAvailability.idle
+                : DriverAvailability.onRide,
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+            geohash: encodeGeohash(pos.latitude, pos.longitude),
+            accuracy: pos.accuracy,
+            heading: pos.heading,
+            speed: pos.speed,
+            currentRideId: activeRide?.id,
+            // Carried on every ping so a rotated token self-heals on the next
+            // GPS update rather than leaving the driver unreachable.
+            fcmToken: _pushToken,
+          ));
+    } on FirebaseException catch (e) {
+      throw PresenceWriteException(
+          PresenceIssue(write: 'presence', code: e.code), e);
+    }
 
     if (activeRide != null && activeRide.status.isLive) {
-      await ref.read(refsProvider).ride(activeRide.id).update(
-            RideWrites.locationPing(GeoPoint(pos.latitude, pos.longitude)),
-          );
+      try {
+        await ref.read(refsProvider).ride(activeRide.id).update(
+              RideWrites.locationPing(GeoPoint(pos.latitude, pos.longitude)),
+            );
+      } on FirebaseException catch (e) {
+        throw PresenceWriteException(
+            PresenceIssue(write: 'ride', code: e.code), e);
+      }
     }
   }
 

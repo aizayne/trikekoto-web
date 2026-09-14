@@ -2100,6 +2100,30 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Hindi pinayagan ng server na mag-online. Tiyaking naaprubahan ang ID mo.'**
   String get presenceRefused;
+
+  /// No description provided for @presenceConnecting.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kumokonekta…'**
+  String get presenceConnecting;
+
+  /// No description provided for @presenceNoFix.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi makakuha ng location. Pumunta sa lugar na nakikita ang langit, tapos subukan ulit.'**
+  String get presenceNoFix;
+
+  /// No description provided for @presenceWriteFailed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi naisave sa server ang location mo. Tingnan ang connection, tapos subukan ulit.'**
+  String get presenceWriteFailed;
+
+  /// No description provided for @presenceIssue.
+  ///
+  /// In fil, this message translates to:
+  /// **'Detalye para sa suporta: {write} · {code}'**
+  String presenceIssue(String write, String code);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

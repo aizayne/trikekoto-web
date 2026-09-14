@@ -333,5 +333,9 @@
   "presenceLocationOff": "Your phone's location is off. Turn it on to go online.",
   "presenceLocationDenied": "Location permission is needed to go online.",
   "presenceLocationBlocked": "Location permission is blocked. Allow it in your phone's Settings to go online.",
-  "presenceRefused": "The server refused to put you online. Check that your ID has been approved."
+  "presenceRefused": "The server refused to put you online. Check that your ID has been approved.",
+  "presenceConnecting": "Connecting…",
+  "presenceNoFix": "Cannot get a location fix. Move somewhere with a view of the sky, then try again.",
+  "presenceWriteFailed": "Your location could not be saved to the server. Check your connection, then try again.",
+  "presenceIssue": "Details for support: {write} · {code}"
 }
