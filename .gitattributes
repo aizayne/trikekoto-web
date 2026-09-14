@@ -1,0 +1,9 @@
+# Binary deliverables: never let core.autocrlf rewrite line endings inside them.
+# A PDF is ASCII enough for git to guess "text", and CRLF on checkout breaks
+# its byte offsets.
+*.pdf binary
+*.pptx binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.apk binary
