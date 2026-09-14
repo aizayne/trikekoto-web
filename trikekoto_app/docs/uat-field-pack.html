@@ -1,0 +1,535 @@
+<title>TrikeKoTo UAT Field Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<!--
+  Source of truth for the printable UAT pack (roadmap step 78).
+  The method behind it is docs/uat-kit.md; this is only the paper a
+  facilitator carries. Keep the two in step: a task or consent line changed
+  in one must change in the other. Published as an artifact from this file.
+-->
+
+<style>
+:root {
+  --paper:    #EFF3F7;
+  --sheet:    #FFFFFF;
+  --ink:      #101A2C;
+  --graphite: #5B6675;
+  --faint:    #8894A3;
+  --rule:     #CBD5E0;
+  --hair:     #E2E8F0;
+  --accent:   #B45309;
+  --blue:     #1D4ED8;
+  --tint:     #F5E9DA;
+
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --display: "Poppins", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0C131B; --sheet: #131C27; --ink: #E4EAF0; --graphite: #97A5B4;
+    --faint: #6B7A8A; --rule: #2A3845; --hair: #1D2833;
+    --accent: #F5A623; --blue: #7FB9E5; --tint: #2A2013;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0C131B; --sheet: #131C27; --ink: #E4EAF0; --graphite: #97A5B4;
+  --faint: #6B7A8A; --rule: #2A3845; --hair: #1D2833;
+  --accent: #F5A623; --blue: #7FB9E5; --tint: #2A2013;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  margin: 0; padding: 0 clamp(12px,3vw,32px) 80px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; }
+
+.intro { padding: clamp(30px,5vw,54px) 0 20px; }
+.eyebrow {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.75rem,4.4vw,2.5rem); line-height: 1.08;
+  letter-spacing: -.025em; margin: 0 0 14px; text-wrap: balance;
+}
+.standfirst { color: var(--graphite); max-width: 62ch; margin: 0 0 20px; }
+.bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+button.act {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .07em;
+  text-transform: uppercase; color: #fff; background: var(--accent);
+  border: 1px solid var(--accent); border-radius: 3px;
+  padding: 9px 15px; cursor: pointer;
+}
+button.act:hover { filter: brightness(1.08); }
+button.act:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.hint { font-size: .88rem; color: var(--graphite); }
+
+.contents {
+  margin: 26px 0 0; padding: 18px 20px;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px;
+}
+.contents h2 {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint); margin: 0 0 12px; font-weight: 500;
+}
+.contents ol { margin: 0; padding-left: 20px; }
+.contents li { margin-bottom: 7px; }
+.contents b { font-weight: 500; }
+.contents .qty { font-family: var(--mono); font-size: .74rem; color: var(--accent); }
+
+.sheet {
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px;
+  padding: clamp(22px,4vw,40px); margin: 22px 0;
+}
+.sheet > header { border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 20px; }
+.sheet h2 {
+  font-family: var(--display); font-weight: 600; font-size: 1.3rem;
+  letter-spacing: -.018em; margin: 0 0 3px;
+}
+.sheet .kicker {
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 8px;
+}
+.sheet .sub { color: var(--graphite); font-size: .92rem; margin: 0; }
+
+h3 { font-family: var(--display); font-weight: 500; font-size: 1rem; margin: 26px 0 10px; }
+p { margin: 0 0 13px; }
+
+.fields { display: flex; flex-wrap: wrap; gap: 14px 26px; margin: 0 0 20px; }
+.fld { flex: 1 1 170px; display: flex; flex-direction: column; gap: 3px; }
+.fld .lab {
+  font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--faint);
+}
+.fld .line { border-bottom: 1px solid var(--rule); height: 26px; }
+
+.lines { margin: 8px 0 18px; }
+.lines .line { border-bottom: 1px solid var(--hair); height: 30px; }
+.lines .line:last-child { border-bottom-color: var(--rule); }
+
+.box {
+  display: inline-block; width: 15px; height: 15px;
+  border: 1.5px solid var(--graphite); border-radius: 2px;
+  vertical-align: -2px; margin-right: 7px; flex: none;
+}
+ul.checks { list-style: none; margin: 0 0 8px; padding: 0; }
+ul.checks li { display: flex; gap: 4px; align-items: flex-start; margin-bottom: 9px; }
+ul.checks li .box { margin-top: 4px; }
+
+ol.rules { margin: 0; padding-left: 0; list-style: none; counter-reset: r; }
+ol.rules li { counter-increment: r; position: relative; padding-left: 34px; margin-bottom: 15px; }
+ol.rules li::before {
+  content: counter(r); position: absolute; left: 0; top: 1px;
+  font-family: var(--mono); font-size: .78rem; font-weight: 600; color: var(--accent);
+  width: 22px; height: 22px; border: 1px solid var(--accent);
+  border-radius: 50%; display: grid; place-items: center;
+}
+ol.rules b { font-weight: 600; }
+
+.say {
+  border-left: 3px solid var(--accent); background: var(--tint);
+  padding: 14px 18px; margin: 16px 0; border-radius: 0 3px 3px 0;
+}
+.say .lab {
+  font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 6px;
+}
+.say p { margin: 0; font-size: 1.02rem; }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th {
+  text-align: left; font-family: var(--mono); font-weight: 500;
+  font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--faint); border-bottom: 1.5px solid var(--ink);
+  padding: 0 8px 7px 0; vertical-align: bottom;
+}
+td { border-bottom: 1px solid var(--hair); padding: 9px 8px 9px 0; vertical-align: top; }
+tbody tr:last-child td { border-bottom: 1px solid var(--rule); }
+td.n, th.n { font-family: var(--mono); font-size: .78rem; color: var(--accent); width: 26px; padding-right: 10px; }
+td.tick { text-align: center; width: 46px; }
+td.write { width: 30%; }
+.blank { display: block; border-bottom: 1px solid var(--hair); height: 21px; }
+.cue { color: var(--faint); font-style: italic; font-size: .86rem; }
+
+.sus td.item { padding-right: 14px; }
+.sus td.fil { color: var(--graphite); font-size: .86rem; }
+.sus td.sc { white-space: nowrap; width: 128px; text-align: right; }
+.sus td.sc span {
+  display: inline-block; width: 19px; height: 19px; margin-left: 3px;
+  border: 1px solid var(--graphite); border-radius: 2px;
+  font-family: var(--mono); font-size: .6rem; color: var(--faint);
+  text-align: center; line-height: 18px;
+}
+
+.scoring { background: var(--tint); border-radius: 3px; padding: 14px 18px; margin-top: 18px; font-size: .9rem; }
+.scoring p { margin: 0 0 7px; }
+.scoring p:last-child { margin: 0; }
+code {
+  font-family: var(--mono); font-size: .86em;
+  background: color-mix(in srgb, var(--ink) 7%, transparent); padding: .08em .34em; border-radius: 3px;
+}
+
+.warn { border-left: 3px solid var(--accent); padding: 12px 16px; font-size: .88rem; color: var(--graphite); margin: 18px 0 0; }
+.warn b { color: var(--ink); }
+
+.slips { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.slip { border: 1.5px dashed var(--graphite); border-radius: 4px; padding: 14px 16px; }
+.slip .who { font-family: var(--display); font-weight: 600; margin: 0 0 8px; }
+.slip dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 0; font-size: .88rem; }
+.slip dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding-top: 3px; }
+.slip dd { margin: 0; border-bottom: 1px solid var(--hair); min-height: 21px; font-family: var(--mono); font-size: .82rem; }
+
+@media print {
+  @page { margin: 13mm; }
+  :root {
+    --paper: #fff; --sheet: #fff; --ink: #000; --graphite: #333;
+    --faint: #555; --rule: #000; --hair: #999;
+    --accent: #000; --blue: #000; --tint: #fff;
+  }
+  body { background: #fff; font-size: 10.5pt; padding: 0; }
+  .intro { display: none; }
+  .sheet { border: none; padding: 0; margin: 0; break-after: page; page-break-after: always; }
+  .sheet:last-child { break-after: auto; page-break-after: auto; }
+  .sheet > header { border-bottom: 1.5pt solid #000; }
+  .say { background: #fff; border-left: 2pt solid #000; }
+  .scoring { background: #fff; border: 1pt solid #000; }
+  .lines .line, .fld .line, .blank, .slip dd { border-bottom: .5pt solid #666; }
+  table, ol.rules li, tr, .slip { break-inside: avoid; }
+  code { background: #fff; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<section class="intro">
+  <p class="eyebrow">Roadmap step 78 · print pack · app version 1.0.5 (6)</p>
+  <h1>TrikeKoTo UAT Field Pack</h1>
+  <p class="standfirst">
+    Eight sheets to print and take to the terminal. Each starts on its own page.
+    The full method — recruitment, pass criteria, reporting — is in
+    <code>docs/uat-kit.md</code>; this is only the paper you carry.
+  </p>
+  <div class="bar">
+    <button class="act" onclick="window.print()">Print the pack</button>
+    <span class="hint">Print to PDF first if you want to check the page breaks.</span>
+  </div>
+
+  <div class="contents">
+    <h2>What to print</h2>
+    <ol>
+      <li><b>Facilitator card</b> — <span class="qty">1 copy</span>, keep it beside you</li>
+      <li><b>Setup and cleanup</b> — <span class="qty">1 per session day</span></li>
+      <li><b>Pahintulot sa paglahok</b> — <span class="qty">1 per participant</span> (10)</li>
+      <li><b>Driver test details</b> — <span class="qty">1 page</span>, cut into slips</li>
+      <li><b>Observation — Pasahero</b> — <span class="qty">1 per commuter</span> (5)</li>
+      <li><b>Observation — Driver</b> — <span class="qty">1 per driver</span> (5)</li>
+      <li><b>SUS questionnaire</b> — <span class="qty">1 per participant</span> (10)</li>
+      <li><b>Debrief</b> — <span class="qty">1 per participant</span> (10)</li>
+    </ol>
+  </div>
+
+  <div class="warn">
+    <b>Replaces the August pack.</b> Destroy any printed copy of the old consent form: it said
+    <i>walang panganib</i> and mentioned neither the phone number the app requires nor the ID it
+    photographs. This pack also corrects what the September kit still got wrong — test rides cannot
+    be deleted, the ID step cannot be skipped, and driver accounts are not deleted from inside the app.
+  </div>
+</section>
+
+<!-- ═══ 1. FACILITATOR CARD ═══════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 1 · keep beside you</p>
+    <h2>Facilitator card</h2>
+    <p class="sub">These six rules are the method. Everything else is paperwork.</p>
+  </header>
+
+  <ol class="rules">
+    <li><b>Give the goal, never the steps.</b> “Mag-book po kayo ng tricycle papuntang palengke” — not “pindutin ninyo ang pickup, tapos…”. The moment you describe the interface, you stop learning whether it explains itself.</li>
+    <li><b>Count to ten before helping.</b> Silence is uncomfortable and it is where the findings are. Most facilitators rescue far too early.</li>
+    <li><b>Never say “just” or “simply”.</b> Both tell a struggling participant that what they cannot do is obvious.</li>
+    <li><b>Ask what they expected, not why they failed.</b> “Ano po ang inaasahan ninyong mangyari?” beats “Bakit po hindi ninyo napindot?”</li>
+    <li><b>Record what they did, not what they say they would do.</b> Stated intent is close to worthless; observed behaviour is the data.</li>
+    <li><b>Say out loud, more than once, that you are testing the app.</b> A participant who thinks they are being judged stops trying things.</li>
+  </ol>
+
+  <div class="say">
+    <span class="lab">Open every session with this</span>
+    <p>“Ang app po ang sinusubukan natin, hindi kayo. Kung may hindi kayo maintindihan, problema po iyon ng app at iyon mismo ang gusto kong malaman. Sabihin ninyo po nang malakas kung ano ang iniisip ninyo habang ginagawa.”</p>
+  </div>
+
+  <h3>Write quotes, not summaries</h3>
+  <p>“Hindi ko alam kung saan ko ilalagay” is evidence. “Confused about the pickup field” is your interpretation of evidence — and by the time you write the report, you will not remember which was which.</p>
+</section>
+
+<!-- ═══ 2. SETUP AND CLEANUP ══════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 2 · isa bawat araw ng session</p>
+    <h2>Setup and cleanup</h2>
+    <p class="sub">Every booking needs a second person on the other role’s phone. Without the helper phones, tasks 5–9 cannot happen.</p>
+  </header>
+
+  <div class="fields">
+    <div class="fld"><span class="lab">Petsa</span><span class="line"></span></div>
+    <div class="fld"><span class="lab">Lugar</span><span class="line"></span></div>
+    <div class="fld"><span class="lab">Facilitator</span><span class="line"></span></div>
+  </div>
+
+  <h3>Before the first session</h3>
+  <ul class="checks">
+    <li><span class="box"></span><span><b>Latest app on every phone you bring</b>, installed over mobile data. The bottom of the landing screen must read <code>TrikeKoTo 1.0.5 (6)</code> or newer.</span></li>
+    <li><span class="box"></span><span><b>Admin phone</b> signed in as an administrator, email already confirmed. Open <b>ID review</b>. Remember: <b>Aprubahan</b> stays disabled until you tap <b>Tingnan ang ID</b>.</span></li>
+    <li><span class="box"></span><span><b>Helper driver phone</b> (for commuter sessions): a verified, approved test driver, switched <b>Online</b> near the venue.</span></li>
+    <li><span class="box"></span><span><b>Helper commuter phone</b> (for driver sessions): a verified test commuter, ready to book a pickup near the venue.</span></li>
+    <li><span class="box"></span><span><b>Dispatch → Tumatanggap ng booking</b> is on.</span></li>
+    <li><span class="box"></span><span><b>Dummy ID cards</b>, one per participant — a blank card with a made-up name and number. Never a real ID.</span></li>
+    <li><span class="box"></span><span><b>Driver test-detail slips</b> filled in (Sheet 4).</span></li>
+    <li><span class="box"></span><span>Printed consent forms, observation sheets, SUS and debrief sheets.</span></li>
+  </ul>
+
+  <h3>After each participant</h3>
+  <ul class="checks">
+    <li><span class="box"></span><span><b>Commuter:</b> in front of them, <b>Profile → Burahin ang account</b>. This deletes their name, number, photo, the dummy-ID photo and the verification. Their test rides stay, with name and number removed.</span></li>
+    <li><span class="box"></span><span><b>Driver:</b> the app has no delete button for drivers. Note the test email below; the project maintainer deletes the account from the Firebase console the same day (Authentication user; Firestore <code>drivers</code>, <code>active_drivers</code>, <code>id_submissions</code>, <code>id_verified</code>; Storage <code>ids/…/card</code>). Test rides stay, carrying only the test details.</span></li>
+    <li><span class="box"></span><span>Offer to uninstall the app from their phone.</span></li>
+  </ul>
+
+  <h3>Cleanup log</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="n">#</th><th>Participant ID</th><th>Role</th><th>Test email (drivers)</th><th>Deleted by</th><th>Time</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
+      <tr><td class="n">2</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
+      <tr><td class="n">3</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
+      <tr><td class="n">4</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
+      <tr><td class="n">5</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ═══ 3. CONSENT ════════════════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 3 · isa bawat kalahok</p>
+    <h2>Pahintulot sa Paglahok</h2>
+    <p class="sub">Basahin ito nang malakas. Huwag na lang iabot — may mga kalahok na ayaw aminin na mas gusto nilang hindi na basahin.</p>
+  </header>
+
+  <p>Ginagawa ko po itong pag-aaral para sa aking thesis tungkol sa <b>TrikeKoTo</b>, isang app para sa pag-book ng tricycle.</p>
+
+  <ul class="checks">
+    <li><span class="box"></span><span><b>Ang app po ang sinusubukan, hindi kayo.</b> Walang mali o tamang sagot.</span></li>
+    <li><span class="box"></span><span>Kusang-loob po ang paglahok. Puwede kayong huminto anumang oras, at hindi ninyo kailangang magpaliwanag.</span></li>
+    <li><span class="box"></span><span>Isusulat ko po ang mga napansin ko habang ginagamit ninyo ang app.</span></li>
+    <li><span class="box"></span><span>Hindi po ilalagay ang inyong pangalan sa report. Gagamit po ako ng tulad ng “Driver 1” o “Pasahero 3”.</span></li>
+    <li><span class="box"></span><span>Walang bayad sa paglahok.</span></li>
+  </ul>
+
+  <h3>Mga impormasyong hihingin ng app</h3>
+  <ul class="checks">
+    <li><span class="box"></span><span><b>Pasahero — number ninyo.</b> Magpapadala po ang app ng code sa SMS sa inyong mobile number. Libre po ang code.</span></li>
+    <li><span class="box"></span><span><b>Driver — test na detalye.</b> Hindi po kailangan ang inyong email, plate number o mobile number. Bibigyan ko po kayo ng test na detalye na ilalagay sa app.</span></li>
+    <li><span class="box"></span><span><b>Lokasyon.</b> Hihingi po ng permiso ang telepono para sa lokasyon habang ginagamit ang app. Kapag naka-Online ang driver, nakikita ng malapit na pasahero ang kanyang lokasyon.</span></li>
+    <li><span class="box"></span><span><b>Litrato ng ID.</b> Hindi po magamit ang app nang walang ID. <b>Huwag pong gamitin ang totoong ID ninyo</b> — bibigyan ko po kayo ng pekeng card. Ang proseso po ang sinusubukan, hindi kung sino kayo. Kung ayaw ninyong magpadala ng litrato, kahit ng pekeng card, puwede pong huminto dito.</span></li>
+  </ul>
+
+  <h3>Pagkatapos ng session</h3>
+  <ul class="checks">
+    <li><span class="box"></span><span><b>Buburahin po ang account ninyo sa araw na ito</b> — ang pangalan, number, litrato, at ang litrato ng pekeng ID.</span></li>
+    <li><span class="box"></span><span><b>Ang mga biyahe ng pagsubok ay hindi po mabubura</b>, dahil record ng sistema ang mga ito. Pasahero: aalisin po ang inyong pangalan at number sa mga ito. Driver: test na detalye lang po ang nasa mga ito.</span></li>
+  </ul>
+
+  <h3>Kung kukuha ng litrato o recording</h3>
+  <p><span class="box"></span> Pumapayag akong kunan ng litrato / i-record ang boses. <i>(Puwedeng tanggihan ito at makilahok pa rin.)</i></p>
+
+  <p style="margin-top:18px">Naiintindihan ko po ang nasa itaas at pumapayag akong lumahok.</p>
+
+  <div class="fields" style="margin-top:22px">
+    <div class="fld"><span class="lab">Pangalan</span><span class="line"></span></div>
+    <div class="fld"><span class="lab">Lagda</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 130px"><span class="lab">Petsa</span><span class="line"></span></div>
+  </div>
+  <div class="fields">
+    <div class="fld"><span class="lab">Facilitator</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 130px"><span class="lab">Participant ID</span><span class="line"></span></div>
+  </div>
+</section>
+
+<!-- ═══ 4. DRIVER TEST DETAILS ════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 4 · gupitin</p>
+    <h2>Driver test details</h2>
+    <p class="sub">Fill in before the session and hand one slip to each driver for task 1. Test rides can never be deleted, so a driver’s real email, plate and number must never go into them.</p>
+  </header>
+
+  <div class="slips">
+    <div class="slip"><p class="who">Driver 1</p><dl><dt>Pangalan</dt><dd>Driver</dd><dt>Apelyido</dt><dd>Uno</dd><dt>Mobile</dt><dd></dd><dt>Plate</dt><dd>UAT 001</dd><dt>TODA</dt><dd></dd><dt>Email</dt><dd>uat.driver1@trikekoto.test</dd><dt>Password</dt><dd></dd></dl></div>
+    <div class="slip"><p class="who">Driver 2</p><dl><dt>Pangalan</dt><dd>Driver</dd><dt>Apelyido</dt><dd>Dos</dd><dt>Mobile</dt><dd></dd><dt>Plate</dt><dd>UAT 002</dd><dt>TODA</dt><dd></dd><dt>Email</dt><dd>uat.driver2@trikekoto.test</dd><dt>Password</dt><dd></dd></dl></div>
+    <div class="slip"><p class="who">Driver 3</p><dl><dt>Pangalan</dt><dd>Driver</dd><dt>Apelyido</dt><dd>Tres</dd><dt>Mobile</dt><dd></dd><dt>Plate</dt><dd>UAT 003</dd><dt>TODA</dt><dd></dd><dt>Email</dt><dd>uat.driver3@trikekoto.test</dd><dt>Password</dt><dd></dd></dl></div>
+    <div class="slip"><p class="who">Driver 4</p><dl><dt>Pangalan</dt><dd>Driver</dd><dt>Apelyido</dt><dd>Kuwatro</dd><dt>Mobile</dt><dd></dd><dt>Plate</dt><dd>UAT 004</dd><dt>TODA</dt><dd></dd><dt>Email</dt><dd>uat.driver4@trikekoto.test</dd><dt>Password</dt><dd></dd></dl></div>
+    <div class="slip"><p class="who">Driver 5</p><dl><dt>Pangalan</dt><dd>Driver</dd><dt>Apelyido</dt><dd>Singko</dd><dt>Mobile</dt><dd></dd><dt>Plate</dt><dd>UAT 005</dd><dt>TODA</dt><dd></dd><dt>Email</dt><dd>uat.driver5@trikekoto.test</dd><dt>Password</dt><dd></dd></dl></div>
+  </div>
+
+  <div class="warn"><b>Mobile:</b> use the facilitator’s helper-phone number, so a commuter’s “call the driver” reaches you, not a stranger. <b>Password:</b> at least 6 characters.</div>
+</section>
+
+<!-- ═══ 5. COMMUTER OBSERVATION ═══════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 5 · isa bawat pasahero</p>
+    <h2>Observation — Pasahero</h2>
+    <p class="sub">Say the task, then stop talking. Italic lines are what you do on the other phones — never read them aloud.</p>
+  </header>
+
+  <div class="fields">
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Participant</span><span class="line"></span></div>
+    <div class="fld"><span class="lab">Handset / Android</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 120px"><span class="lab">Data / Wifi</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Petsa</span><span class="line"></span></div>
+  </div>
+
+  <div class="scroll"><table>
+    <thead><tr>
+      <th class="n">#</th><th>Sabihin ito</th>
+      <th class="tick">Mag-<br>isa</th><th class="tick">May<br>tulong</th><th class="tick">Hindi<br>natapos</th>
+      <th class="tick">Oras</th><th class="write">Saan natigil / eksaktong sinabi</th>
+    </tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>“Buksan ninyo po ang app at tingnan muna. Ano sa palagay ninyo ang magagawa dito?”<br><span class="cue">First impression — hindi task</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">2</td><td>“Gusto ninyong mag-book. Simulan ninyo po.”<br><span class="cue">Done at the ID screen. TIME THIS — sign-in, SMS code, name.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">3</td><td><span class="cue">(Iabot ang pekeng card.)</span> “Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala.”<br><span class="cue">Watch the consent tick: read / ticked blind / asked.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">4</td><td><span class="cue">(Admin phone: Tingnan ang ID → Aprubahan. Say nothing.)</span> “May nagbago po ba?”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">5</td><td>“Mag-book po kayo ng tricycle papuntang ______________.”<br><span class="cue">Did they notice the pickup filled itself in?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">6</td><td><span class="cue">(Helper driver phone: Tanggapin.)</span> “Gusto ninyong malaman kung nasaan na ang driver.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">7</td><td>“Nagbago ang isip ninyo. Ayaw ninyo nang sumakay.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">8</td><td><span class="cue">(Have them book again. Helper driver phone: Tanggapin → Simulan → Tapusin.)</span> “Tapos na po ang biyahe ninyo. May gusto pa po kayong gawin?”<br><span class="cue">Do not mention the rating.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">9</td><td>“Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?”<br><span class="cue">Do not help. Then delete it together for real (Sheet 2).</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Eksaktong sinabi (quote, huwag i-paraphrase)</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div></div>
+</section>
+
+<!-- ═══ 6. DRIVER OBSERVATION ═════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 6 · isa bawat driver</p>
+    <h2>Observation — Driver</h2>
+    <p class="sub">Tasks 4 and 9 matter most. Do not prompt on either. Italic lines are what you do on the other phones.</p>
+  </header>
+
+  <div class="fields">
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Participant</span><span class="line"></span></div>
+    <div class="fld"><span class="lab">Handset / Android</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 150px"><span class="lab">Test email</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Petsa</span><span class="line"></span></div>
+  </div>
+
+  <div class="scroll"><table>
+    <thead><tr>
+      <th class="n">#</th><th>Sabihin ito</th>
+      <th class="tick">Mag-<br>isa</th><th class="tick">May<br>tulong</th><th class="tick">Hindi<br>natapos</th>
+      <th class="tick">Oras</th><th class="write">Saan natigil / eksaktong sinabi</th>
+    </tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><span class="cue">(Iabot ang test-detail slip.)</span> “Gumawa po kayo ng account bilang driver gamit ang mga detalyeng ito.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">2</td><td><span class="cue">(Iabot ang pekeng card.)</span> “Hihingin po ng chapter ang ID ninyo bago gamitin ang app. Subukan ninyo pong ipadala.”<br><span class="cue">Note any hesitation.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">3</td><td>“Ano po ang nakikita ninyo ngayon? Puwede na po ba kayong tumanggap ng pasahero?”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">4</td><td><span class="cue">(Admin phone: Tingnan ang ID → Aprubahan; then approve the driver. Say nothing.)</span> “May nagbago po ba?”<br><span class="cue">Do they find Magpatuloy, then notice the banner change?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">5</td><td>“Ipakita ninyo pong available na kayo.”<br><span class="cue">Done when the switch reads Online. Red text under it? Photograph the screen.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">6</td><td><span class="cue">(Helper commuter phone: book a nearby pickup.)</span> “May pasahero po. Kunin ninyo.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">7</td><td>“Nasa inyo na po ang pasahero.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">8</td><td>“Nakarating na po kayo.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">9</td><td><span class="cue">(Phone locked, in their pocket. Helper commuter phone: book again.)</span> “May dumating pong booking. Napansin ninyo po ba?”<br><span class="cue">Did they notice the push without being told to look?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Eksaktong sinabi</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div></div>
+</section>
+
+<!-- ═══ 7. SUS ════════════════════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 7 · isa bawat kalahok</p>
+    <h2>System Usability Scale</h2>
+    <p class="sub">Bilugan po ang numero. <b>1 = Hindi sang-ayon &nbsp;·&nbsp; 5 = Sang-ayon.</b> Walang tama o maling sagot.</p>
+  </header>
+
+  <div class="fields">
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Participant</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Role</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Petsa</span><span class="line"></span></div>
+  </div>
+
+  <div class="scroll"><table class="sus">
+    <thead><tr><th class="n">#</th><th class="item">Pahayag</th><th class="sc">1 &nbsp; 2 &nbsp; 3 &nbsp; 4 &nbsp; 5</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="item">Gusto kong gamitin nang madalas ang app na ito.<br><span class="fil">I would like to use this system frequently</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">2</td><td class="item">Masyadong kumplikado ang app para sa kailangan kong gawin.<br><span class="fil">I found the system unnecessarily complex</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">3</td><td class="item">Madaling gamitin ang app.<br><span class="fil">I thought the system was easy to use</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">4</td><td class="item">Kailangan ko ng tulong ng ibang tao para magamit ito.<br><span class="fil">I would need support from a technical person</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">5</td><td class="item">Magkakaugnay at pare-pareho ang mga bahagi ng app.<br><span class="fil">The functions were well integrated</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">6</td><td class="item">Marami akong napansing hindi magkatugma sa app.<br><span class="fil">There was too much inconsistency</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">7</td><td class="item">Mabilis matututo ang karamihan na gamitin ito.<br><span class="fil">Most people would learn this very quickly</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">8</td><td class="item">Nakakalito at nakakapagod gamitin ang app.<br><span class="fil">The system was cumbersome to use</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">9</td><td class="item">Kumpiyansa ako habang ginagamit ang app.<br><span class="fil">I felt confident using the system</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+      <tr><td class="n">10</td><td class="item">Marami akong kailangang matutunan bago ko ito magamit.<br><span class="fil">I needed to learn a lot before I could start</span></td><td class="sc"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="scoring">
+    <p><b>Scoring</b> &nbsp;·&nbsp; Odd items: <code>score − 1</code>. Even items: <code>5 − score</code>. Add all ten, then <code>× 2.5</code>.</p>
+    <p>Range 0–100. <b>It is not a percentage.</b> ~68 is average; above 80 is good.</p>
+    <p style="margin-top:9px">Total adjusted: __________ &nbsp;&nbsp;×&nbsp;2.5&nbsp;= &nbsp; <b>SUS __________</b></p>
+  </div>
+
+  <div class="warn">
+    <b>For your methodology section:</b> the Filipino above is a working translation, not a validated instrument — say so. Five participants find most usability problems but give no statistically meaningful score. Print <code>n = 5</code> beside every SUS figure you report.
+  </div>
+</section>
+
+<!-- ═══ 8. DEBRIEF ════════════════════════════════════════ -->
+<section class="sheet">
+  <header>
+    <p class="kicker">Sheet 8 · isa bawat kalahok</p>
+    <h2>Debrief</h2>
+    <p class="sub">After the questionnaire, before deleting the account. Write their words down verbatim.</p>
+  </header>
+
+  <div class="fields">
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Participant</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Role</span><span class="line"></span></div>
+    <div class="fld" style="flex:0 1 110px"><span class="lab">Petsa</span><span class="line"></span></div>
+  </div>
+
+  <h3>1. “Ano po ang pinakanakakainis sa app?”</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
+
+  <h3>2. “Kung may isang bagay lang kayong mababago, ano po iyon?”</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
+
+  <h3>3. <i>(drivers)</i> “Gagamitin ninyo po ba ito sa totoong pamamasada? Bakit o bakit hindi?”</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
+
+  <div class="warn">
+    <b>Question 3 is your acceptance criterion.</b> A driver who completed every task perfectly and then says they would not use it has told you the study’s most important result — and no task-completion table will surface it.
+  </div>
+
+  <h3>Facilitator notes</h3>
+  <div class="lines"><div class="line"></div><div class="line"></div><div class="line"></div></div>
+</section>
+
+</div>

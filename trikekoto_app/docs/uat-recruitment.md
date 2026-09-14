@@ -24,7 +24,7 @@ the one person whose cooperation the pilot depends on.
 > ko po ay isang app para sa pagbo-book ng tricycle — **TrikeKoTo** — at
 > gusto ko pong subukan ito kasama ang inyong chapter.
 >
-> Ang hihilingin ko lang po sa ngayon ay **mga 30 minuto kasama ang lima
+> Ang hihilingin ko lang po sa ngayon ay **mga 45 minuto kasama ang lima
 > ninyong driver**, isa-isa. Susubukan lang po nila ang app sa sarili nilang
 > telepono at sasabihin kung ano ang nakikita nila. Walang bayad, walang
 > obligasyon, at puwede pong huminto kahit kailan.
@@ -52,12 +52,14 @@ software reads like a scam; the same words from a person standing there do not.
 > pagbo-book ng tricycle, at pinayagan na po ako ni [chapter officer] na
 > subukan ito kasama ang ilang driver dito.
 >
-> Mga **30 minuto lang po**. Ilalagay ko po ito sa telepono ninyo, susubukan
+> Mga **45 minuto po**. Ilalagay ko po ito sa telepono ninyo, susubukan
 > ninyo, at sasabihin ninyo kung ano ang nakakalito. **Ang app po ang
 > sinusubukan, hindi kayo** — kung may hindi kayo maintindihan, ako po ang
 > may mali, hindi kayo.
 >
-> Buburahin ko rin po lahat pagkatapos, pati ang app kung gusto ninyo.
+> Hindi po kailangan ang inyong email o plate number — bibigyan ko po kayo
+> ng test na detalye. Buburahin po ang test account pagkatapos, at ang app
+> kung gusto ninyo.
 
 **Do not promise income, passengers, or that the chapter will adopt it.** You
 do not control any of those, and a driver who agreed on that basis will feel
@@ -71,7 +73,7 @@ misled when the pilot ends.
 > pagbo-book ng tricycle, at naghahanap po ako ng mga sumasakay ng tricycle
 > na puwedeng sumubok.
 >
-> Mga **20–30 minuto** lang po, sa telepono ninyo mismo. Wala pong tama o
+> Mga **30–45 minuto** po, sa telepono ninyo mismo. Wala pong tama o
 > mali — kung may nakalito, iyon mismo ang kailangan kong malaman.
 >
 > Wala pong bayad, pero malaking tulong po sa thesis ko.
@@ -92,8 +94,11 @@ makes people assume there is money and feel cheated later.
 Say this *before* the session, not when the screen appears — someone who
 arrives worried about their licence has already had a worse session.
 
-**"Ano ang gagawin ninyo sa number ko?"** — The app sends one SMS code, and
-you delete the whole account the same day, in front of them.
+**"Ano ang gagawin ninyo sa number ko?"** — *Commuters:* the app sends one SMS
+code to it, and you delete the account together the same day; the number is
+also removed from their test rides. *Drivers* never give one — they register
+with the test details you hand them, because a driver's account cannot be
+deleted from inside the app and test rides are never deleted at all.
 
 **"Gagamitin ba ito ng TODA namin?"** — You do not know. Say so. The pilot
 plan is step 89 and it is the chapter's decision, not yours.

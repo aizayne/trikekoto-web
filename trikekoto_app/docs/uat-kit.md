@@ -19,6 +19,17 @@ meant to work rather than as a demo with an apology attached.
 > mentioned none of it. A real driver could not have been shown the ID screen
 > under it. Do not use a printed copy of the old form.
 
+> **Revised again 14 September 2026, for app version 1.0.5 (6).** Reading the
+> kit against the app found three things the September rewrite still got
+> wrong. The consent promised to delete the test rides — nobody can; rides are
+> kept, with a commuter's name and number removed. It said the ID part could be
+> skipped — the ID requirement makes that impossible. And it said data is
+> deleted in the app — true only for commuters; a driver account can only be
+> removed from the Firebase console, so drivers now register with
+> facilitator-issued test details. It also never said that every booking needs
+> a second person on the other role's phone. The printable pack is rebuilt to
+> match, in `docs/uat-field-pack.html`.
+
 ## Before you recruit
 
 ### How many people
@@ -48,6 +59,33 @@ themselves. Record the handset model and Android version for each participant.
 
 ---
 
+## Setup — before the first session
+
+Tasks 5–9 need a second person on the other role's phone: a commuter's booking
+must be accepted by a driver, and a driver's offer must come from a booking.
+Run sessions with a helper, or with enough phones to play the other side
+yourself.
+
+- **Latest app on every phone you bring**, installed over mobile data. The
+  landing screen must read `TrikeKoTo 1.0.5 (6)` or newer.
+- **Admin phone** signed in as an administrator with the email already
+  confirmed, open on **ID review**. **Aprubahan** stays disabled until you tap
+  **Tingnan ang ID** — open every dummy card before approving it.
+- **Helper driver phone** for commuter sessions: a verified, approved test
+  driver, switched **Online** near the venue.
+- **Helper commuter phone** for driver sessions: a verified test commuter,
+  ready to book a pickup near the venue. Both helper accounts are verified once
+  and reused all day.
+- **Dispatch → Tumatanggap ng booking** switched on.
+- **One dummy ID card per participant** — a blank card with a made-up name and
+  number.
+- **Driver test-detail slips** filled in (field pack, sheet 4). Test rides
+  cannot be deleted, so a driver's real email, plate and number must never go
+  into them. Use the facilitator's helper-phone number as the driver's mobile,
+  so a commuter's "call the driver" reaches you.
+
+---
+
 ## Consent form
 
 Print one per participant. Read it aloud rather than handing it over — several
@@ -68,16 +106,23 @@ participants will not want to admit they would rather not read it.
 >
 > **Tungkol sa mga impormasyong hihingin ng app:**
 >
-> - **Number ninyo.** Hihingi po ang app ng mobile number at magpapadala ng
->   code sa SMS. Kailangan po ito para makagamit. Libre po ang code.
+> - **Pasahero — number ninyo.** Magpapadala po ang app ng code sa SMS sa
+>   inyong mobile number. Libre po ang code.
+> - **Driver — test na detalye.** Hindi po kailangan ang inyong email, plate
+>   number o mobile number. Bibigyan ko po kayo ng test na detalye na
+>   ilalagay sa app.
 > - **Lokasyon.** Hihingi po ng permiso ang telepono para sa lokasyon habang
->   ginagamit ang app.
-> - **Larawan ng ID.** May bahagi po ang app na humihingi ng litrato ng ID.
->   **Huwag pong gamitin ang totoong ID ninyo.** Bibigyan ko po kayo ng
->   pekeng card para dito — ang proseso po ang sinusubukan, hindi kung sino
->   kayo. Kung mas gusto ninyong laktawan ang bahaging ito, ayos lang po.
-> - **Buburahin ko po ang lahat ng ginawa ninyo pagkatapos ng session** —
->   ang account, ang mga biyahe, at kahit anong litrato.
+>   ginagamit ang app. Kapag naka-Online ang driver, nakikita ng malapit na
+>   pasahero ang kanyang lokasyon.
+> - **Litrato ng ID.** Hindi po magamit ang app nang walang ID. **Huwag pong
+>   gamitin ang totoong ID ninyo** — bibigyan ko po kayo ng pekeng card. Ang
+>   proseso po ang sinusubukan, hindi kung sino kayo. Kung ayaw ninyong
+>   magpadala ng litrato, kahit ng pekeng card, puwede pong huminto dito.
+> - **Buburahin po ang account ninyo sa araw na ito** — ang pangalan, number,
+>   litrato, at ang litrato ng pekeng ID.
+> - **Ang mga biyahe ng pagsubok ay hindi po mabubura**, dahil record ng
+>   sistema ang mga ito. Pasahero: aalisin po ang inyong pangalan at number sa
+>   mga ito. Driver: test na detalye lang po ang nasa mga ito.
 >
 > Naiintindihan ko po ang nasa itaas at pumapayag akong lumahok.
 >
@@ -95,10 +140,19 @@ ID is approved. Bring a second phone signed in as admin and approve each
 dummy submission live, during the session. Deleting the participant's account
 at the end removes their verification along with everything else.
 
-**Delete their data the same day.** Account deletion is in the app now
-(Profile → Burahin ang account), and it anonymises their rides server-side.
-Doing it in front of them, at the end, is also the most reassuring thing you
-can do for the next participant they talk to.
+**Delete their data the same day — and know that the two roles differ.**
+
+- **Commuters** delete their own account in the app: **Profile → Burahin ang
+  account**. It removes their name, number, photo, the dummy-ID photo and
+  their verification, and strips name and number from their test rides. Do
+  it together, in front of them, at the end — the most reassuring thing you
+  can do for the next participant they talk to.
+- **Drivers have no delete button.** The project maintainer removes the test
+  account from the Firebase console the same day: the Authentication user;
+  Firestore `drivers/{email}`, `active_drivers/{email}`,
+  `id_submissions/{uid}` and `id_verified/{uid}`; and Storage `ids/{uid}/card`.
+  Their test rides remain, which is exactly why drivers use test details.
+  Record each deletion on the cleanup log (field pack, sheet 2).
 
 If you plan to photograph or record audio, add a separate line for it and let
 them decline that part while still taking part.
@@ -143,9 +197,9 @@ abandoned, or five minutes elapsed.
 | 3 | *(hand them the dummy card)* "Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala." | Submission pending. **Watch what they do at the consent tick**, and whether the notice saying *why* an ID is needed reassures them or alarms them |
 | 4 | *(approve it from the admin phone, without saying so)* "May nagbago po ba?" | They find **Magpatuloy** and reach the booking screen unprompted |
 | 5 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it |
-| 6 | "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
+| 6 | *(accept on the helper driver phone)* "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting |
 | 7 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
-| 8 | *(after a completed ride)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
+| 8 | *(have them book again; on the helper driver phone accept, start and complete it)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
 | 9 | "Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?" | They find it, or do not. Do not help |
 
 **Task 2 is the one to watch, and it is longer than it was.** It did not exist
@@ -160,11 +214,11 @@ blind, or ask what it means. If everyone ticks without reading, the consent is
 technically recorded and practically meaningless, and that is worth knowing
 before a chapter rolls it out.
 
-**Task 8 is a right, not a feature.** If people cannot find account deletion,
+**Task 9 is a right, not a feature.** If people cannot find account deletion,
 they cannot exercise it, and "we have deletion" becomes a claim rather than a
 capability.
 
-Task 6 is deliberately open. If nobody finds the rating without being told, your
+Task 8 is deliberately open. If nobody finds the rating without being told, your
 rating coverage in production will be poor and the driver averages unreliable.
 
 ---
@@ -173,15 +227,15 @@ rating coverage in production will be poor and the driver averages unreliable.
 
 | # | Task (say this) | Done when |
 |---|---|---|
-| 1 | "Gumawa po kayo ng account bilang driver." | Registration submitted |
+| 1 | *(hand them a test-detail slip)* "Gumawa po kayo ng account bilang driver gamit ang mga detalyeng ito." | Registration submitted, with the test details — never their own email, plate or number |
 | 2 | *(hand them the dummy card)* "Hihingin po ng chapter ang ID ninyo bago gamitin ang app. Subukan ninyo pong ipadala." | ID submitted — they cannot reach the dashboard without it. Note whether they hesitate: a driver asked for a licence by an app feels different from one asked by a person they know |
 | 3 | "Ano po ang nakikita ninyo ngayon? Puwede na po ba kayong tumanggap ng pasahero?" | They correctly read that they are waiting on the chapter |
-| 4 | *(approve the ID, then the driver, from the admin phone)* "May nagbago po ba?" | They find **Magpatuloy**, then notice the dashboard banner changed without being told |
-| 5 | "Ipakita ninyo pong available na kayo." | Online, `active_drivers` document exists |
-| 6 | "May pasahero po. Kunin ninyo." | Offer accepted |
+| 4 | *(admin phone: **Tingnan ang ID** → **Aprubahan**, then approve the driver)* "May nagbago po ba?" | They find **Magpatuloy**, then notice the dashboard banner changed without being told |
+| 5 | "Ipakita ninyo pong available na kayo." | The switch reads **Online** (it shows **Kumokonekta…** first). If red text appears under it, photograph the screen |
+| 6 | *(book a nearby pickup on the helper commuter phone)* "May pasahero po. Kunin ninyo." | Offer accepted |
 | 7 | "Nasa inyo na po ang pasahero." | Trip started |
 | 8 | "Nakarating na po kayo." | Ride completed |
-| 9 | *(with their phone locked and in a pocket, send them an offer)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
+| 9 | *(with their phone locked and in a pocket, book again on the helper commuter phone)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
 
 Task 4 tests the live approval update, which no participant will notice if you
 tell them to look.
@@ -213,6 +267,7 @@ Task │ Mag-isa │ May tulong │ Hindi natapos │ Oras │ Saan natigil / si
   6  │         │            │               │      │
   7  │         │            │               │      │
   8  │         │            │               │      │
+  9  │         │            │               │      │
 
 Mga eksaktong sinabi (quote them, do not paraphrase):
 
