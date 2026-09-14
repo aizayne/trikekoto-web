@@ -3,8 +3,8 @@
 // ============================================================
 // Deploy with:  firebase deploy --only storage
 //
-// One thing is stored: a rider's profile photo. Everything else is
-// denied, including paths nobody has thought of yet — the default
+// Two things are stored: a rider's profile photo, and the photo of a
+// government ID sent for review. Everything else is denied, including paths nobody has thought of yet — the default
 // at the bottom is closed, the same way firestore.rules ends.
 //
 // The `read` rule below grants only the rider themselves, but that
@@ -91,6 +91,12 @@ service firebase.storage {
         // Verified once, verified for good: no second ID photo is accepted,
         // matching the Firestore rule on id_submissions.
         && !firestore.exists(/databases/(default)/documents/id_verified/$(uid))
+        // Only before a submission exists. The app uploads the photo and then
+        // creates the submission, so every real upload is admitted — but the
+        // photo cannot be replaced once a reviewer may have looked at it, so
+        // what is kept on record is what was approved. After a rejection the
+        // person withdraws, which deletes both, and sends again.
+        && !firestore.exists(/databases/(default)/documents/id_submissions/$(uid))
         // 4 MB. Larger than a profile photo because an ID has to stay
         // legible enough to read a number off, and smaller than a modern
         // camera's default so the client is obliged to downscale.

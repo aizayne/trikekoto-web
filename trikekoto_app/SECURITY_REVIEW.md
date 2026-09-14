@@ -1,8 +1,11 @@
 # TrikeKoTo — Security Review
 
-**Reviewed:** 24 August 2026 · **Project:** `trikekoto` · **Ruleset:** deployed
-**Verification:** 125 emulator tests, 19 of them adversarial
-([`test_rules/attacks.test.mjs`](test_rules/attacks.test.mjs))
+**Reviewed:** 24 August 2026 · **Re-reviewed:** 14 September 2026 ·
+**Project:** `trikekoto`
+**Ruleset:** the repository copy. The 14 September fixes are **not yet
+deployed** — see [Re-review](#re-review--14-september-2026).
+**Verification:** 216 emulator tests, the adversarial ones in
+[`test_rules/attacks.test.mjs`](test_rules/attacks.test.mjs)
 
 Every claim below was executed against the deployed ruleset in the Firestore
 emulator, not reasoned about on paper. Where a gap exists it is stated, its
@@ -24,7 +27,9 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | Medium | **0** — key restrictions applied; see the caveat on what they actually enforce |
 | New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
-| Accepted by design | **3** — documented below with tripwire tests |
+| Found and fixed on re-review | **4** — 2 medium, 2 low; fixed and tested, **awaiting deploy** |
+| Open on re-review | **1** low, plus 2 decisions for the owner |
+| Accepted by design | **2** — documented below with tripwire tests |
 
 The two findings from the original web build — an admin gate that trusted an
 unverified email claim, and world-readable ride documents carrying commuter
@@ -52,18 +57,136 @@ anyone could have registered an unverified account matching a known admin
 email.
 
 **Hijack a ride.** A driver cannot accept a ride offered to someone else. A
-commuter cannot reassign their own ride to a chosen driver, cannot forge a
-completed status to farm a rating, and cannot rewrite the fare after the fact.
-Nobody — including admins — can delete a ride, because rides are the audit
-trail.
+commuter cannot reassign their own ride to a chosen driver, cannot choose which
+driver is offered it, cannot forge a completed status to farm a rating, and
+cannot attach a fare after the fact. Nobody — including admins — can delete a
+ride, because rides are the audit trail.
 
-**Tamper with runtime config.** `config/app` drives the search radius and the
-whole fare table for every user. Writes are admin-only.
+**Tamper with runtime config.** `config/app` drives the search radius, the
+offer timeout and the booking stop switch for every user. Writes are
+admin-only.
 
 **Extract secrets from the APK.** Scanned: no service-account files, no
 private keys, no `.jks`/`.p12`. The Firebase API keys present are public
 configuration by design — they identify the project, they do not authorise
 anything. Authorisation rests entirely on the rules.
+
+---
+
+## Re-review — 14 September 2026
+
+Due because the rider collection, mandatory accounts, the rating cutover, the
+ID gate, the verified-once marker, the driver-index lock and server-side
+dispatch all postdated the first review. Method: `firestore.rules`,
+`storage.rules` and `functions/src/index.ts` read against what the shipped app
+actually writes, then every fix pinned by an emulator test before it was
+called fixed.
+
+**Deploy status: none of the fixes below is live yet.** They are in the
+repository with the suite passing (216). Deploy with:
+
+```bash
+npm --prefix functions run build
+firebase deploy --only firestore:rules,storage,functions:requestDispatch,functions:sweepStaleRides --project trikekoto
+```
+
+### MEDIUM — A commuter could choose which driver is offered their ride — FIXED
+
+The rides rule still carried clause 1, *commuter widens the search*, from when
+matching ran on the commuter's phone. Matching moved to `requestDispatch` at
+step 69 and no shipped client has written `dispatch` since, but the clause
+stayed. A modified client could therefore write any driver's email into
+`dispatch.offeredTo` and so:
+
+- push a ride to that driver, repeatedly — `onRideOffered` trusts the field;
+- open the ride, with the passenger's name, number and pickup, to them;
+- skip nearest-first matching entirely.
+
+The ID gate limited who could try, not what they could do.
+
+**Fix.** Clause 1 is removed. The cancel clause may still reset `dispatch` but
+now requires `offeredTo` to be null, so an offer cannot be folded into a
+cancellation. Tests: `a commuter cannot choose which driver is offered their
+ride` (attacks) and two in `rules — dispatch`. The lifecycle suite now seeds
+offers the way the functions write them, with admin credentials.
+
+### MEDIUM — Suspended and unapproved drivers could be offered rides — FIXED
+
+Documented below as accepted: a suspended driver can still publish presence,
+because approval is not re-checked on GPS pings. The review said this was
+harmless because such a driver *cannot accept*. That was true, and it missed
+what happens before acceptance. The dispatch functions offered rides to
+whoever was in the index, and an offer:
+
+- pushes the pickup and drop-off to the driver's phone;
+- grants read of the ride (`isOfferedDriver`), including the commuter's name
+  and phone number.
+
+So a driver the chapter had suspended — for cause, presumably — kept receiving
+passengers' names and numbers for as long as their app stayed online.
+
+**Fix.** `attemptDispatch` now filters candidates through `approvedOnly()`, one
+batched read of the in-radius drivers' profiles, before ranking. Server-side
+rather than in the rules, so GPS pings stay read-free. This is in the
+functions, which have no automated tests; it is covered by review and
+typechecking only.
+
+### LOW — An approved driver could change the plate they were approved with — FIXED
+
+The driver self-edit clause admitted `plateNumber`, `phone` and names at any
+status. An officer approves a person and a tricycle; changing either afterwards
+kept the approval, and `snapshotMatchesProfile()` then faithfully copied the
+new, unchecked plate into what the commuter is shown. No screen in the app edits
+these, so only a modified client could do it — and only one would want to.
+
+**Fix.** Self-edit is allowed while `pending` only. After approval the officer
+edits it as an admin. Tests in both suites.
+
+### LOW — An ID photo could be replaced after the reviewer looked — FIXED
+
+The Storage rule let the subject overwrite `ids/{uid}/card` at any time until
+verified. A reviewer opens the photo, the subject swaps it, the reviewer
+approves what they saw — and the image kept on record for the 90 days is not
+the one approved.
+
+**Fix.** Writes are refused once `id_submissions/{uid}` exists. The app uploads
+first and creates the submission second, and withdrawing deletes both, so every
+legitimate flow — including resubmitting after a rejection — still works.
+**Not emulator-tested:** the suite runs Firestore only. The rule uses the same
+`firestore.exists` form as the `id_verified` check already deployed and working
+in version 1.0.5 (6).
+
+### Hardening — `requestDispatch` read the whole index to say "wait"
+
+The callable read every online driver before discovering that an offer was
+still live. It now answers `held` from the ride alone. A script repeating the
+call against its own ride could previously bill one read per online driver per
+call.
+
+### Open — LOW — `requestDispatch` does not enforce App Check
+
+Enforcement on Firestore does not extend to callable functions; each callable
+opts in with `enforceAppCheck: true`. Today a script holding a real, ID-verified
+account can call it for its own rides. The damage is bounded — ownership is
+checked, the reply is one word, and the fix above removes the expensive path —
+so this is low. Recommended: enable it, then confirm on the installed APK that
+booking still gets an offer within seconds. If tokens are not being attached,
+`sweepStaleRides` still offers the ride within a minute, so the failure mode is
+slow rather than broken.
+
+### Owner decisions raised
+
+- **A booking can carry someone else's phone number.** `commuterName` and
+  `commuterPhone` come from the booking form, not the verified token, so a
+  commuter can send a tricycle to a stranger with the stranger's number. The
+  ID gate means every such booking traces back to a verified person, which is a
+  real deterrent. Locking the phone to the sign-in number would close it, at
+  the cost of booking for a relative.
+- **Driver accounts cannot be deleted from the app.** Only commuters have
+  account deletion. A driver's profile, presence, submission, ID photo and
+  `id_verified` marker are removed from the Firebase console by the project
+  team (the UAT kit lists the paths). Under RA 10173 a driver can ask; there is
+  no button to press.
 
 ---
 
@@ -288,8 +411,11 @@ Each has a tripwire test that fails if the behaviour changes.
 **A suspended driver can still publish presence.** Approval is not re-checked
 on every GPS ping, because that would cost one document read per ping per
 driver every few seconds. A suspended driver appears in the dispatch index but
-**cannot accept anything** — the gate sits at ride acceptance, which is the
-write that matters. Tested both halves.
+**cannot accept anything** — the gate sits at ride acceptance. Tested both
+halves. *Corrected on re-review:* being offered a ride was itself an exposure,
+since an offer carries the passenger's name and number. The dispatch functions
+now offer only to approved drivers, so presence alone gets a suspended driver
+nothing (awaiting deploy).
 
 **Commuter PII lives on the ride document.** Name and phone are readable by
 the assigned driver and by any driver currently offered the ride. That is the
@@ -327,8 +453,10 @@ before deploying.
    origin on the Firebase endpoints tested.
 5. ~~**Blaze plan** → server-side rating aggregation (68) and dispatch (67)~~
    — done. Both functions are deployed.
-6. Re-run this review after any rules change. **It is due one now:** the rider
-   collection, mandatory accounts, and the rating cutover all postdate it.
+6. ~~Re-run this review after any rules change.~~ Re-run on 14 September
+   2026; four findings fixed. **Deploy them** (command in the re-review), then
+   decide on App Check for `requestDispatch`. Run it again after the next rules
+   change.
 
 ---
 
@@ -337,7 +465,10 @@ before deploying.
 - **Penetration testing of the deployed project.** Everything here ran against
   the emulator with the same ruleset. Rules behaviour is identical; quotas,
   App Check enforcement, and key restrictions are not exercised.
-- **The Cloud Functions.** Written and typechecked but not deployed, so their
-  runtime behaviour is unreviewed.
+- **Automated tests for the Cloud Functions.** They are deployed and were
+  reviewed by reading, and dispatch has run in the field, but nothing runs them
+  under test — so the approved-only filter above rests on review and
+  typechecking.
+- **The Storage rules under test.** The emulator suite covers Firestore only.
 - **Device-level threats.** A rooted phone can read its own app storage; no
   mitigation is attempted and none is warranted at this scale.

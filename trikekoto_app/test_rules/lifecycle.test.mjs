@@ -104,7 +104,7 @@ const newRide = (overrides = {}) => ({
   ...overrides,
 });
 
-/** What the commuter's greedy sweep writes when it pings a driver. */
+/** What the dispatch function writes when it offers a ride to a driver. */
 const offerTo = (email, depth = 1) => ({
   dispatch: {
     offeredTo: email,
@@ -181,6 +181,16 @@ beforeEach(async () => {
   });
 });
 
+/**
+ * The dispatch functions' write. They hold admin credentials, so no rule
+ * applies to it — and no commuter may make it.
+ */
+async function serverOffers(rideId, data) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'rides', rideId), data);
+  });
+}
+
 // ════════════════════════════════════════════════════════════
 describe('the whole ride, start to finish', () => {
   it('books, dispatches, accepts, drives, completes, and rates', async () => {
@@ -191,8 +201,8 @@ describe('the whole ride, start to finish', () => {
     const rideRef = await addDoc(collection(rider, 'rides'), newRide());
     const rideId = rideRef.id;
 
-    // 2. The greedy sweep pings the nearest driver.
-    await updateDoc(doc(rider, 'rides', rideId), offerTo(DRIVER));
+    // 2. The dispatch function offers it to the nearest driver.
+    await serverOffers(rideId, offerTo(DRIVER));
 
     // 3. The offer is visible to that driver, and to nobody else.
     const offered = await getDoc(doc(juan, 'rides', rideId));
@@ -292,7 +302,7 @@ describe('the whole ride, start to finish', () => {
 
     for (let depth = 1; depth <= 10; depth++) {
       attempted.push(`driver${depth}@toda.ph`);
-      await updateDoc(doc(rider, 'rides', rideRef.id), {
+      await serverOffers(rideRef.id, {
         dispatch: {
           offeredTo: attempted[attempted.length - 1],
           offerSeq: depth,
@@ -329,7 +339,7 @@ describe('concurrency', () => {
     const rider = commuter();
     const juan = driver();
     const rideRef = await addDoc(collection(rider, 'rides'), newRide());
-    await updateDoc(doc(rider, 'rides', rideRef.id), offerTo(DRIVER));
+    await serverOffers(rideRef.id, offerTo(DRIVER));
 
     // The same driver, firing twice before the first commit lands.
     const results = await Promise.allSettled([
@@ -348,7 +358,7 @@ describe('concurrency', () => {
   it('refuses a driver who was never offered the ride, even mid-race', async () => {
     const rider = commuter();
     const rideRef = await addDoc(collection(rider, 'rides'), newRide());
-    await updateDoc(doc(rider, 'rides', rideRef.id), offerTo(DRIVER));
+    await serverOffers(rideRef.id, offerTo(DRIVER));
 
     const results = await Promise.allSettled([
       acceptRide(driver(), rideRef.id, DRIVER),
@@ -370,7 +380,7 @@ describe('concurrency', () => {
     const rider = commuter();
     const juan = driver();
     const rideRef = await addDoc(collection(rider, 'rides'), newRide());
-    await updateDoc(doc(rider, 'rides', rideRef.id), offerTo(DRIVER));
+    await serverOffers(rideRef.id, offerTo(DRIVER));
 
     await Promise.allSettled([
       acceptRide(juan, rideRef.id, DRIVER),
@@ -431,14 +441,14 @@ describe('concurrency', () => {
 describe('ID gate on accepting', () => {
   it('an offered driver whose ID is not verified cannot accept', async () => {
     // Unverified drivers cannot go online, so dispatch never finds them. This
-    // covers the ways an offer can still reach one: a presence document from
-    // before the gate existed, or a modified commuter client writing an
-    // accomplice into dispatch.offeredTo.
+    // covers the way an offer can still reach one: a presence document from
+    // before the gate existed. (A commuter writing an accomplice into
+    // dispatch.offeredTo was the other, until that clause was removed.)
     const { deleteDoc } = await import('firebase/firestore');
     const rider = commuter();
     const juan = driver();
     const rideRef = await addDoc(collection(rider, 'rides'), newRide());
-    await updateDoc(doc(rider, 'rides', rideRef.id), offerTo(DRIVER));
+    await serverOffers(rideRef.id, offerTo(DRIVER));
 
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       await deleteDoc(doc(ctx.firestore(), 'id_verified', DRIVER_UID));

@@ -255,71 +255,24 @@ describe('rides — dispatch', () => {
     },
   });
 
-  it('lets the commuter widen the search', async () => {
+  it('refuses a commuter aiming their ride at a chosen driver', async () => {
+    // Matching is the server's. The clause that let the commuter's device
+    // write dispatch outlived client-side matching, and let a modified client
+    // pick which driver was pushed and shown the passenger's details.
     await seedRide('r1');
-    await assertSucceeds(
-      updateDoc(doc(commuter(), 'rides', 'r1'), {
-        dispatch: {
-          offeredTo: DRIVER_EMAIL,
-          offerSeq: 1,
-          offerExpiresAt: null,
-          attemptedDrivers: [DRIVER_EMAIL],
-          depth: 1,
-        },
-      }),
+    await assertFails(
+      updateDoc(doc(commuter(), 'rides', 'r1'), offered(DRIVER_EMAIL)),
     );
   });
 
-  it('refuses to let the search walk backwards', async () => {
-    await seedRide('r1', {
-      dispatch: {
-        offeredTo: null,
-        offerSeq: 3,
-        offerExpiresAt: null,
-        attemptedDrivers: [DRIVER_EMAIL],
-        depth: 3,
-      },
-    });
-    await assertFails(
-      updateDoc(doc(commuter(), 'rides', 'r1'), {
-        dispatch: {
-          offeredTo: DRIVER_EMAIL,
-          offerSeq: 4,
-          offerExpiresAt: null,
-          attemptedDrivers: [DRIVER_EMAIL],
-          depth: 1,
-        },
-      }),
-    );
-  });
-
-  it('caps the search at 10 candidates', async () => {
+  it('refuses an offer folded into a cancellation', async () => {
     await seedRide('r1');
     await assertFails(
       updateDoc(doc(commuter(), 'rides', 'r1'), {
-        dispatch: {
-          offeredTo: DRIVER_EMAIL,
-          offerSeq: 1,
-          offerExpiresAt: null,
-          attemptedDrivers: [DRIVER_EMAIL],
-          depth: 11,
-        },
-      }),
-    );
-  });
-
-  it('stops a commuter from smuggling a status change into a dispatch write', async () => {
-    await seedRide('r1');
-    await assertFails(
-      updateDoc(doc(commuter(), 'rides', 'r1'), {
-        status: 'completed',
-        dispatch: {
-          offeredTo: DRIVER_EMAIL,
-          offerSeq: 1,
-          offerExpiresAt: null,
-          attemptedDrivers: [DRIVER_EMAIL],
-          depth: 1,
-        },
+        status: 'cancelled',
+        cancelledAt: serverTimestamp(),
+        cancelledBy: 'commuter',
+        ...offered(DRIVER_EMAIL),
       }),
     );
   });
@@ -780,14 +733,26 @@ describe('drivers — registration and verification', () => {
     );
   });
 
-  it('lets a driver edit their own contact details', async () => {
-    await seedDriver(DRIVER_EMAIL, 'approved');
+  it('lets a pending driver correct their own details', async () => {
+    await seedDriver(DRIVER_EMAIL, 'pending');
     await assertSucceeds(
       updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
         phone: '09990000000',
         updatedAt: serverTimestamp(),
       }),
     );
+  });
+
+  it('stops an approved driver changing what the officer approved', async () => {
+    await seedDriver(DRIVER_EMAIL, 'approved');
+    for (const change of [{ plateNumber: 'XYZ9999' }, { phone: '09990000000' }]) {
+      await assertFails(
+        updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
+          ...change,
+          updatedAt: serverTimestamp(),
+        }),
+      );
+    }
   });
 
   it('stops a driver from approving themselves', async () => {

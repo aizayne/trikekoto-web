@@ -213,8 +213,22 @@ describe('privilege escalation', () => {
     );
   });
 
+  it('an approved driver cannot swap the plate they were approved with', async () => {
+    // The officer approved a person and a tricycle. Changing either afterwards
+    // would carry the approval to one nobody checked — and the accept rule
+    // copies these fields into what the commuter is shown.
+    for (const change of [{ plateNumber: 'XYZ9999' }, { phone: '09990000000' }]) {
+      await assertFails(
+        updateDoc(doc(driver(), 'drivers', ATTACKER), {
+          ...change,
+          updatedAt: serverTimestamp(),
+        }),
+      );
+    }
+  });
+
   it('a commuter cannot tamper with runtime config', async () => {
-    // Changing searchRadiusKm or the fare table affects every user.
+    // Changing searchRadiusKm or the booking stop switch affects every user.
     await assertFails(
       setDoc(doc(commuter(), 'config', 'app'), { farePerKm: 0 }),
     );
@@ -238,6 +252,32 @@ describe('hijacking a ride', () => {
     await assertFails(
       updateDoc(doc(commuter(), 'rides', 'victim-ride'), {
         assignedDriver: ATTACKER,
+      }),
+    );
+  });
+
+  it('a commuter cannot choose which driver is offered their ride', async () => {
+    // Matching is the server's. Until 2026-09-14 a leftover clause let the
+    // commuter write dispatch, so a modified client could aim a ride at any
+    // driver email: push that driver, open the passenger's name and number to
+    // them, and skip nearest-first entirely.
+    const aimed = {
+      offeredTo: ATTACKER,
+      offerSeq: 2,
+      offerExpiresAt: null,
+      attemptedDrivers: [VICTIM, ATTACKER],
+      depth: 2,
+    };
+    await assertFails(
+      updateDoc(doc(commuter(), 'rides', 'victim-ride'), { dispatch: aimed }),
+    );
+    // Nor by folding the offer into a cancellation.
+    await assertFails(
+      updateDoc(doc(commuter(), 'rides', 'victim-ride'), {
+        status: 'cancelled',
+        cancelledAt: serverTimestamp(),
+        cancelledBy: 'commuter',
+        dispatch: aimed,
       }),
     );
   });
@@ -323,6 +363,12 @@ describe('known gaps — asserted so they cannot change unnoticed', () => {
     // document read per ping, per driver, every few seconds is a real cost.
     // A suspended driver therefore appears in the dispatch index but cannot
     // accept anything offered to them.
+    //
+    // Its consequence is closed elsewhere. Since 2026-09-14 the dispatch
+    // functions offer a ride only to a driver whose profile is approved, so a
+    // suspended driver in the index is never pushed a ride or given read of a
+    // passenger's name and number. That check lives in functions/src, not in
+    // these rules, so this test still pins the presence write itself.
     await seed(async (db) => {
       await setDoc(doc(db, 'drivers', ATTACKER), profileOf(ATTACKER, 'suspended'));
     });

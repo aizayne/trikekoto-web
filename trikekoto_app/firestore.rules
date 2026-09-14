@@ -7,9 +7,8 @@
 // Identity model
 // --------------
 //   Drivers & admins are keyed by their LOWERCASED email address.
-//   Commuters are keyed by their Firebase Anonymous Auth uid — they
-//   never create a password account, but they always have an auth
-//   token, which is what makes ride documents ownable.
+//   Commuters are keyed by their Firebase Auth uid, from phone sign-in.
+//   The uid is what makes a ride document ownable.
 //
 // Trust boundary
 // --------------
@@ -198,9 +197,16 @@ service cloud.firestore {
       allow create: if isSelf(driverEmail) && validNewDriver();
 
       allow update: if
-        // Driver edits their own contact details. `status` is absent
-        // from this list, so approval/suspension stays with admins.
+        // Driver corrects their own details. `status` is absent from
+        // this list, so approval/suspension stays with admins.
+        //
+        // Before approval only. These are what the officer checked
+        // against the chapter's records, and what a commuter is shown at
+        // accept time; changing the plate afterwards would carry the
+        // approval over to a tricycle nobody checked. An approved driver
+        // asks the officer, who edits it as an admin.
         (isSelf(driverEmail)
+          && resource.data.status == 'pending'
           && onlyChanged(['firstName', 'lastName', 'phone',
                           'plateNumber', 'todaChapter', 'updatedAt']))
         ||
@@ -214,7 +220,10 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     // The dispatch index. Written every few seconds while a driver is
     // online, so its rules are deliberately cheap — no get() calls.
-    // Approval is enforced where it actually matters: accepting a ride.
+    // Approval is enforced where it actually matters: accepting a ride —
+    // and, since 2026-09-14, by the dispatch functions, which offer rides
+    // only to approved drivers, so a suspended driver left in this index is
+    // never sent a passenger's name and number.
     match /active_drivers/{driverEmail} {
 
       function validPresence() {
@@ -244,8 +253,9 @@ service cloud.firestore {
     // Lifecycle: searching → accepted → in_transit → completed
     //                     ↘ cancelled / expired
     //
-    // While `searching`, the commuter's device drives the greedy
-    // search by rewriting `dispatch` (offeredTo / depth) every 15s.
+    // While `searching`, `dispatch` belongs to the server: the
+    // requestDispatch callable and sweepStaleRides write it with admin
+    // credentials. No client clause may aim `offeredTo` at anyone.
     // Each transition below is a separate, minimal grant.
     match /rides/{rideId} {
 
@@ -288,8 +298,8 @@ service cloud.firestore {
           && d.commuterName is string  && d.commuterName.size() >= 1 && d.commuterName.size() <= 60
           && d.commuterPhone is string && d.commuterPhone.size() >= 7 && d.commuterPhone.size() <= 20
           // Copied from the rider's profile so the driver can recognise who
-          // they are collecting. Null for the anonymous commuters who never
-          // made an account, which is most of them. Bounded for the same
+          // they are collecting. Null for a commuter who has not added a
+          // photo. Bounded for the same
           // reason as on the rider document: an unvalidated string field is
           // somewhere to park data that is not a photo.
           // `.get(field, default)` rather than direct access: a missing
@@ -348,23 +358,23 @@ service cloud.firestore {
         && ridesAreOpen() && validNewRide();
 
       allow update: if
-        // ── 1. Commuter widens the greedy search ──────────────
-        // Rewrites dispatch only; depth is monotonic and capped at
-        // the 10-driver limit from the dispatch spec.
-        (isRideCommuter()
-          && resource.data.status == 'searching'
-          && request.resource.data.status == 'searching'
-          && onlyChanged(['dispatch'])
-          && request.resource.data.dispatch.depth >= resource.data.dispatch.depth
-          && request.resource.data.dispatch.depth <= 10
-          && request.resource.data.dispatch.attemptedDrivers.size() <= 10)
-        ||
+        // ── 1. (removed 2026-09-14) Commuter widens the search ─
+        // The commuter's device used to write `dispatch` to offer the
+        // ride to each driver in turn. Matching moved to the server at
+        // step 69 but this clause stayed, so a modified client could
+        // still write any driver's email into `offeredTo`: choose who
+        // is pushed, open the passenger's name and number to them, and
+        // skip nearest-first entirely. No shipped client writes it.
+        //
         // ── 2. Commuter cancels, or the search gives up ───────
+        // May reset `dispatch`, never aim it: an offer folded into a
+        // cancellation would still open the ride to that driver.
         (isRideCommuter()
           && resource.data.status in ['searching', 'accepted']
           && request.resource.data.status in ['cancelled', 'expired']
           && request.resource.data.cancelledBy in ['commuter', 'system']
-          && onlyChanged(['status', 'cancelledAt', 'cancelledBy', 'dispatch']))
+          && onlyChanged(['status', 'cancelledAt', 'cancelledBy', 'dispatch'])
+          && request.resource.data.get('dispatch', {}).get('offeredTo', null) == null)
         ||
         // ── 3. Commuter rates a completed ride, once ──────────
         (isRideCommuter()
@@ -442,8 +452,8 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     //  riders/{uid}
     // ═══════════════════════════════════════════════════════
-    // Optional commuter accounts. Booking still works with no account
-    // at all, so most commuters never have one of these.
+    // Commuter accounts. Every commuter has one: phone sign-in and a
+    // profile come before booking.
     //
     // Keyed by uid, not by phone number. A driver's email is their
     // working identity within the chapter; a rider's phone number is
@@ -557,7 +567,8 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     //  config/{configId}
     // ═══════════════════════════════════════════════════════
-    // Runtime tunables (search radius, offer timeout, fare table) so
+    // Runtime tunables (search radius, offer timeout, drivers to try, the
+    // booking stop switch) so
     // dispatch behaviour can change without shipping a new APK.
     match /config/{configId} {
       allow read: if isSignedIn();
@@ -580,7 +591,7 @@ service cloud.firestore {
     // than surgery on a profile someone is still using.
     //
     // And the blast radius of a mistake in these rules is bounded to the
-    // review data, instead of reachingnames, phone numbers and ride history.
+    // review data, instead of reaching names, phone numbers and ride history.
     //
     // **This is sensitive personal information under RA 10173.** The photo
     // itself lives in Storage; this document holds only a PATH to it, never

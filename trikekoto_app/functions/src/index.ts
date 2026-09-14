@@ -462,7 +462,7 @@ async function attemptDispatch(
   if (!pickup) return 'skipped';
 
   // Stage one: straight-line, to apply the radius and cut the field.
-  const shortlist = online
+  const inRadius = online
     .map((d) => ({ email: d.id, data: d.data() }))
     .filter((d) => !attempted.includes(d.email))
     .map((d) => ({
@@ -473,8 +473,14 @@ async function attemptDispatch(
         : Number.POSITIVE_INFINITY,
     }))
     .filter((d) => d.point !== undefined && d.km <= config.searchRadiusKm)
-    .sort((a, b) => a.km - b.km)
-    .slice(0, ROAD_RANK_LIMIT);
+    .sort((a, b) => a.km - b.km);
+
+  // Approved drivers only. The rules do not re-check approval on presence
+  // writes — one read per GPS ping would be the cost — so a suspended or
+  // never-approved driver can sit in the index. An offer pushes the ride to
+  // its driver and opens the passenger's name, number and pickup to them,
+  // so being in the index must not be enough to receive one.
+  const shortlist = (await approvedOnly(inRadius)).slice(0, ROAD_RANK_LIMIT);
 
   // Nobody free right now. Leave the ride searching — a driver may come
   // online before the budget runs out.
@@ -514,6 +520,20 @@ async function attemptDispatch(
   });
   logger.info(`Ride ${ref.id} offered to ${candidate.email}`);
   return 'offered';
+}
+
+/**
+ * The subset of `drivers` whose profile is approved, in the order given.
+ *
+ * One batched read for the drivers in radius — a chapter's worth at most.
+ * A missing profile is not approved.
+ */
+async function approvedOnly<T extends { email: string }>(drivers: T[]): Promise<T[]> {
+  if (drivers.length === 0) return drivers;
+  const profiles = await db.getAll(
+    ...drivers.map((d) => db.doc(`drivers/${d.email}`)),
+  );
+  return drivers.filter((_, i) => profiles[i].data()?.status === 'approved');
 }
 
 /** The online, idle drivers — the index a commuter can no longer read. */
@@ -566,6 +586,13 @@ export const requestDispatch = onCall(
     }
     if (ride.status !== 'searching') {
       return { outcome: 'skipped' as DispatchOutcome };
+    }
+    // Cheap answers first. Most calls find an offer still live, and reading
+    // every online driver to say so would bill one read per driver per call
+    // — a cost a script repeating this call could run up at will.
+    const liveOffer = ride.dispatch?.offerExpiresAt?.toDate();
+    if (liveOffer && liveOffer > new Date()) {
+      return { outcome: 'held' as DispatchOutcome };
     }
 
     const config = await readConfig();
