@@ -3,7 +3,11 @@
 #
 #   flutter build apk --release
 #   flutter build web --release
-#   bash scripts/stage_apk.sh          <-- after BOTH builds
+#   bash scripts/stage_apk.sh          <-- after BOTH builds, from Git Bash
+#
+# From PowerShell, `bash` may not be Git Bash, and on 2026-09-14 the script
+# printed nothing and staged nothing while the deploy after it succeeded.
+# Run it from Git Bash, and read its "staged ... sha256" line before deploying.
 #   firebase deploy --only hosting
 #
 # Order matters. `flutter build web` rewrites build/web and only copies a
@@ -22,20 +26,21 @@ DEST=build/web/download/trikekoto.apk
 mkdir -p "$(dirname "$DEST")"
 cp "$SRC" "$DEST"
 
-SRC_SIZE=$(stat -c %s "$SRC")
-DEST_SIZE=$(stat -c %s "$DEST")
+SRC_SUM=$(sha256sum "$SRC" | cut -d' ' -f1)
+DEST_SUM=$(sha256sum "$DEST" | cut -d' ' -f1)
 
-# Assert rather than announce. This script once failed on Windows with
-# "Class not registered", the deploy ran anyway, and a stale APK shipped —
-# the failure its header warns about, made by the script itself. A size
-# mismatch here now stops the pipeline instead of printing into a log
-# nobody reads.
-if [ "$SRC_SIZE" != "$DEST_SIZE" ]; then
-  echo "STAGING FAILED: source $SRC_SIZE bytes, staged $DEST_SIZE" >&2
+# Assert rather than announce, and by content, not size. This script once
+# failed on Windows with "Class not registered", the deploy ran anyway, and a
+# stale APK shipped. A size check was added — and on 2026-09-14 two
+# consecutive builds (1.0.2 and 1.0.3) came out at exactly 62,408,748 bytes,
+# so an outdated staged APK passed it and reached Hosting. A checksum cannot
+# be fooled that way.
+if [ "$SRC_SUM" != "$DEST_SUM" ]; then
+  echo "STAGING FAILED: staged APK does not match the build (sha256 ${DEST_SUM:0:16} != ${SRC_SUM:0:16})" >&2
   exit 1
 fi
 
-echo "staged $DEST_SIZE bytes -> $DEST"
+echo "staged $(stat -c %s "$DEST") bytes -> $DEST  (sha256 ${DEST_SUM:0:16})"
 echo "built  $(date -r "$SRC" '+%Y-%m-%d %H:%M')"
 echo
 echo "Next:  firebase deploy --only hosting"
