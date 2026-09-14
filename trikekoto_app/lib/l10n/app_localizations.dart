@@ -2136,6 +2136,12 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.'**
   String get idVerifiedOnceBody;
+
+  /// No description provided for @reviewViewFirst.
+  ///
+  /// In fil, this message translates to:
+  /// **'Buksan muna ang ID bago aprubahan.'**
+  String get reviewViewFirst;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

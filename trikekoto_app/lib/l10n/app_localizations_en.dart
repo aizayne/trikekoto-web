@@ -1157,4 +1157,7 @@ class LEn extends L {
   @override
   String get idVerifiedOnceBody =>
       'Your ID is confirmed. You never need to send it again, even after the photo is deleted.';
+
+  @override
+  String get reviewViewFirst => 'Open the ID before approving it.';
 }

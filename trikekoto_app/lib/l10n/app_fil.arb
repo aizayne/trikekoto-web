@@ -665,5 +665,6 @@
     }
   },
   "idVerifiedBadge": "Beripikado ang ID",
-  "idVerifiedOnceBody": "Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato."
+  "idVerifiedOnceBody": "Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.",
+  "reviewViewFirst": "Buksan muna ang ID bago aprubahan."
 }

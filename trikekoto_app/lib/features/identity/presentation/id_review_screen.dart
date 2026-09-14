@@ -241,6 +241,20 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
               ),
 
             const Gap(AppSpacing.lg),
+            // Approval is the whole of the scam and troll protection, and it
+            // means "a person looked at this card". Until the photo is on
+            // screen that has not happened, so the button says why it is off
+            // rather than looking broken. Rejecting stays available: refusing
+            // an ID unseen cannot let anyone in.
+            if (_image == null) ...[
+              Text(
+                context.l.reviewViewFirst,
+                textAlign: TextAlign.center,
+                style: context.text.bodySmall
+                    ?.copyWith(color: context.scheme.onSurfaceVariant),
+              ),
+              const Gap(AppSpacing.sm),
+            ],
             Row(
               children: [
                 Expanded(
@@ -253,7 +267,11 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                 const Gap(AppSpacing.md),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _busy ? null : () => _decide(approve: true),
+                    // Also off when the photo failed to load: an ID the
+                    // reviewer could not see is not one they can vouch for.
+                    onPressed: _busy || _image == null
+                        ? null
+                        : () => _decide(approve: true),
                     child: Text(context.l.reviewApprove),
                   ),
                 ),

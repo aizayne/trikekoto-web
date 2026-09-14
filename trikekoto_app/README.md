@@ -236,7 +236,9 @@ flutter build apk --release --build-number=${{ github.run_number }}
 ```
 
 Run numbers only ever increase, which is what Android requires: an update
-whose `versionCode` did not rise is refused at install. Hand-maintained build
+whose `versionCode` went down is refused at install — but an equal one
+installs silently over the old build, which is how an outdated APK once sat
+on a test phone looking identical to the new one. Hand-maintained build
 numbers eventually collide, usually when two people build the same release.
 
 Bump the semantic version by hand in `pubspec.yaml` when the release warrants

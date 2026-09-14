@@ -1166,4 +1166,7 @@ class LFil extends L {
   @override
   String get idVerifiedOnceBody =>
       'Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.';
+
+  @override
+  String get reviewViewFirst => 'Buksan muna ang ID bago aprubahan.';
 }

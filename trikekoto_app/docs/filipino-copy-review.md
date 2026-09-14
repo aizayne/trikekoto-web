@@ -396,6 +396,8 @@ driver hits at a terminal.
       - *en:* Not accepted
 - [ ] **`[shipped]`** Aprubahan
       - *en:* Approve
+- [ ] **`[new]`** Buksan muna ang ID bago aprubahan.
+      - *en:* Open the ID before approving it.
 
 ## Driver dashboard and map
 
@@ -756,7 +758,7 @@ driver hits at a terminal.
 
 ---
 
-**340 strings.** 69 already shipped and field-tested, **271 new and unread
+**341 strings.** 69 already shipped and field-tested, **272 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate

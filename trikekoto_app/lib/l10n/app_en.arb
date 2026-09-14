@@ -339,5 +339,6 @@
   "presenceWriteFailed": "Your location could not be saved to the server. Check your connection, then try again.",
   "presenceIssue": "Details for support: {write} · {code}",
   "idVerifiedBadge": "ID verified",
-  "idVerifiedOnceBody": "Your ID is confirmed. You never need to send it again, even after the photo is deleted."
+  "idVerifiedOnceBody": "Your ID is confirmed. You never need to send it again, even after the photo is deleted.",
+  "reviewViewFirst": "Open the ID before approving it."
 }
