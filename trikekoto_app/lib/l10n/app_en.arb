@@ -177,7 +177,7 @@
   "idPhotoTitle": "Photo of the ID",
   "idPhotoHint": "Make sure the name and number can be read",
   "idHowUsedTitle": "How your ID is used",
-  "idHowUsedBody": "• Only a TODA chapter officer looks at it, to confirm who you are.\n• No other passenger and no driver of yours can see it.\n• It is deleted 90 days after review, or immediately if you withdraw it.\n• You can delete it at any time from this screen.",
+  "idHowUsedBody": "• Only a TODA chapter officer looks at it, to confirm who you are.\n• No other passenger and no driver of yours can see it.\n• It is deleted 90 days after you send it, or immediately if you withdraw it.\n• You can delete it at any time from this screen.",
   "idConsentLabel": "I agree to my ID being processed for verification.",
   "regTitle": "Driver registration",
   "regPendingNote": "New accounts start as Pending. A TODA admin verifies you before you can accept rides.",

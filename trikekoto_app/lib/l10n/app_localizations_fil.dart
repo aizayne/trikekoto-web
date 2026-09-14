@@ -604,7 +604,7 @@ class LFil extends L {
 
   @override
   String get idHowUsedBody =>
-      '• Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka.\n• Hindi ito makikita ng ibang pasahero o ng driver mo.\n• Buburahin ito 90 araw matapos ang review, o kaagad kapag binawi mo.\n• Puwede mong burahin anumang oras dito sa screen na ito.';
+      '• Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka.\n• Hindi ito makikita ng ibang pasahero o ng driver mo.\n• Buburahin ito 90 araw matapos itong ipadala, o kaagad kapag binawi mo.\n• Puwede mong burahin anumang oras dito sa screen na ito.';
 
   @override
   String get idConsentLabel =>

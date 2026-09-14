@@ -347,8 +347,8 @@ driver hits at a terminal.
       - *en:* Make sure the name and number can be read
 - [ ] **`[shipped]`** Paano gagamitin ang ID mo
       - *en:* How your ID is used
-- [ ] **`[new]`** • Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka. ⏎ • Hindi ito makikita ng ibang pasahero o ng driver mo. ⏎ • Buburahin ito 90 araw matapos ang review, o kaagad kapag binawi mo. ⏎ • Puwede mong burahin anumang oras dito sa screen na ito.
-      - *en:* • Only a TODA chapter officer looks at it, to confirm who you are. ⏎ • No other passenger and no driver of yours can see it. ⏎ • It is deleted 90 days after review, or immediately if you withdraw it. ⏎ • You can delete it at any time from this screen.
+- [ ] **`[new]`** • Titingnan lang ito ng opisyal ng TODA chapter para kumpirmahin kung sino ka. ⏎ • Hindi ito makikita ng ibang pasahero o ng driver mo. ⏎ • Buburahin ito 90 araw matapos itong ipadala, o kaagad kapag binawi mo. ⏎ • Puwede mong burahin anumang oras dito sa screen na ito.
+      - *en:* • Only a TODA chapter officer looks at it, to confirm who you are. ⏎ • No other passenger and no driver of yours can see it. ⏎ • It is deleted 90 days after you send it, or immediately if you withdraw it. ⏎ • You can delete it at any time from this screen.
 - [ ] **`[shipped]`** Pumapayag ako na iproseso ang ID ko para sa pagkumpirma.
       - *en:* I agree to my ID being processed for verification.
 - [ ] **`[new]`** Kailangan ng verified na ID

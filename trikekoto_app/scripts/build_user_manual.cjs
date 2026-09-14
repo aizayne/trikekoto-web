@@ -20,7 +20,7 @@ const {
   TableOfContents, TableRow, TextRun, WidthType,
 } = require('docx');
 
-const VERSION = '1.0.4 (5)';
+const VERSION = '1.0.5 (6)';
 const DATE = 'September 2026';
 
 // ── Content ─────────────────────────────────────────────────────────────

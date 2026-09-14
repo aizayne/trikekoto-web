@@ -601,7 +601,7 @@ class LEn extends L {
 
   @override
   String get idHowUsedBody =>
-      '• Only a TODA chapter officer looks at it, to confirm who you are.\n• No other passenger and no driver of yours can see it.\n• It is deleted 90 days after review, or immediately if you withdraw it.\n• You can delete it at any time from this screen.';
+      '• Only a TODA chapter officer looks at it, to confirm who you are.\n• No other passenger and no driver of yours can see it.\n• It is deleted 90 days after you send it, or immediately if you withdraw it.\n• You can delete it at any time from this screen.';
 
   @override
   String get idConsentLabel =>
