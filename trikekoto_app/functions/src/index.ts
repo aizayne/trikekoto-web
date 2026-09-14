@@ -563,7 +563,12 @@ function onlineDrivers() {
  * exactly the information moving this off the device was meant to withhold.
  */
 export const requestDispatch = onCall(
-  { region: REGION },
+  // App Check enforced. Firestore's enforcement does not reach callables;
+  // each one opts in. Turned on after the logs showed the app's real calls
+  // arriving with a VALID token, so it refuses scripts, not the app. If a
+  // build ever stops attaching tokens, sweepStaleRides still offers the ride
+  // within a minute — slower, not broken.
+  { region: REGION, enforceAppCheck: true },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {

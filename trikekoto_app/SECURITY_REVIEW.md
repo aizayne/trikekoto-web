@@ -28,7 +28,7 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Found and fixed on re-review | **4** — 2 medium, 2 low; fixed, tested and deployed |
-| Open on re-review | **1** low, plus 2 decisions for the owner |
+| Open on re-review | **0** — the App Check gap on `requestDispatch` closed the same day; 2 decisions remain for the owner |
 | Accepted by design | **2** — documented below with tripwire tests |
 
 The two findings from the original web build — an admin gate that trusted an
@@ -160,16 +160,28 @@ still live. It now answers `held` from the ride alone. A script repeating the
 call against its own ride could previously bill one read per online driver per
 call.
 
-### Open — LOW — `requestDispatch` does not enforce App Check
+### ~~LOW — `requestDispatch` did not enforce App Check~~ — CLOSED
 
 Enforcement on Firestore does not extend to callable functions; each callable
-opts in with `enforceAppCheck: true`. Today a script holding a real, ID-verified
-account can call it for its own rides. The damage is bounded — ownership is
-checked, the reply is one word, and the fix above removes the expensive path —
-so this is low. Recommended: enable it, then confirm on the installed APK that
-booking still gets an offer within seconds. If tokens are not being attached,
-`sweepStaleRides` still offers the ride within a minute, so the failure mode is
-slow rather than broken.
+opts in with `enforceAppCheck: true`. Until it did, a script holding a real,
+ID-verified account could call it for its own rides — bounded, since ownership
+is checked and the reply is one word, but a gap.
+
+**Closed 14 September 2026.** Checked before switching on, not after: the
+function's own verification log showed the app's real calls that day arriving
+with `"app":"VALID"`, so enforcement refuses scripts rather than the installed
+app. The two `MISSING` entries on record are from 9 September, unauthenticated
+as well — probes at deploy time, not the app. If a build ever stops attaching
+tokens, `sweepStaleRides` still offers the ride within a minute, so the failure
+mode is slow rather than broken. The logs are also where to look if a booking
+suddenly takes a minute to find a driver.
+
+Verified after deploy with a request carrying no token. It was refused with
+`Unauthenticated` — the library's App Check rejection. The function's own
+sign-in check would have answered `Sign in first.`, so the refusal came before
+the handler ran. Note that the log line still reads *verification passed* for
+such a request: the library logs a missing token as passed and rejects it a
+few lines later, so that line is not evidence either way.
 
 ### Owner decisions raised
 
@@ -451,8 +463,8 @@ before deploying.
 5. ~~**Blaze plan** → server-side rating aggregation (68) and dispatch (67)~~
    — done. Both functions are deployed.
 6. ~~Re-run this review after any rules change.~~ Re-run on 14 September
-   2026; four findings fixed and deployed the same day. Next: decide on App
-   Check for `requestDispatch`. Run the review again after the next rules
+   2026; four findings fixed and deployed the same day, and App Check
+   enforced on `requestDispatch`. Run the review again after the next rules
    change.
 
 ---
