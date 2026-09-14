@@ -17,7 +17,7 @@ const path = require('path');
 const {
   AlignmentType, BorderStyle, Document, Footer, HeadingLevel, LevelFormat,
   PageBreak, PageNumber, Packer, Paragraph, ShadingType, Table, TableCell,
-  TableOfContents, TableRow, TextRun, WidthType,
+  TableOfContents, TableRow, TextRun, WidthType, ImageRun,
 } = require('docx');
 
 const VERSION = '1.0.5 (6)';
@@ -29,8 +29,10 @@ const DATE = 'September 2026';
 
 const L = (fil, en) => `**${fil}** (${en})`; // a button or label, as shown
 
+// Screenshots come from test/manual/manual_screenshots_test.dart, which renders
+// the shipped screens over made-up data. Regenerate them there, not by hand.
 let fig = 0;
-const figure = (caption) => ({ figure: `Figure ${++fig}. ${caption}` });
+const figure = (caption, file) => ({ figure: `Figure ${++fig}. ${caption}`, file });
 
 const content = [
   { h1: '1. Introduction' },
@@ -91,7 +93,7 @@ const content = [
   { p: 'PhilSys National ID, Driver’s License (LTO), UMID, PhilHealth ID, Postal ID, Voter’s ID, Passport, Senior Citizen ID, Student ID, and Barangay ID.' },
   { h2: '3.2 Submitting your ID' },
   { p: `The ${L('ID verification', 'ID verification')} screen appears on its own after you sign up.` },
-  figure('The ID verification screen'),
+  figure('The ID verification screen', 'fig-1-id-verification.png'),
   { steps: [
     `Choose your ID from ${L('Uri ng ID', 'ID type')}.`,
     `Type the number printed on the card in ${L('Numero ng ID', 'ID number')}.`,
@@ -123,10 +125,10 @@ const content = [
     `Tap ${L('Simulan', 'Start')}.`,
     'Submit your ID and wait for approval (Section 3).',
   ] },
-  figure('Signing in with a mobile number'),
+  figure('Signing in with a mobile number', 'fig-2-sign-in.png'),
   { note: 'Your number is not shown to any driver until you book a ride.' },
   { h2: '4.2 Booking a ride' },
-  figure('The booking screen'),
+  figure('The booking screen', 'fig-3-booking.png'),
   { steps: [
     `On ${L('Saan tayo?', 'Where to?')}, check ${L('Sundo', 'Pickup')}. The app fills it in with your current location. To change it, tap it and set it on the map (Section 4.3).`,
     `Tap ${L('Babaan', 'Drop-off')} and set where you are going.`,
@@ -150,7 +152,7 @@ const content = [
     'If no driver accepts after 10 drivers or about 5 minutes, the search stops and the booking screen appears again. Try again later.',
   ] },
   { h2: '4.5 When a driver accepts' },
-  figure('Tracking an accepted ride'),
+  figure('Tracking an accepted ride', 'fig-4-tracking.png'),
   { p: `The screen changes to ${L('Papunta na ang driver', 'Driver is on the way')} and shows the driver’s name and tricycle plate number. The map shows where the driver is and how far away.` },
   { bullets: [
     `To call the driver, tap the phone button, ${L('Tawagan si …', 'Call …')}.`,
@@ -217,7 +219,7 @@ const content = [
     ],
   } },
   { h2: '5.3 Going online' },
-  figure('The driver screen with the Online switch'),
+  figure('The driver screen with the Online switch', 'fig-5-driver-online.png'),
   { steps: [
     'Turn on **Location** on your phone.',
     'Slide the **Offline** switch to **Online**.',
@@ -259,7 +261,7 @@ const content = [
   { p: 'You only confirm your email once. If you are taken to the driver screen instead, your administrator entry does not match your email address; contact the project team.' },
   { h2: '6.2 The dashboard' },
   { p: 'The administrator dashboard has shortcuts to **Feedback**, **Dispatch** and **ID review**, a ride summary, and the list of drivers.' },
-  figure('The administrator dashboard'),
+  figure('The administrator dashboard', 'fig-6-admin-dashboard.png'),
   { h3: 'Ride summary' },
   { p: `Choose **Today**, **7 days** or **30 days**, then tap ${L('I-refresh', 'Refresh')}. The summary does not update live while you watch it; tap it again to load the latest rides.` },
   { table: {
@@ -282,7 +284,7 @@ const content = [
   ] },
   { p: `To stop a driver from accepting rides, tap ${L('I-suspend', 'Suspend')} on their entry in ${L('Lahat ng driver', 'All drivers')}. To reinstate them, tap ${L('Aprubahan', 'Approve')}.` },
   { h2: '6.4 Reviewing IDs' },
-  figure('Reviewing a submitted ID'),
+  figure('Reviewing a submitted ID', 'fig-7-id-review.png'),
   { steps: [
     `Open ${L('ID review', 'ID review')}. Each card shows whether the person is a driver or commuter, the ID type and number.`,
     `Tap ${L('Tingnan ang ID', 'View the ID')} and check the photo.`,
@@ -400,7 +402,7 @@ function toMarkdown(blocks) {
     else if (b.steps) { b.steps.forEach((s, i) => out.push(`${i + 1}. ${s}`)); out.push(''); }
     else if (b.bullets) { b.bullets.forEach((s) => out.push(`- ${s}`)); out.push(''); }
     else if (b.note) out.push(`> **Note:** ${b.note}`, '');
-    else if (b.figure) out.push(`*[${b.figure} — insert screenshot]*`, '');
+    else if (b.figure) out.push(`![${b.figure}](manual/${b.file})`, '', `*${b.figure}*`, '');
     else if (b.table) {
       const t = b.table;
       const cell = (c) => c.replace(/\|/g, '\\|');
@@ -461,14 +463,18 @@ function toDocx(blocks) {
         children: [new TextRun({ text: 'Note: ', bold: true, font: FONT }), ...runs(b.note)],
       }));
     } else if (b.figure) {
+      const data = fs.readFileSync(path.join(root, 'docs', 'manual', b.file));
+      // PNG width and height sit at fixed offsets in the IHDR chunk.
+      const w = data.readUInt32BE(16), h = data.readUInt32BE(20);
+      // Phone screens, so bounded by height as much as width.
+      const scale = Math.min(260 / w, 500 / h);
       body.push(new Paragraph({
         alignment: AlignmentType.CENTER,
-        // Top and bottom only. docx 9.6.1 writes a four-sided paragraph border as
-        // top > bottom > left > right, which breaks the schema's required
-        // top > left > bottom > right order however the keys are passed.
-        border: { top: cellBorder, bottom: cellBorder },
+        keepNext: true,
         spacing: { before: 160, after: 60 },
-        children: [new TextRun({ text: '[ Insert screenshot here ]', color: '8C8C8C', font: FONT })],
+        children: [new ImageRun({ type: 'png', data,
+          transformation: { width: Math.round(w * scale), height: Math.round(h * scale) },
+          altText: { title: b.figure, description: b.figure, name: b.file } })],
       }));
       body.push(new Paragraph({
         alignment: AlignmentType.CENTER, spacing: { after: 240 },
@@ -556,5 +562,5 @@ fs.writeFileSync(mdPath, toMarkdown(content) + '\n', 'utf8');
 Packer.toBuffer(toDocx(content)).then((buf) => {
   fs.writeFileSync(docxPath, buf);
   const sections = content.filter((b) => b.h1).length;
-  console.log(`wrote ${path.relative(root, mdPath)} and ${path.relative(root, docxPath)} (${sections} sections, ${fig} figure placeholders)`);
+  console.log(`wrote ${path.relative(root, mdPath)} and ${path.relative(root, docxPath)} (${sections} sections, ${fig} figures)`);
 });

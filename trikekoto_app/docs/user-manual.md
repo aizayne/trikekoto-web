@@ -78,7 +78,9 @@ PhilSys National ID, Driver’s License (LTO), UMID, PhilHealth ID, Postal ID, V
 
 The **ID verification** (ID verification) screen appears on its own after you sign up.
 
-*[Figure 1. The ID verification screen — insert screenshot]*
+![Figure 1. The ID verification screen](manual/fig-1-id-verification.png)
+
+*Figure 1. The ID verification screen*
 
 1. Choose your ID from **Uri ng ID** (ID type).
 2. Type the number printed on the card in **Numero ng ID** (ID number).
@@ -109,13 +111,17 @@ The screen changes to **Hinihintay ang review** (Waiting for review). You do not
 5. Tap **Simulan** (Start).
 6. Submit your ID and wait for approval (Section 3).
 
-*[Figure 2. Signing in with a mobile number — insert screenshot]*
+![Figure 2. Signing in with a mobile number](manual/fig-2-sign-in.png)
+
+*Figure 2. Signing in with a mobile number*
 
 > **Note:** Your number is not shown to any driver until you book a ride.
 
 ### 4.2 Booking a ride
 
-*[Figure 3. The booking screen — insert screenshot]*
+![Figure 3. The booking screen](manual/fig-3-booking.png)
+
+*Figure 3. The booking screen*
 
 1. On **Saan tayo?** (Where to?), check **Sundo** (Pickup). The app fills it in with your current location. To change it, tap it and set it on the map (Section 4.3).
 2. Tap **Babaan** (Drop-off) and set where you are going.
@@ -144,7 +150,9 @@ The screen shows **Naghahanap ng driver…** (Looking for a driver…). The syst
 
 ### 4.5 When a driver accepts
 
-*[Figure 4. Tracking an accepted ride — insert screenshot]*
+![Figure 4. Tracking an accepted ride](manual/fig-4-tracking.png)
+
+*Figure 4. Tracking an accepted ride*
 
 The screen changes to **Papunta na ang driver** (Driver is on the way) and shows the driver’s name and tricycle plate number. The map shows where the driver is and how far away.
 
@@ -214,7 +222,9 @@ Two approvals are needed before you can take rides: your **ID** (Section 3) and 
 
 ### 5.3 Going online
 
-*[Figure 5. The driver screen with the Online switch — insert screenshot]*
+![Figure 5. The driver screen with the Online switch](manual/fig-5-driver-online.png)
+
+*Figure 5. The driver screen with the Online switch*
 
 1. Turn on **Location** on your phone.
 2. Slide the **Offline** switch to **Online**.
@@ -266,7 +276,9 @@ You only confirm your email once. If you are taken to the driver screen instead,
 
 The administrator dashboard has shortcuts to **Feedback**, **Dispatch** and **ID review**, a ride summary, and the list of drivers.
 
-*[Figure 6. The administrator dashboard — insert screenshot]*
+![Figure 6. The administrator dashboard](manual/fig-6-admin-dashboard.png)
+
+*Figure 6. The administrator dashboard*
 
 #### Ride summary
 
@@ -293,7 +305,9 @@ To stop a driver from accepting rides, tap **I-suspend** (Suspend) on their entr
 
 ### 6.4 Reviewing IDs
 
-*[Figure 7. Reviewing a submitted ID — insert screenshot]*
+![Figure 7. Reviewing a submitted ID](manual/fig-7-id-review.png)
+
+*Figure 7. Reviewing a submitted ID*
 
 1. Open **ID review** (ID review). Each card shows whether the person is a driver or commuter, the ID type and number.
 2. Tap **Tingnan ang ID** (View the ID) and check the photo.

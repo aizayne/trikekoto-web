@@ -46,6 +46,11 @@ class OsmTiles extends StatelessWidget {
   /// on its own.
   static Future<void> clearCache() => _store?.clean() ?? Future.value();
 
+  /// Replaces the network for widget tests, which cannot reach it. Used by
+  /// the manual's screenshots, so a map in a picture is a map.
+  @visibleForTesting
+  static TileProvider? debugTileProvider;
+
   @override
   Widget build(BuildContext context) {
     return TileLayer(
@@ -54,12 +59,13 @@ class OsmTiles extends StatelessWidget {
       maxNativeZoom: 19,
       // Falls back to the plain network provider when the cache has not
       // initialised — a map that draws uncached beats a map that throws.
-      tileProvider: _store == null
-          ? NetworkTileProvider()
-          : CachedTileProvider(
-              store: _store!,
-              maxStale: const Duration(days: 30),
-            ),
+      tileProvider: debugTileProvider ??
+          (_store == null
+              ? NetworkTileProvider()
+              : CachedTileProvider(
+                  store: _store!,
+                  maxStale: const Duration(days: 30),
+                )),
       // OSM tiles are drawn for light backgrounds. Rather than ship a second
       // tile source, dark mode dims and inverts them slightly so the map does
       // not glare at a driver working a night shift.
