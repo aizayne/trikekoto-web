@@ -14,6 +14,7 @@ import '../data/driver.dart';
 import 'driver_ride_map.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../core/ui/build_stamp.dart';
+import '../../identity/application/id_verification_service.dart';
 
 class DriverDashboardScreen extends ConsumerWidget {
   const DriverDashboardScreen({super.key});
@@ -21,6 +22,7 @@ class DriverDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myDriverProfileProvider);
+    final idVerified = ref.watch(myIdVerifiedProvider).value == true;
 
     return Scaffold(
       appBar: AppBar(
@@ -59,12 +61,19 @@ class DriverDashboardScreen extends ConsumerWidget {
               // Available at every status, including pending — a driver
               // waiting on approval is exactly who should be able to send
               // the document that unblocks it.
+              // Once verified it stays verified, so the card stops asking.
+              // Still tappable: the driver may want to withdraw the photo,
+              // which deletes the ID but not the verification.
               Card(
                 child: ListTile(
-                  leading: const Icon(Icons.badge_outlined),
+                  leading: idVerified
+                      ? Icon(Icons.verified_user_outlined,
+                          color: context.semantic.success)
+                      : const Icon(Icons.badge_outlined),
                   title: Text(context.l.driverIdVerification),
-                  subtitle: Text(
-                      context.l.driverIdSubtitle),
+                  subtitle: Text(idVerified
+                      ? context.l.idVerifiedBadge
+                      : context.l.driverIdSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/driver/id'),
                 ),

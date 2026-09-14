@@ -663,5 +663,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "idVerifiedBadge": "Beripikado ang ID",
+  "idVerifiedOnceBody": "Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato."
 }

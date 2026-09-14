@@ -1159,4 +1159,11 @@ class LFil extends L {
   String presenceIssue(String write, String code) {
     return 'Detalye para sa suporta: $write · $code';
   }
+
+  @override
+  String get idVerifiedBadge => 'Beripikado ang ID';
+
+  @override
+  String get idVerifiedOnceBody =>
+      'Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.';
 }

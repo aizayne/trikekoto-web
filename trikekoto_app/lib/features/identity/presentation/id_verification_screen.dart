@@ -212,9 +212,17 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
                   mine.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (_, _) => _form(context),
-                    data: (sub) =>
-                        sub == null ? _form(context) : _status(context, sub),
+                    // Verified outranks "no submission". Retention deletes the
+                    // submission after 90 days and a withdrawal deletes it at
+                    // once; neither un-verifies anyone, so neither may put the
+                    // upload form back in front of them.
+                    error: (_, _) =>
+                        verified ? _verifiedOnly(context) : _form(context),
+                    data: (sub) => sub != null
+                        ? _status(context, sub)
+                        : verified
+                            ? _verifiedOnly(context)
+                            : _form(context),
                   ),
                 ],
               ),
@@ -258,6 +266,31 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
             ],
           ),
         ),
+      );
+
+  // ── Verified, with the ID itself already deleted ────────────
+  Widget _verifiedOnly(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(Icons.verified_user_outlined,
+              size: 56, color: context.semantic.success),
+          const Gap(AppSpacing.lg),
+          Text(context.l.idApprovedTitle,
+              textAlign: TextAlign.center,
+              style: context.text.headlineSmall),
+          const Gap(AppSpacing.sm),
+          Text(context.l.idVerifiedOnceBody,
+              textAlign: TextAlign.center,
+              style: context.text.bodyMedium
+                  ?.copyWith(color: context.scheme.onSurfaceVariant)),
+          const Gap(AppSpacing.xxl),
+          FilledButton.icon(
+            onPressed: () => context
+                .go(widget.role == IdRole.driver ? '/driver' : '/commuter'),
+            icon: const Icon(Icons.arrow_forward),
+            label: Text(context.l.idContinue),
+          ),
+        ],
       );
 
   // ── Already submitted ───────────────────────────────────────

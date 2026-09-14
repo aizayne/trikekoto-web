@@ -2124,6 +2124,18 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Detalye para sa suporta: {write} · {code}'**
   String presenceIssue(String write, String code);
+
+  /// No description provided for @idVerifiedBadge.
+  ///
+  /// In fil, this message translates to:
+  /// **'Beripikado ang ID'**
+  String get idVerifiedBadge;
+
+  /// No description provided for @idVerifiedOnceBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.'**
+  String get idVerifiedOnceBody;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

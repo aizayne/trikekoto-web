@@ -1150,4 +1150,11 @@ class LEn extends L {
   String presenceIssue(String write, String code) {
     return 'Details for support: $write · $code';
   }
+
+  @override
+  String get idVerifiedBadge => 'ID verified';
+
+  @override
+  String get idVerifiedOnceBody =>
+      'Your ID is confirmed. You never need to send it again, even after the photo is deleted.';
 }

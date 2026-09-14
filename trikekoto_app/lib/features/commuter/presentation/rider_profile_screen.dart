@@ -10,6 +10,7 @@ import '../../../core/ui/theme_controller.dart';
 import '../application/commuter_location.dart';
 import 'profile_photo_picker.dart';
 import '../../../core/ui/locale_controller.dart';
+import '../../identity/application/id_verification_service.dart';
 
 /// The rider's own profile — the only place a photo can be changed after
 /// sign-up.
@@ -279,8 +280,12 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                           onPressed: _busy
                               ? null
                               : () => context.push('/commuter/id'),
-                          icon: const Icon(Icons.badge_outlined),
-                          label: Text(context.l.profileIdVerification),
+                          icon: Icon(ref.watch(myIdVerifiedProvider).value == true
+                              ? Icons.verified_user_outlined
+                              : Icons.badge_outlined),
+                          label: Text(ref.watch(myIdVerifiedProvider).value == true
+                              ? context.l.idVerifiedBadge
+                              : context.l.profileIdVerification),
                         ),
                         const Gap(AppSpacing.lg),
 

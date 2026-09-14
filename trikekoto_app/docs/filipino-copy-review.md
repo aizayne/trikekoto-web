@@ -357,6 +357,10 @@ driver hits at a terminal.
       - *en:* To protect passengers and drivers from scams and trolls, the TODA chapter confirms your ID before you can use TrikeKoTo. Once it is approved, a Continue button appears here.
 - [ ] **`[new]`** Magpatuloy
       - *en:* Continue
+- [ ] **`[new]`** Beripikado ang ID
+      - *en:* ID verified
+- [ ] **`[new]`** Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.
+      - *en:* Your ID is confirmed. You never need to send it again, even after the photo is deleted.
 
 ## ID review (admin)
 
@@ -752,7 +756,7 @@ driver hits at a terminal.
 
 ---
 
-**338 strings.** 69 already shipped and field-tested, **269 new and unread
+**340 strings.** 69 already shipped and field-tested, **271 new and unread
 by anyone.**
 
 ## Settled, so do not re-litigate

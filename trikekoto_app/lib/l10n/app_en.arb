@@ -337,5 +337,7 @@
   "presenceConnecting": "Connecting…",
   "presenceNoFix": "Cannot get a location fix. Move somewhere with a view of the sky, then try again.",
   "presenceWriteFailed": "Your location could not be saved to the server. Check your connection, then try again.",
-  "presenceIssue": "Details for support: {write} · {code}"
+  "presenceIssue": "Details for support: {write} · {code}",
+  "idVerifiedBadge": "ID verified",
+  "idVerifiedOnceBody": "Your ID is confirmed. You never need to send it again, even after the photo is deleted."
 }

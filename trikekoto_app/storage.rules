@@ -88,6 +88,9 @@ service firebase.storage {
       allow read: if isSelf(uid) || isAdminReviewer();
 
       allow write: if isSelf(uid)
+        // Verified once, verified for good: no second ID photo is accepted,
+        // matching the Firestore rule on id_submissions.
+        && !firestore.exists(/databases/(default)/documents/id_verified/$(uid))
         // 4 MB. Larger than a profile photo because an ID has to stay
         // legible enough to read a number off, and smaller than a modern
         // camera's default so the client is obliged to downscale.

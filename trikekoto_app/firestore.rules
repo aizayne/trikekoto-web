@@ -627,7 +627,11 @@ service cloud.firestore {
 
       allow get: if isSelfSubject() || isAdmin();
       allow list: if isAdmin();
-      allow create: if isSelfSubject() && validNewSubmission();
+      // One verification per account. Once id_verified exists the person is
+      // verified for good, so a second submission would collect a government
+      // ID for no purpose — exactly what RA 10173's minimisation forbids.
+      allow create: if isSelfSubject() && validNewSubmission()
+        && !exists(/databases/$(database)/documents/id_verified/$(uid()));
       allow update: if isAdmin() && validReview();
       // Either side may delete: the subject withdrawing consent, or an admin
       // enforcing retention. Deleting the document does not delete the

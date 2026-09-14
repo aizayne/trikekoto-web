@@ -9,6 +9,7 @@ import 'package:trikekoto_app/features/drivers/data/driver.dart';
 import 'package:trikekoto_app/features/drivers/presentation/driver_dashboard_screen.dart';
 import 'package:trikekoto_app/features/rides/data/ride.dart';
 import 'package:trikekoto_app/l10n/app_localizations.dart';
+import 'package:trikekoto_app/features/identity/application/id_verification_service.dart';
 
 /// Widget tests for the driver dashboard.
 ///
@@ -76,11 +77,13 @@ Widget _harness({
   Ride? activeRide,
   PresenceController Function()? presence,
   PresenceStatus? status,
+  bool idVerified = true,
 }) {
   return ProviderScope(
     overrides: [
       themeModeProvider.overrideWith(_FixedTheme.new),
       myDriverProfileProvider.overrideWith((ref) => Stream.value(driver)),
+      myIdVerifiedProvider.overrideWith((ref) => Stream.value(idVerified)),
       myOffersProvider.overrideWith((ref) => Stream.value(offers)),
       myActiveRideProvider.overrideWith((ref) => Stream.value(activeRide)),
       presenceProvider
@@ -375,6 +378,23 @@ void main() {
       expect(find.text('Details for support: presence · permission-denied'),
           findsOneWidget);
       expect(find.text('Offline'), findsOneWidget);
+    });
+  });
+
+  group('verified once, verified for good', () {
+    testWidgets('a verified driver is told so instead of being asked',
+        (tester) async {
+      await tester.pumpWidget(_harness(driver: _driver(DriverStatus.approved)));
+      await tester.pumpAndSettle();
+      expect(find.text('ID verified'), findsOneWidget);
+      expect(find.text('Send your licence or ID to the chapter'), findsNothing);
+    });
+
+    testWidgets('an unverified driver is still asked', (tester) async {
+      await tester.pumpWidget(_harness(
+          driver: _driver(DriverStatus.approved), idVerified: false));
+      await tester.pumpAndSettle();
+      expect(find.text('Send your licence or ID to the chapter'), findsOneWidget);
     });
   });
 }

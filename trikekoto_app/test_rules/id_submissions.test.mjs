@@ -374,3 +374,36 @@ describe('withdrawal and retention', () => {
     );
   });
 });
+
+// ════════════════════════════════════════════════════════════
+describe('one verification per account', () => {
+  it('a verified account cannot submit another ID', async () => {
+    // Verified once is verified for good. A second submission would collect
+    // a government ID for no purpose, which is what minimisation forbids.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'id_verified', RIDER_UID), { role: 'rider' });
+    });
+    await assertFails(
+      setDoc(doc(rider(), 'id_submissions', RIDER_UID), submission()),
+    );
+  });
+
+  it('that stays true after the first submission has been deleted', async () => {
+    // Retention and withdrawal both delete the submission, and neither
+    // un-verifies anyone — so neither may reopen the door to a new one.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'id_verified', DRIVER_UID), { role: 'driver' });
+    });
+    await assertFails(
+      setDoc(doc(driver(), 'id_submissions', DRIVER_UID),
+        submission(DRIVER_UID, { role: 'driver' })),
+    );
+  });
+
+  it('an unverified account can still submit', async () => {
+    await assertSucceeds(
+      setDoc(doc(rider(), 'id_submissions', RIDER_UID), submission()),
+    );
+  });
+});
+
