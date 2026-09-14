@@ -2,8 +2,8 @@
 
 **Reviewed:** 24 August 2026 · **Re-reviewed:** 14 September 2026 ·
 **Project:** `trikekoto`
-**Ruleset:** the repository copy. The 14 September fixes are **not yet
-deployed** — see [Re-review](#re-review--14-september-2026).
+**Ruleset:** deployed, including the 14 September fixes — see
+[Re-review](#re-review--14-september-2026).
 **Verification:** 216 emulator tests, the adversarial ones in
 [`test_rules/attacks.test.mjs`](test_rules/attacks.test.mjs)
 
@@ -27,7 +27,7 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | Medium | **0** — key restrictions applied; see the caveat on what they actually enforce |
 | New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
-| Found and fixed on re-review | **4** — 2 medium, 2 low; fixed and tested, **awaiting deploy** |
+| Found and fixed on re-review | **4** — 2 medium, 2 low; fixed, tested and deployed |
 | Open on re-review | **1** low, plus 2 decisions for the owner |
 | Accepted by design | **2** — documented below with tripwire tests |
 
@@ -82,13 +82,10 @@ dispatch all postdated the first review. Method: `firestore.rules`,
 actually writes, then every fix pinned by an emulator test before it was
 called fixed.
 
-**Deploy status: none of the fixes below is live yet.** They are in the
-repository with the suite passing (216). Deploy with:
-
-```bash
-npm --prefix functions run build
-firebase deploy --only firestore:rules,storage,functions:requestDispatch,functions:sweepStaleRides --project trikekoto
-```
+**Deployed 14 September 2026**, with the suite passing (216): Firestore rules,
+Storage rules, `requestDispatch` and `sweepStaleRides`. Still to confirm on a
+handset: a real booking still reaches a driver, and a new ID upload still goes
+through — the one fix no emulator covers.
 
 ### MEDIUM — A commuter could choose which driver is offered their ride — FIXED
 
@@ -415,7 +412,7 @@ driver every few seconds. A suspended driver appears in the dispatch index but
 halves. *Corrected on re-review:* being offered a ride was itself an exposure,
 since an offer carries the passenger's name and number. The dispatch functions
 now offer only to approved drivers, so presence alone gets a suspended driver
-nothing (awaiting deploy).
+nothing.
 
 **Commuter PII lives on the ride document.** Name and phone are readable by
 the assigned driver and by any driver currently offered the ride. That is the
@@ -454,8 +451,8 @@ before deploying.
 5. ~~**Blaze plan** → server-side rating aggregation (68) and dispatch (67)~~
    — done. Both functions are deployed.
 6. ~~Re-run this review after any rules change.~~ Re-run on 14 September
-   2026; four findings fixed. **Deploy them** (command in the re-review), then
-   decide on App Check for `requestDispatch`. Run it again after the next rules
+   2026; four findings fixed and deployed the same day. Next: decide on App
+   Check for `requestDispatch`. Run the review again after the next rules
    change.
 
 ---
