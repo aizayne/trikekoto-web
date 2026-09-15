@@ -1,0 +1,11 @@
+[
+  {
+    "origin": [
+      "https://trikekoto.web.app",
+      "https://trikekoto.firebaseapp.com",
+      "http://localhost"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
