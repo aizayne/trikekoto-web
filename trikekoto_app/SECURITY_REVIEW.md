@@ -28,7 +28,7 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
 | Found and fixed on re-review | **3** — 2 medium, 1 low; fixed, tested and deployed. A fourth (low) was deployed and rolled back the same night; see below |
-| Open on re-review | **1** low — the ID photo swap, reopened when its fix was rolled back; the App Check gap on `requestDispatch` is closed; 2 decisions remain for the owner |
+| Open on re-review | **2** — medium: the web admin page opens ID photos through a download URL; low: the ID photo swap, reopened when its fix was rolled back. 2 decisions remain for the owner |
 | Accepted by design | **2** — documented below with tripwire tests |
 
 The two findings from the original web build — an admin gate that trusted an
@@ -155,13 +155,15 @@ in version 1.0.5 (6).
 
 **Rolled back, early on 15 September 2026.** After it went live, an ID upload on
 a handset failed with *User is not authorized to perform the desired action*.
-The cause was not established — the account may already have held a
-submission or a verification — but this was the only Storage change that
-night and the one no test covered, so it came out first, with a proposal
-defense hours away. The gap is open again: low severity, and bounded by the
-reviewer approving only what they saw. Restore it only alongside a Storage
-emulator test and a handset upload that proves a first-time submission still
-works.
+It was the only Storage change that night and the one no test covered, so it
+came out first, with a proposal defense hours away. The gap is open again: low
+severity, and bounded by the reviewer approving only what they saw.
+
+*The rule was very likely innocent.* The upload kept failing after the
+rollback, and the real cause turned out to be a missing IAM grant (see
+*Found during handset checks*), which broke every `firestore.exists()` in the
+Storage rules. Restore it alongside a Storage emulator test and a handset
+upload that proves a first-time submission still works.
 
 ### Hardening — `requestDispatch` read the whole index to say "wait"
 
@@ -192,6 +194,36 @@ sign-in check would have answered `Sign in first.`, so the refusal came before
 the handler ran. Note that the log line still reads *verification passed* for
 such a request: the library logs a missing token as passed and rejects it a
 few lines later, so that line is not evidence either way.
+
+### Found during handset checks — 15 September 2026
+
+**FIXED — Cross-service Storage rules had no IAM grant.** Every
+`firestore.exists()` in `storage.rules` needs the Storage service agent
+(`service-877860610923@gcp-sa-firebasestorage.iam.gserviceaccount.com`) to hold
+**Firebase Rules Firestore Service Agent**. It did not. Each lookup was refused,
+so ID uploads failed from the moment the verified-account check was added
+(14 September, 18:32), and admins could not open ID photos — while the emulator,
+which needs no grant, passed the same rules. The owner granted the role; a
+handset upload then reached the review queue and the photo opened in the
+Android admin app. The verified-account check is restored. Lesson: an emulator
+pass does not prove a cross-service rule works in production.
+
+**OPEN — MEDIUM — The web admin page opens ID photos through a download URL.**
+On the web, FlutterFire's `getData()` fetches a tokenised download URL and then
+downloads it, so viewing an ID on the web mints exactly the kind of URL this
+review says is never created: one that works for anyone holding it, bypasses
+the Storage rules, and survives until the object is deleted or the token is
+revoked. The browser error that exposed it printed the URL in full. Android is
+not affected. Until fixed, review IDs in the Android app, and delete test IDs
+after viewing (deleting the object kills the URL). Fix: on the web, read the
+bytes with an authorised request instead of `getData()`, or revoke the token
+after each view.
+
+**PENDING — The bucket has no CORS policy**, so the web page cannot download ID
+photos at all. `storage.cors.json` is in the repository; apply it with
+`gcloud storage buckets update gs://trikekoto.firebasestorage.app --cors-file=storage.cors.json`.
+Weigh the finding above first: applying CORS is what makes the web path work,
+download URL and all.
 
 ### Owner decisions raised
 
