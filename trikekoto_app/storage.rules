@@ -91,12 +91,12 @@ service firebase.storage {
         // Verified once, verified for good: no second ID photo is accepted,
         // matching the Firestore rule on id_submissions.
         && !firestore.exists(/databases/(default)/documents/id_verified/$(uid))
-        // Only before a submission exists. The app uploads the photo and then
-        // creates the submission, so every real upload is admitted — but the
-        // photo cannot be replaced once a reviewer may have looked at it, so
-        // what is kept on record is what was approved. After a rejection the
-        // person withdraws, which deletes both, and sends again.
-        && !firestore.exists(/databases/(default)/documents/id_submissions/$(uid))
+        // A second check — refuse the upload once id_submissions/{uid} exists,
+        // so the photo cannot be swapped after a reviewer has looked — was
+        // added on 2026-09-14 and rolled back the same night: an ID upload on
+        // a handset was refused straight after it went live, and the check was
+        // never covered by an emulator test. Restore it only with a Storage
+        // emulator test and a handset upload to prove it.
         // 4 MB. Larger than a profile photo because an ID has to stay
         // legible enough to read a number off, and smaller than a modern
         // camera's default so the client is obliged to downscale.

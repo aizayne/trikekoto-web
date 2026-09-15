@@ -27,8 +27,8 @@ cd test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 | Medium | **0** — key restrictions applied; see the caveat on what they actually enforce |
 | New surface | **1** — government ID collection, added deliberately; see below |
 | Closed since this review | **1** — rating inflation, by the step 68 cutover |
-| Found and fixed on re-review | **4** — 2 medium, 2 low; fixed, tested and deployed |
-| Open on re-review | **0** — the App Check gap on `requestDispatch` closed the same day; 2 decisions remain for the owner |
+| Found and fixed on re-review | **3** — 2 medium, 1 low; fixed, tested and deployed. A fourth (low) was deployed and rolled back the same night; see below |
+| Open on re-review | **1** low — the ID photo swap, reopened when its fix was rolled back; the App Check gap on `requestDispatch` is closed; 2 decisions remain for the owner |
 | Accepted by design | **2** — documented below with tripwire tests |
 
 The two findings from the original web build — an admin gate that trusted an
@@ -83,9 +83,9 @@ actually writes, then every fix pinned by an emulator test before it was
 called fixed.
 
 **Deployed 14 September 2026**, with the suite passing (216): Firestore rules,
-Storage rules, `requestDispatch` and `sweepStaleRides`. Still to confirm on a
-handset: a real booking still reaches a driver, and a new ID upload still goes
-through — the one fix no emulator covers.
+Storage rules, `requestDispatch` and `sweepStaleRides`. The Storage change was
+rolled back hours later (see the ID photo finding). Still to confirm on a
+handset: a real booking reaches a driver, and an ID upload goes through.
 
 ### MEDIUM — A commuter could choose which driver is offered their ride — FIXED
 
@@ -139,7 +139,7 @@ these, so only a modified client could do it — and only one would want to.
 **Fix.** Self-edit is allowed while `pending` only. After approval the officer
 edits it as an admin. Tests in both suites.
 
-### LOW — An ID photo could be replaced after the reviewer looked — FIXED
+### LOW — An ID photo could be replaced after the reviewer looked — REOPENED (fix rolled back)
 
 The Storage rule let the subject overwrite `ids/{uid}/card` at any time until
 verified. A reviewer opens the photo, the subject swaps it, the reviewer
@@ -152,6 +152,16 @@ legitimate flow — including resubmitting after a rejection — still works.
 **Not emulator-tested:** the suite runs Firestore only. The rule uses the same
 `firestore.exists` form as the `id_verified` check already deployed and working
 in version 1.0.5 (6).
+
+**Rolled back, early on 15 September 2026.** After it went live, an ID upload on
+a handset failed with *User is not authorized to perform the desired action*.
+The cause was not established — the account may already have held a
+submission or a verification — but this was the only Storage change that
+night and the one no test covered, so it came out first, with a proposal
+defense hours away. The gap is open again: low severity, and bounded by the
+reviewer approving only what they saw. Restore it only alongside a Storage
+emulator test and a handset upload that proves a first-time submission still
+works.
 
 ### Hardening — `requestDispatch` read the whole index to say "wait"
 
