@@ -88,9 +88,14 @@ service firebase.storage {
       allow read: if isSelf(uid) || isAdminReviewer();
 
       allow write: if isSelf(uid)
-        // Verified once, verified for good: no second ID photo is accepted,
-        // matching the Firestore rule on id_submissions.
-        && !firestore.exists(/databases/(default)/documents/id_verified/$(uid))
+        // DIAGNOSTIC, 2026-09-15, deployed at the owner's request: the check
+        //   && !firestore.exists(/databases/(default)/documents/id_verified/$(uid))
+        // is suspended. No ID upload has succeeded since it was added, and a
+        // first-time upload on 1.0.5 (6) was refused although the emulator
+        // admits the same request. Verify-once still holds without it: the
+        // Firestore rule on id_submissions refuses a second submission. What it
+        // alone prevented was a verified person uploading an orphan photo to
+        // their own path. Restore it once the refusal is explained.
         // A second check — refuse the upload once id_submissions/{uid} exists,
         // so the photo cannot be swapped after a reviewer has looked — was
         // added on 2026-09-14 and rolled back the same night: an ID upload on
