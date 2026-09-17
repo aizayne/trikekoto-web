@@ -25,10 +25,20 @@ import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, GeoPoint, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
-import { onDocumentDeleted, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import {
+  onDocumentCreated,
+  onDocumentDeleted,
+  onDocumentUpdated,
+} from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
+import {
+  driversHoldingOffers,
+  msUntilLapsed,
+  pickByRoad,
+  shortlistByDistance,
+} from './dispatch';
 
 initializeApp();
 const db = getFirestore();
@@ -112,20 +122,6 @@ async function readConfig() {
     logger.warn('config/app unreadable, using defaults', e);
     return FALLBACK;
   }
-}
-
-/** Great-circle distance in kilometres — the same measure the client sorts by. */
-function haversineKm(a: GeoPoint, b: GeoPoint): number {
-  const R = 6371;
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLng = toRad(b.longitude - a.longitude);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.latitude)) *
-      Math.cos(toRad(b.latitude)) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
 /**
@@ -413,6 +409,7 @@ async function attemptDispatch(
   online: FirebaseFirestore.QueryDocumentSnapshot[],
   config: Awaited<ReturnType<typeof readConfig>>,
   now: Date,
+  busy: Set<string>,
 ): Promise<DispatchOutcome> {
   if (ride.status !== 'searching') return 'skipped';
 
@@ -424,6 +421,13 @@ async function attemptDispatch(
 
   const attempted = dispatch.attemptedDrivers ?? [];
   const depth = dispatch.depth ?? 0;
+  const seq = dispatch.offerSeq ?? 0;
+  const expire = {
+    status: 'expired',
+    cancelledAt: FieldValue.serverTimestamp(),
+    cancelledBy: 'system',
+    dispatch: emptyDispatch(),
+  };
 
   // Wall clock first, because it catches the case the candidate budget
   // structurally cannot: nobody was ever available, so no candidate was
@@ -434,12 +438,7 @@ async function attemptDispatch(
     : 0;
 
   if (searchingFor > SEARCH_TIMEOUT_MINUTES) {
-    await ref.update({
-      status: 'expired',
-      cancelledAt: FieldValue.serverTimestamp(),
-      cancelledBy: 'system',
-      dispatch: emptyDispatch(),
-    });
+    if (!(await commitIfUnchanged(ref, seq, expire))) return 'held';
     logger.info(
       `Ride ${ref.id} expired after ${Math.round(searchingFor)} min ` +
       `unmatched (${depth} candidates tried)`,
@@ -448,12 +447,7 @@ async function attemptDispatch(
   }
 
   if (depth >= config.maxDriversToTry) {
-    await ref.update({
-      status: 'expired',
-      cancelledAt: FieldValue.serverTimestamp(),
-      cancelledBy: 'system',
-      dispatch: emptyDispatch(),
-    });
+    if (!(await commitIfUnchanged(ref, seq, expire))) return 'held';
     logger.info(`Ride ${ref.id} expired after ${depth} candidates`);
     return 'expired';
   }
@@ -461,19 +455,13 @@ async function attemptDispatch(
   const pickup = ride.pickup?.geopoint;
   if (!pickup) return 'skipped';
 
-  // Stage one: straight-line, to apply the radius and cut the field.
-  const inRadius = online
-    .map((d) => ({ email: d.id, data: d.data() }))
-    .filter((d) => !attempted.includes(d.email))
-    .map((d) => ({
-      email: d.email,
-      point: d.data.position?.geopoint as GeoPoint | undefined,
-      km: d.data.position?.geopoint
-        ? haversineKm(pickup, d.data.position.geopoint as GeoPoint)
-        : Number.POSITIVE_INFINITY,
-    }))
-    .filter((d) => d.point !== undefined && d.km <= config.searchRadiusKm)
-    .sort((a, b) => a.km - b.km);
+  // Stage one: straight-line, to apply the radius and cut the field. Drivers
+  // already tried, or holding a live offer on another ride, are left out.
+  const inRadius = shortlistByDistance(
+    online.map((d) => ({ email: d.id, position: d.data().position })),
+    pickup,
+    { attempted, busy, radiusKm: config.searchRadiusKm },
+  );
 
   // Approved drivers only. The rules do not re-check approval on presence
   // writes — one read per GPS ping would be the cost — so a suspended or
@@ -488,38 +476,88 @@ async function attemptDispatch(
 
   // Stage two: road distance over the shortlist decides the winner.
   // Crow-flies is wrong wherever geography does not follow the streets.
-  let candidate = shortlist[0];
-  if (shortlist.length > 1) {
-    const roadKm = await roadDistancesKm(
-      config.routingBaseUrl,
-      pickup,
-      shortlist.map((d) => d.point as GeoPoint),
-    );
-    if (roadKm) {
-      // A null entry means no road connection to the pickup. Drop those
-      // rather than ranking them last — offering a ride to a driver who
-      // cannot reach it burns a whole offer timeout.
-      const routed = shortlist
-        .map((d, i) => ({ ...d, road: roadKm[i] }))
-        .filter((d): d is typeof d & { road: number } => d.road !== null)
-        .sort((a, b) => a.road - b.road);
-      if (routed.length > 0) candidate = routed[0];
-    }
-  }
+  const roadKm = shortlist.length > 1
+    ? await roadDistancesKm(
+        config.routingBaseUrl,
+        pickup,
+        shortlist.map((d) => d.point as GeoPoint),
+      )
+    : null;
+  const candidate = pickByRoad(shortlist, roadKm)!;
 
-  await ref.update({
+  // The window starts when the offer is written, not when this run began:
+  // the routing call alone can take seconds, and a driver should get the
+  // whole timeout to answer.
+  const offered = await commitIfUnchanged(ref, seq, {
     dispatch: {
       offeredTo: candidate.email,
-      offerSeq: (dispatch.offerSeq ?? 0) + 1,
-      offerExpiresAt: new Date(
-        now.getTime() + config.offerTimeoutSeconds * 1000,
-      ),
+      offerSeq: seq + 1,
+      offerExpiresAt: new Date(Date.now() + config.offerTimeoutSeconds * 1000),
       attemptedDrivers: [...attempted, candidate.email],
       depth: depth + 1,
     },
   });
+  // Someone else moved this ride first; their offer stands.
+  if (!offered) return 'held';
+
+  busy.add(candidate.email);
   logger.info(`Ride ${ref.id} offered to ${candidate.email}`);
   return 'offered';
+}
+
+/**
+ * Writes [update] only if nobody else has moved this ride since it was read.
+ *
+ * Dispatch runs from four places — the booking trigger, the offer trigger,
+ * the commuter's app and the minute sweep — and each is delivered at least
+ * once, not exactly once. Without this, two runs reading the same state would
+ * both offer, and the second would quietly take the ride away from the first
+ * driver mid-offer. `offerSeq` changes with every offer and a live offer has
+ * an unexpired `offerExpiresAt`, so either one moving means stand down.
+ */
+async function commitIfUnchanged(
+  ref: FirebaseFirestore.DocumentReference,
+  seq: number,
+  update: Record<string, unknown>,
+): Promise<boolean> {
+  return db.runTransaction(async (tx) => {
+    const fresh = (await tx.get(ref)).data() as Ride | undefined;
+    if (!fresh || fresh.status !== 'searching') return false;
+    const d = fresh.dispatch ?? {};
+    if ((d.offerSeq ?? 0) !== seq) return false;
+    const expires = d.offerExpiresAt?.toDate();
+    if (expires && expires > new Date()) return false;
+    tx.update(ref, update);
+    return true;
+  });
+}
+
+/** Searching rides, to know which drivers already hold a live offer. */
+function searchingRides() {
+  return db.collection('rides').where('status', '==', 'searching').limit(100).get();
+}
+
+/**
+ * One dispatch attempt for one ride, with everything it ranks against read
+ * fresh. Shared by the callable and the event triggers so all of them choose
+ * the same way.
+ */
+async function dispatchNow(
+  ref: FirebaseFirestore.DocumentReference,
+  ride: Ride,
+): Promise<DispatchOutcome> {
+  const now = new Date();
+  const [config, online, searching] = await Promise.all([
+    readConfig(),
+    onlineDrivers(),
+    searchingRides(),
+  ]);
+  const busy = driversHoldingOffers(
+    searching.docs.map((d) => ({ id: d.id, ...(d.data() as Ride) })),
+    now,
+    ref.id,
+  );
+  return attemptDispatch(ref, ride, online.docs, config, now, busy);
 }
 
 /**
@@ -600,12 +638,73 @@ export const requestDispatch = onCall(
       return { outcome: 'held' as DispatchOutcome };
     }
 
-    const config = await readConfig();
-    const online = await onlineDrivers();
-    const outcome = await attemptDispatch(
-      ref, ride, online.docs, config, new Date(),
-    );
-    return { outcome };
+    return { outcome: await dispatchNow(ref, ride) };
+  },
+);
+
+// ════════════════════════════════════════════════════════════
+// 67b · Event-driven dispatch — offers move when something happens.
+// ════════════════════════════════════════════════════════════
+/**
+ * Offers a new booking straight away.
+ *
+ * The first offer used to wait for the commuter's app to call
+ * [requestDispatch], or for the minute sweep. That call can be refused — a
+ * sideloaded APK's App Check token did not verify on 2026-09-15 — and a
+ * commuter then watched a spinner for up to a minute. A trigger on the ride
+ * document needs nothing from the device.
+ */
+export const dispatchOnBooking = onDocumentCreated(
+  { document: 'rides/{rideId}', region: REGION },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const outcome = await dispatchNow(snap.ref, snap.data() as Ride);
+    logger.info(`Booking ${snap.id}: ${outcome}`);
+  },
+);
+
+/**
+ * Moves a search on the moment an offer ends without an accept.
+ *
+ * - **Declined:** the driver clears `offeredTo` while the ride is still
+ *   searching. The next driver is offered now.
+ * - **Unanswered:** a new offer was written. This waits until it lapses,
+ *   re-reads the ride, and if nobody answered offers the next driver — at
+ *   the timeout, not up to a minute after it.
+ *
+ * It cannot loop. Its own offer writes start a fresh wait, which acts only if
+ * that offer is still the current one when it lapses; accepting, cancelling
+ * and expiring all leave `searching`, which it ignores.
+ */
+export const advanceDispatch = onDocumentUpdated(
+  { document: 'rides/{rideId}', region: REGION, timeoutSeconds: 180 },
+  async (event) => {
+    const before = event.data?.before.data() as Ride | undefined;
+    const after = event.data?.after.data() as Ride | undefined;
+    const ref = event.data?.after.ref;
+    if (!after || !ref || after.status !== 'searching') return;
+
+    const previous = before?.dispatch?.offeredTo ?? null;
+    const current = after.dispatch?.offeredTo ?? null;
+
+    if (previous && !current) {
+      logger.info(`Ride ${ref.id} declined; ${await dispatchNow(ref, after)}`);
+      return;
+    }
+
+    const seq = after.dispatch?.offerSeq ?? 0;
+    const expires = after.dispatch?.offerExpiresAt?.toDate();
+    const newOffer = current && seq !== (before?.dispatch?.offerSeq ?? 0);
+    if (!newOffer || !expires) return;
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, msUntilLapsed(expires, new Date())));
+
+    const fresh = (await ref.get()).data() as Ride | undefined;
+    if (!fresh || fresh.status !== 'searching') return;
+    if ((fresh.dispatch?.offerSeq ?? 0) !== seq) return;
+    logger.info(`Ride ${ref.id} offer lapsed; ${await dispatchNow(ref, fresh)}`);
   },
 );
 
@@ -617,9 +716,9 @@ export const requestDispatch = onCall(
  * untried driver, and expires the ride once the candidate budget or the
  * five-minute wall clock is spent.
  *
- * Runs every minute, which is coarser than the client's 15-second cadence. A
- * foregrounded commuter still gets the fast path; this is the safety net,
- * and a per-second schedule would cost far more than it buys.
+ * Runs every minute. Offers normally move on events — [dispatchOnBooking] and
+ * [advanceDispatch] — so this is the net for a trigger that failed or never
+ * fired, and a per-second schedule would cost far more than it buys.
  */
 export const sweepStaleRides = onSchedule(
   { schedule: 'every 1 minutes', region: REGION },
@@ -638,9 +737,16 @@ export const sweepStaleRides = onSchedule(
     // One read for the whole batch, not one per ride.
     const online = await onlineDrivers();
 
+    // Drivers holding a live offer, kept up to date as this run offers more,
+    // so two rides in one sweep never go to the same driver.
+    const busy = driversHoldingOffers(
+      stale.docs.map((d) => ({ id: d.id, ...(d.data() as Ride) })),
+      now,
+    );
+
     for (const doc of stale.docs) {
       await attemptDispatch(
-        doc.ref, doc.data() as Ride, online.docs, config, now,
+        doc.ref, doc.data() as Ride, online.docs, config, now, busy,
       );
     }
   },
