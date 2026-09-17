@@ -206,6 +206,31 @@ void main() {
       expect(find.textContaining('Plaza'), findsOneWidget);
       expect(find.text('Accept'), findsOneWidget);
       expect(find.text('Decline'), findsOneWidget);
+      // No choice recorded reads as regular, never as special.
+      expect(find.text('Regular — 1 passenger'), findsOneWidget);
+    });
+
+    testWidgets('a special trip is labelled on the offer, before Accept',
+        (tester) async {
+      // A special trip is the whole tricycle at a full load's fare. The
+      // driver has to know that when deciding, not after accepting.
+      final offer = Ride.fromMap(const {
+        'commuterName': 'Maria',
+        'status': 'searching',
+        'serviceType': 'special',
+        'pickup': {'label': 'Plaza'},
+        'dropoff': {'label': 'Palengke'},
+        'dispatch': {'offeredTo': 'juan@toda.ph', 'depth': 1},
+      }, 'r1');
+
+      await tester.pumpWidget(_harness(
+        driver: _driver(DriverStatus.approved),
+        online: true,
+        offers: [offer],
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Special trip — fare for 5 passengers'), findsOneWidget);
     });
 
     testWidgets('a driver already carrying someone is shown no new offers',

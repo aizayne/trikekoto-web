@@ -1173,4 +1173,58 @@ class LFil extends L {
   @override
   String get idUploadRefused =>
       'Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.';
+
+  @override
+  String idNumberExactDigits(int count) {
+    return 'Kailangan ng $count numero';
+  }
+
+  @override
+  String idNumberExactChars(int count) {
+    return 'Kailangan ng $count letra o numero';
+  }
+
+  @override
+  String get idNumberDigitsOnly => 'Numero lang, walang letra';
+
+  @override
+  String get idNumberLettersDigitsOnly => 'Letra at numero lang';
+
+  @override
+  String idNumberHelperDigits(int count) {
+    return '$count numero, walang gitling o espasyo';
+  }
+
+  @override
+  String idNumberHelperChars(int count) {
+    return '$count letra o numero, walang gitling o espasyo';
+  }
+
+  @override
+  String idNumberHelperRange(int min, int max) {
+    return '$min hanggang $max letra o numero, walang gitling';
+  }
+
+  @override
+  String get bookServiceTitle => 'Uri ng biyahe';
+
+  @override
+  String get bookServiceRegular => 'Regular — 1 pasahero';
+
+  @override
+  String get bookServiceRegularBody =>
+      'Nagbabayad ng pamasahe para sa 1 pasahero. Puwedeng magsakay ang driver ng ibang pasaherong pareho ang daan.';
+
+  @override
+  String get bookServiceSpecial => 'Special — buong tricycle';
+
+  @override
+  String get bookServiceSpecialBody =>
+      'Pumapayag na magbayad ng pamasahe para sa 5 pasahero. Ang tricycle ay para sa inyo lang.';
+
+  @override
+  String get rideServiceRegular => 'Regular — 1 pasahero';
+
+  @override
+  String get rideServiceSpecial => 'Special — bayad para sa 5 pasahero';
 }

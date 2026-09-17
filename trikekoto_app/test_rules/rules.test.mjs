@@ -217,6 +217,26 @@ describe('rides — creation and ownership', () => {
     );
   });
 
+  it('accepts a special trip and a regular one', async () => {
+    for (const serviceType of ['special', 'regular']) {
+      await assertSucceeds(
+        setDoc(doc(commuter(), 'rides', `r-${serviceType}`), {
+          ...rideDoc({ serviceType }),
+          createdAt: serverTimestamp(),
+        }),
+      );
+    }
+  });
+
+  it('rejects a trip type the app does not offer', async () => {
+    await assertFails(
+      setDoc(doc(commuter(), 'rides', 'r1'), {
+        ...rideDoc({ serviceType: 'vip' }),
+        createdAt: serverTimestamp(),
+      }),
+    );
+  });
+
   it('hides a commuter\'s ride — with their phone number — from other commuters', async () => {
     await seedRide('r1');
     await assertSucceeds(getDoc(doc(commuter(), 'rides', 'r1')));

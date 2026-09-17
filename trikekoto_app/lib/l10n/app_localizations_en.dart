@@ -1164,4 +1164,58 @@ class LEn extends L {
   @override
   String get idUploadRefused =>
       'The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue.';
+
+  @override
+  String idNumberExactDigits(int count) {
+    return 'Must be exactly $count digits';
+  }
+
+  @override
+  String idNumberExactChars(int count) {
+    return 'Must be exactly $count letters or digits';
+  }
+
+  @override
+  String get idNumberDigitsOnly => 'Digits only, no letters';
+
+  @override
+  String get idNumberLettersDigitsOnly => 'Letters and digits only';
+
+  @override
+  String idNumberHelperDigits(int count) {
+    return '$count digits, no dashes or spaces';
+  }
+
+  @override
+  String idNumberHelperChars(int count) {
+    return '$count letters or digits, no dashes or spaces';
+  }
+
+  @override
+  String idNumberHelperRange(int min, int max) {
+    return '$min to $max letters or digits, no dashes';
+  }
+
+  @override
+  String get bookServiceTitle => 'Type of trip';
+
+  @override
+  String get bookServiceRegular => 'Regular — 1 passenger';
+
+  @override
+  String get bookServiceRegularBody =>
+      'You pay the fare for 1 passenger. The driver may take other passengers going the same way.';
+
+  @override
+  String get bookServiceSpecial => 'Special — whole tricycle';
+
+  @override
+  String get bookServiceSpecialBody =>
+      'You agree to pay the fare for 5 passengers. The tricycle is yours alone.';
+
+  @override
+  String get rideServiceRegular => 'Regular — 1 passenger';
+
+  @override
+  String get rideServiceSpecial => 'Special trip — fare for 5 passengers';
 }

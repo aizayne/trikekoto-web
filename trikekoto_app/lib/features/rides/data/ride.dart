@@ -169,6 +169,31 @@ class RideDriverSnapshot {
       };
 }
 
+/// Regular or special — how TODA terminals already sell a trip.
+///
+/// A *regular* trip is one passenger's fare, and the driver may take other
+/// passengers going the same way. A *special* trip is the tricycle to
+/// yourself, paid as a full load of five. The app records the choice and shows
+/// it to the driver before they accept; it still never quotes an amount, which
+/// stays the posted TODA tariff.
+enum RideService {
+  regular('regular', 1),
+  special('special', 5);
+
+  const RideService(this.wire, this.farePassengers);
+
+  final String wire;
+
+  /// How many passengers' fares the commuter agrees to pay.
+  final int farePassengers;
+
+  /// Anything unrecognised — including a ride booked before the choice
+  /// existed — reads as regular. Special costs the commuter more, so it is
+  /// never assumed.
+  static RideService fromWire(String? value) =>
+      value == special.wire ? special : regular;
+}
+
 /// A document in `rides/{rideId}`.
 class Ride {
   const Ride({
@@ -181,6 +206,7 @@ class Ride {
     required this.dropoff,
     required this.status,
     required this.dispatch,
+    this.service = RideService.regular,
     this.notes,
     this.assignedDriver,
     this.driverSnapshot,
@@ -215,6 +241,7 @@ class Ride {
   final String? commuterPhotoUrl;
   final RidePlace pickup;
   final RidePlace dropoff;
+  final RideService service;
   final String? notes;
   final RideStatus status;
   final RideDispatch dispatch;
@@ -262,6 +289,7 @@ class Ride {
       commuterPhotoUrl: d['commuterPhotoUrl'] as String?,
       pickup: RidePlace.fromAny(d['pickup']),
       dropoff: RidePlace.fromAny(d['dropoff']),
+      service: RideService.fromWire(d['serviceType'] as String?),
       notes: d['notes'] as String?,
       status: RideStatus.fromWire(d['status'] as String?),
       dispatch: RideDispatch.fromMap(_asMap(d['dispatch'])),
@@ -293,6 +321,7 @@ class Ride {
         'commuterPhotoUrl': commuterPhotoUrl,
         'pickup': pickup.toMap(),
         'dropoff': dropoff.toMap(),
+        'serviceType': service.wire,
         'notes': notes,
         'status': status.wire,
         'dispatch': dispatch.toMap(),
@@ -331,6 +360,7 @@ class RideWrites {
     String? commuterPhotoUrl,
     required RidePlace pickup,
     required RidePlace dropoff,
+    RideService service = RideService.regular,
     String? notes,
     Timestamp? scheduledFor,
     String? commuterFcmToken,
@@ -342,6 +372,7 @@ class RideWrites {
         'commuterPhotoUrl': commuterPhotoUrl,
         'pickup': pickup.toMap(),
         'dropoff': dropoff.toMap(),
+        'serviceType': service.wire,
         'notes': (notes?.trim().isEmpty ?? true) ? null : notes!.trim(),
         'status': RideStatus.searching.wire,
         'dispatch': const RideDispatch().toMap(),

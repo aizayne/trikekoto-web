@@ -12,6 +12,7 @@ import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/driver_controllers.dart';
 import '../data/driver.dart';
 import 'driver_ride_map.dart';
+import '../../rides/presentation/ride_service_badge.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../core/ui/build_stamp.dart';
 import '../../identity/application/id_verification_service.dart';
@@ -288,6 +289,11 @@ class _ActiveRideSection extends ConsumerWidget {
               children: [
                 Text(context.l.driverCurrentRide,
                     style: Theme.of(context).textTheme.titleMedium),
+                const Gap(AppSpacing.sm),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: RideServiceBadge(service: ride.service),
+                ),
                 const Gap(AppSpacing.md),
 
                 // Where to go leads; who to call follows. A driver who has
@@ -403,6 +409,13 @@ class _OffersSection extends ConsumerWidget {
                     children: [
                       Text(context.l.driverNewOffer,
                           style: Theme.of(context).textTheme.titleMedium),
+                      const Gap(AppSpacing.sm),
+                      // Before the route: whether the driver may pick anyone
+                      // else up decides the accept, not only the drive.
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: RideServiceBadge(service: ride.service),
+                      ),
                       const Gap(AppSpacing.md),
                       Text(context.l.driverRoute(
                           ride.pickup.label, ride.dropoff.label)),

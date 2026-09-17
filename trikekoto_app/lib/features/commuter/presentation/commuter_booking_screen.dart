@@ -19,6 +19,7 @@ import '../../../core/routing/route_service.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
+import '../../rides/presentation/ride_service_badge.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/commuter_location.dart';
 import '../application/dispatch_controller.dart';
@@ -37,6 +38,10 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
   bool _busy = false;
+
+  /// Regular unless the commuter chooses otherwise. Special commits them to a
+  /// full load's fare, so it is never the default.
+  RideService _service = RideService.regular;
 
   /// Chosen on the map rather than typed. Coordinates are what dispatch and
   /// dispatch needs; a free-text label alone gave neither.
@@ -217,6 +222,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
               label: _dropoff!.label,
               geopoint: _dropoff!.point.geoPoint,
             ),
+            service: _service,
             // Copied across so the driver can recognise who they are
             // collecting. A driver cannot read `riders/{uid}` — and should
             // not be able to — so this is the only way it reaches them.
@@ -433,6 +439,20 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
           ],
           const Gap(AppSpacing.lg),
 
+          // Part of the trip, so it sits with the route rather than with the
+          // commuter's details — and it decides what they agree to pay.
+          Text(context.l.bookServiceTitle, style: context.text.titleSmall),
+          const Gap(AppSpacing.sm),
+          for (final option in RideService.values) ...[
+            _ServiceOption(
+              service: option,
+              selected: _service == option,
+              onTap: _busy ? null : () => setState(() => _service = option),
+            ),
+            const Gap(AppSpacing.sm),
+          ],
+          const Gap(AppSpacing.md),
+
           TextFormField(
             controller: _name,
             textCapitalization: TextCapitalization.words,
@@ -632,6 +652,84 @@ class _RouteRow extends StatelessWidget {
   }
 }
 
+/// One trip type, as a whole tappable card. The explanation is the point, so
+/// it sits on the target rather than behind an info icon.
+class _ServiceOption extends StatelessWidget {
+  const _ServiceOption({
+    required this.service,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final RideService service;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final special = service == RideService.special;
+    final foreground =
+        selected ? context.scheme.onSecondaryContainer : context.scheme.onSurface;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: selected ? context.scheme.secondaryContainer : null,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: selected
+                  ? context.scheme.primary
+                  : context.scheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: selected
+                    ? context.scheme.primary
+                    : context.scheme.onSurfaceVariant,
+              ),
+              const Gap(AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      special
+                          ? context.l.bookServiceSpecial
+                          : context.l.bookServiceRegular,
+                      style: context.text.titleSmall?.copyWith(color: foreground),
+                    ),
+                    const Gap(AppSpacing.xs),
+                    Text(
+                      special
+                          ? context.l.bookServiceSpecialBody
+                          : context.l.bookServiceRegularBody,
+                      style: context.text.bodySmall?.copyWith(color: foreground),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Placeholder while the route is being fetched.
 ///
 /// Reserves the same height as the summary so the button below does not jump
@@ -804,6 +902,11 @@ class _ActiveRideCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const Gap(AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: RideServiceBadge(service: ride.service),
             ),
             if (searching) ...[
               const Gap(AppSpacing.md),

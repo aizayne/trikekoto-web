@@ -341,5 +341,19 @@
   "idVerifiedBadge": "ID verified",
   "idVerifiedOnceBody": "Your ID is confirmed. You never need to send it again, even after the photo is deleted.",
   "reviewViewFirst": "Open the ID before approving it.",
-  "idUploadRefused": "The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue."
+  "idUploadRefused": "The server refused the photo. If your ID was already approved, you do not need to send it again — go back and continue.",
+  "idNumberExactDigits": "Must be exactly {count} digits",
+  "idNumberExactChars": "Must be exactly {count} letters or digits",
+  "idNumberDigitsOnly": "Digits only, no letters",
+  "idNumberLettersDigitsOnly": "Letters and digits only",
+  "idNumberHelperDigits": "{count} digits, no dashes or spaces",
+  "idNumberHelperChars": "{count} letters or digits, no dashes or spaces",
+  "idNumberHelperRange": "{min} to {max} letters or digits, no dashes",
+  "bookServiceTitle": "Type of trip",
+  "bookServiceRegular": "Regular — 1 passenger",
+  "bookServiceRegularBody": "You pay the fare for 1 passenger. The driver may take other passengers going the same way.",
+  "bookServiceSpecial": "Special — whole tricycle",
+  "bookServiceSpecialBody": "You agree to pay the fare for 5 passengers. The tricycle is yours alone.",
+  "rideServiceRegular": "Regular — 1 passenger",
+  "rideServiceSpecial": "Special trip — fare for 5 passengers"
 }

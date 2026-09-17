@@ -53,14 +53,16 @@ void main() {
       expect(m['consentAt'], isNotNull);
     });
 
-    test('trims the number', () {
+    test('stores the number without spaces or dashes, in capitals', () {
+      // One card, one stored form, however it was typed — so an admin
+      // comparing two submissions is not fooled by punctuation.
       final m = IdSubmissionWrites.create(
         subjectUid: uid,
         role: IdRole.driver,
         idType: 'drivers_license',
-        idNumber: '  N01-23-456789  ',
+        idNumber: '  n01-23-456789  ',
       );
-      expect(m['idNumber'], 'N01-23-456789');
+      expect(m['idNumber'], 'N0123456789');
     });
 
     test('never carries a download URL', () {
@@ -153,6 +155,57 @@ void main() {
 
     test('an unrecognised key shows itself rather than an empty box', () {
       expect(IdTypes.label('something_else'), 'something_else');
+    });
+  });
+
+  group('ID number formats', () {
+    test('every ID type on the list has a format', () {
+      expect(IdTypes.formats.keys.toSet(), IdTypes.options.keys.toSet());
+    });
+
+    test('PhilSys takes exactly 16 digits', () {
+      final f = IdTypes.format('national_id');
+      expect(f.check('1234567890123456'), isNull);
+      expect(f.check('1234-5678-9012-3456'), isNull,
+          reason: 'dashes copied off the card are ignored');
+      expect(f.check('123456789012345'), IdNumberProblem.wrongLength);
+      expect(f.check('12345678901234567'), IdNumberProblem.wrongLength);
+      expect(f.check('12345678901234AB'), IdNumberProblem.notDigits);
+    });
+
+    test('an LTO licence is a letter and ten digits, 11 characters', () {
+      final f = IdTypes.format('drivers_license');
+      expect(f.check('N01-23-456789'), isNull);
+      expect(f.check('N01-23-45678'), IdNumberProblem.wrongLength);
+    });
+
+    test('UMID and PhilHealth are 12 digits; a passport is 9 characters', () {
+      expect(IdTypes.format('umid').check('0111-1234567-8'), isNull);
+      expect(IdTypes.format('philhealth').check('12-345678901-2'), isNull);
+      expect(IdTypes.format('passport').check('P1234567A'), isNull);
+      expect(IdTypes.format('passport').check('P1234567'),
+          IdNumberProblem.wrongLength);
+    });
+
+    test('locally issued IDs take a range, not an invented exact length', () {
+      final f = IdTypes.format('barangay');
+      expect(f.isExact, isFalse);
+      expect(f.check('B-123'), isNull);
+      expect(f.check('B1'), IdNumberProblem.tooShort);
+      expect(f.check('A' * 21), IdNumberProblem.tooLong);
+    });
+
+    test('an empty number and symbols are refused', () {
+      expect(IdTypes.format('student').check('   '), IdNumberProblem.empty);
+      expect(IdTypes.format('student').check('AB#123'),
+          IdNumberProblem.notAlphanumeric);
+    });
+
+    test('every limit sits inside what the security rules accept (4-40)', () {
+      for (final f in IdTypes.formats.values) {
+        expect(f.minLength, greaterThanOrEqualTo(4));
+        expect(f.maxLength, lessThanOrEqualTo(40));
+      }
     });
   });
 }

@@ -309,6 +309,10 @@ service cloud.firestore {
           && (d.get('commuterPhotoUrl', null) == null
               || (d.get('commuterPhotoUrl', null) is string
                   && d.get('commuterPhotoUrl', '').size() <= 500))
+          // Regular (one fare; the driver may take others along the way) or
+          // special (the whole tricycle, paid as a full load). Optional, so
+          // a booking from an app older than the choice still validates.
+          && d.get('serviceType', 'regular') in ['regular', 'special']
           && d.pickup.label is string  && d.pickup.label.size() >= 1  && d.pickup.label.size() <= 200
           && d.dropoff.label is string && d.dropoff.label.size() >= 1 && d.dropoff.label.size() <= 200
           && d.pickup.geopoint is latlng

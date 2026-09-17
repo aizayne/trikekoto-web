@@ -2148,6 +2148,90 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.'**
   String get idUploadRefused;
+
+  /// No description provided for @idNumberExactDigits.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng {count} numero'**
+  String idNumberExactDigits(int count);
+
+  /// No description provided for @idNumberExactChars.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan ng {count} letra o numero'**
+  String idNumberExactChars(int count);
+
+  /// No description provided for @idNumberDigitsOnly.
+  ///
+  /// In fil, this message translates to:
+  /// **'Numero lang, walang letra'**
+  String get idNumberDigitsOnly;
+
+  /// No description provided for @idNumberLettersDigitsOnly.
+  ///
+  /// In fil, this message translates to:
+  /// **'Letra at numero lang'**
+  String get idNumberLettersDigitsOnly;
+
+  /// No description provided for @idNumberHelperDigits.
+  ///
+  /// In fil, this message translates to:
+  /// **'{count} numero, walang gitling o espasyo'**
+  String idNumberHelperDigits(int count);
+
+  /// No description provided for @idNumberHelperChars.
+  ///
+  /// In fil, this message translates to:
+  /// **'{count} letra o numero, walang gitling o espasyo'**
+  String idNumberHelperChars(int count);
+
+  /// No description provided for @idNumberHelperRange.
+  ///
+  /// In fil, this message translates to:
+  /// **'{min} hanggang {max} letra o numero, walang gitling'**
+  String idNumberHelperRange(int min, int max);
+
+  /// No description provided for @bookServiceTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Uri ng biyahe'**
+  String get bookServiceTitle;
+
+  /// No description provided for @bookServiceRegular.
+  ///
+  /// In fil, this message translates to:
+  /// **'Regular — 1 pasahero'**
+  String get bookServiceRegular;
+
+  /// No description provided for @bookServiceRegularBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nagbabayad ng pamasahe para sa 1 pasahero. Puwedeng magsakay ang driver ng ibang pasaherong pareho ang daan.'**
+  String get bookServiceRegularBody;
+
+  /// No description provided for @bookServiceSpecial.
+  ///
+  /// In fil, this message translates to:
+  /// **'Special — buong tricycle'**
+  String get bookServiceSpecial;
+
+  /// No description provided for @bookServiceSpecialBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pumapayag na magbayad ng pamasahe para sa 5 pasahero. Ang tricycle ay para sa inyo lang.'**
+  String get bookServiceSpecialBody;
+
+  /// No description provided for @rideServiceRegular.
+  ///
+  /// In fil, this message translates to:
+  /// **'Regular — 1 pasahero'**
+  String get rideServiceRegular;
+
+  /// No description provided for @rideServiceSpecial.
+  ///
+  /// In fil, this message translates to:
+  /// **'Special — bayad para sa 5 pasahero'**
+  String get rideServiceSpecial;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

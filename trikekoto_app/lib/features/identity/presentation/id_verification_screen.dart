@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -424,6 +424,75 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
   static String _mask(String n) =>
       n.length <= 4 ? n : '${'•' * (n.length - 4)}${n.substring(n.length - 4)}';
 
+  // ── The ID number, limited by the chosen type ───────────────
+  /// Typing stops at the type's length, and only the characters that type
+  /// uses can be entered at all — digits for PhilSys, UMID and PhilHealth.
+  /// The validator still checks, because a pasted value or a type changed
+  /// after typing has to be caught before submission, not only while typing.
+  Widget _numberField(BuildContext context, IdNumberFormat format) {
+    return TextFormField(
+      // Keyed on the type so the counter and formatters are rebuilt when the
+      // type changes, rather than keeping the previous type's limit.
+      key: ValueKey('id-number-$_idType'),
+      controller: _number,
+      keyboardType:
+          format.digitsOnly ? TextInputType.number : TextInputType.text,
+      textCapitalization: TextCapitalization.characters,
+      maxLength: format.maxLength,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(
+          format.digitsOnly ? RegExp(r'[0-9]') : RegExp(r'[A-Za-z0-9]'),
+        ),
+        _UpperCaseFormatter(),
+        LengthLimitingTextInputFormatter(format.maxLength),
+      ],
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      decoration: InputDecoration(
+        labelText: context.l.idNumberLabel,
+        prefixIcon: const Icon(Icons.pin_outlined),
+        helperText: _numberHelper(context, format),
+      ),
+      validator: (v) =>
+          _numberProblem(context, format, format.check(v ?? '')),
+    );
+  }
+
+  /// A number typed for one type rarely fits another. Switching type clears
+  /// it when it no longer fits, rather than leaving a value the new limits
+  /// would silently cut short.
+  void _fitNumberToType() {
+    final format = IdTypes.format(_idType);
+    final n = IdTypes.normalize(_number.text);
+    final fits = n.length <= format.maxLength &&
+        (!format.digitsOnly || RegExp(r'^[0-9]*$').hasMatch(n));
+    if (!fits) _number.clear();
+  }
+
+  static String _numberHelper(BuildContext context, IdNumberFormat f) {
+    if (!f.isExact) return context.l.idNumberHelperRange(f.minLength, f.maxLength);
+    return f.digitsOnly
+        ? context.l.idNumberHelperDigits(f.maxLength)
+        : context.l.idNumberHelperChars(f.maxLength);
+  }
+
+  static String? _numberProblem(
+      BuildContext context, IdNumberFormat f, IdNumberProblem? p) {
+    if (p == null) return null;
+    if (p == IdNumberProblem.notDigits) return context.l.idNumberDigitsOnly;
+    if (p == IdNumberProblem.notAlphanumeric) {
+      return context.l.idNumberLettersDigitsOnly;
+    }
+    if (f.isExact) {
+      return f.digitsOnly
+          ? context.l.idNumberExactDigits(f.minLength)
+          : context.l.idNumberExactChars(f.minLength);
+    }
+    return p == IdNumberProblem.tooLong
+        ? context.l.idNumberTooLong
+        : context.l.idNumberTooShort;
+  }
+
   // ── Not yet submitted ───────────────────────────────────────
   Widget _form(BuildContext context) {
     return Form(
@@ -453,23 +522,16 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
               for (final e in IdTypes.options.entries)
                 DropdownMenuItem(value: e.key, child: Text(e.value)),
             ],
-            onChanged: _busy ? null : (v) => setState(() => _idType = v!),
+            onChanged: _busy
+                ? null
+                : (v) => setState(() {
+                      _idType = v!;
+                      _fitNumberToType();
+                    }),
           ),
           const Gap(AppSpacing.lg),
 
-          TextFormField(
-            controller: _number,
-            decoration: InputDecoration(
-              labelText: context.l.idNumberLabel,
-              prefixIcon: const Icon(Icons.pin_outlined),
-            ),
-            validator: (v) {
-              final t = (v ?? '').trim();
-              if (t.length < 4) return context.l.idNumberTooShort;
-              if (t.length > 40) return context.l.idNumberTooLong;
-              return null;
-            },
-          ),
+          _numberField(context, IdTypes.format(_idType)),
           const Gap(AppSpacing.xl),
 
           _photoBox(context),
@@ -569,4 +631,13 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
           ],
         ),
       );
+}
+
+/// Capitalises as the person types, so the field shows the number the way
+/// it will be stored and the way it is printed on the card.
+class _UpperCaseFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+          TextEditingValue oldValue, TextEditingValue newValue) =>
+      newValue.copyWith(text: newValue.text.toUpperCase());
 }

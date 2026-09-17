@@ -667,5 +667,57 @@
   "idVerifiedBadge": "Beripikado ang ID",
   "idVerifiedOnceBody": "Nakumpirma na ang ID mo. Hindi na kailangan magpadala ulit — kahit nabura na ang litrato.",
   "reviewViewFirst": "Buksan muna ang ID bago aprubahan.",
-  "idUploadRefused": "Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy."
+  "idUploadRefused": "Hindi tinanggap ng server ang litrato. Kung naaprubahan na ang ID mo, hindi kailangan magpadala ulit — bumalik at magpatuloy.",
+  "idNumberExactDigits": "Kailangan ng {count} numero",
+  "@idNumberExactDigits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "idNumberExactChars": "Kailangan ng {count} letra o numero",
+  "@idNumberExactChars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "idNumberDigitsOnly": "Numero lang, walang letra",
+  "idNumberLettersDigitsOnly": "Letra at numero lang",
+  "idNumberHelperDigits": "{count} numero, walang gitling o espasyo",
+  "@idNumberHelperDigits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "idNumberHelperChars": "{count} letra o numero, walang gitling o espasyo",
+  "@idNumberHelperChars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "idNumberHelperRange": "{min} hanggang {max} letra o numero, walang gitling",
+  "@idNumberHelperRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "bookServiceTitle": "Uri ng biyahe",
+  "bookServiceRegular": "Regular — 1 pasahero",
+  "bookServiceRegularBody": "Nagbabayad ng pamasahe para sa 1 pasahero. Puwedeng magsakay ang driver ng ibang pasaherong pareho ang daan.",
+  "bookServiceSpecial": "Special — buong tricycle",
+  "bookServiceSpecialBody": "Pumapayag na magbayad ng pamasahe para sa 5 pasahero. Ang tricycle ay para sa inyo lang.",
+  "rideServiceRegular": "Regular — 1 pasahero",
+  "rideServiceSpecial": "Special — bayad para sa 5 pasahero"
 }

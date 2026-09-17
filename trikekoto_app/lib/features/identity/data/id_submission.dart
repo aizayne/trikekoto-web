@@ -126,7 +126,84 @@ class IdTypes {
     'barangay': 'Barangay ID',
   };
 
+  /// What the number on each card looks like, as the app accepts it: letters
+  /// and digits only, with the spaces and dashes printed on the card dropped.
+  ///
+  /// An exact length only where a national format fixes one. Senior Citizen,
+  /// student and barangay IDs are numbered by whichever LGU or school issues
+  /// them, and Postal and Voter's IDs have changed format over the years, so
+  /// an invented exact length would refuse genuine cards; those get a range.
+  /// Every limit sits inside the 4–40 the security rules allow.
+  static const formats = <String, IdNumberFormat>{
+    // PhilSys Card Number, printed 1234-5678-9012-3456.
+    'national_id': IdNumberFormat.exact(16, digitsOnly: true),
+    // LTO licence number, printed N01-23-456789: a letter and ten digits.
+    'drivers_license': IdNumberFormat.exact(11),
+    // UMID Common Reference Number, printed 0111-1234567-8.
+    'umid': IdNumberFormat.exact(12, digitsOnly: true),
+    // PhilHealth Identification Number, printed 12-345678901-2.
+    'philhealth': IdNumberFormat.exact(12, digitsOnly: true),
+    // Philippine passport, P1234567A (older books: EB1234567).
+    'passport': IdNumberFormat.exact(9),
+    'postal': IdNumberFormat.range(8, 20),
+    'voters': IdNumberFormat.range(8, 30),
+    'senior': IdNumberFormat.range(4, 20),
+    'student': IdNumberFormat.range(4, 20),
+    'barangay': IdNumberFormat.range(4, 20),
+  };
+
+  /// The format for [key]. An unknown key gets the rules' own bounds rather
+  /// than refusing every number.
+  static IdNumberFormat format(String key) =>
+      formats[key] ?? const IdNumberFormat.range(4, 40);
+
   static String label(String key) => options[key] ?? key;
+
+  /// Drops the spaces and dashes people copy off the card, and capitalises,
+  /// so one card is stored one way however it was typed.
+  static String normalize(String raw) =>
+      raw.replaceAll(RegExp(r'[\s-]'), '').toUpperCase();
+}
+
+/// Why an ID number does not fit its type. Null from [IdNumberFormat.check]
+/// means it fits.
+enum IdNumberProblem {
+  empty,
+  notDigits,
+  notAlphanumeric,
+  wrongLength,
+  tooShort,
+  tooLong,
+}
+
+class IdNumberFormat {
+  const IdNumberFormat.exact(int length, {this.digitsOnly = false})
+      : minLength = length,
+        maxLength = length;
+
+  const IdNumberFormat.range(this.minLength, this.maxLength)
+      : digitsOnly = false;
+
+  final int minLength;
+  final int maxLength;
+  final bool digitsOnly;
+
+  bool get isExact => minLength == maxLength;
+
+  IdNumberProblem? check(String raw) {
+    final n = IdTypes.normalize(raw);
+    if (n.isEmpty) return IdNumberProblem.empty;
+    if (digitsOnly && !RegExp(r'^[0-9]+$').hasMatch(n)) {
+      return IdNumberProblem.notDigits;
+    }
+    if (!RegExp(r'^[A-Z0-9]+$').hasMatch(n)) {
+      return IdNumberProblem.notAlphanumeric;
+    }
+    if (isExact && n.length != minLength) return IdNumberProblem.wrongLength;
+    if (n.length < minLength) return IdNumberProblem.tooShort;
+    if (n.length > maxLength) return IdNumberProblem.tooLong;
+    return null;
+  }
 }
 
 /// Write payloads, one per permitted rules clause.
@@ -149,7 +226,7 @@ class IdSubmissionWrites {
         'subjectUid': subjectUid,
         'role': role,
         'idType': idType,
-        'idNumber': idNumber.trim(),
+        'idNumber': IdTypes.normalize(idNumber),
         'idPhotoPath': IdPaths.card(subjectUid),
         'status': IdStatus.pending,
         'consentAt': FieldValue.serverTimestamp(),
