@@ -8,6 +8,7 @@ const {
   pickByRoad,
   driversHoldingOffers,
   msUntilLapsed,
+  isStale,
 } = require('../lib/dispatch.js');
 
 // San Marcelino plaza. One degree of latitude is about 111.2 km.
@@ -91,4 +92,31 @@ test('the lapse check waits one second past expiry, never less than zero, capped
   assert.equal(msUntilLapsed(new Date('2026-09-17T08:00:15Z'), now), 16_000);
   assert.equal(msUntilLapsed(new Date('2026-09-17T07:59:00Z'), now), 0);
   assert.equal(msUntilLapsed(new Date('2026-09-17T09:00:00Z'), now), 150_000);
+});
+
+// ── Check-ins ───────────────────────────────────────────────
+const NOW = new Date('2026-09-18T08:00:00Z');
+const ago = (s) => ({ toDate: () => new Date(NOW.getTime() - s * 1000) });
+const checkingIn = (email, km, secondsAgo) => ({ ...row(email, km), heartbeatSeconds: 120, updatedAt: ago(secondsAgo) });
+
+test('a driver who keeps checking in is not stale, however long parked', () => {
+  assert.equal(isStale(checkingIn('a', 1, 110), NOW), false);
+  assert.equal(isStale(checkingIn('a', 1, 299), NOW), false, 'within two and a half check-ins');
+});
+
+test('a driver who stopped checking in is stale', () => {
+  assert.equal(isStale(checkingIn('a', 1, 301), NOW), true);
+});
+
+test('an app too old to promise check-ins is never judged by silence', () => {
+  assert.equal(isStale({ ...row('old', 1), updatedAt: ago(86400) }, NOW), false);
+});
+
+test('dispatch skips a driver whose app went quiet', () => {
+  const list = shortlistByDistance(
+    [checkingIn('ghost', 0.5, 900), checkingIn('live', 1, 30), row('old-app', 2)],
+    pickup,
+    opts({ now: NOW }),
+  );
+  assert.deepEqual(emails(list), ['live', 'old-app']);
 });

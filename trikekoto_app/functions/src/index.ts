@@ -458,9 +458,19 @@ async function attemptDispatch(
   // Stage one: straight-line, to apply the radius and cut the field. Drivers
   // already tried, or holding a live offer on another ride, are left out.
   const inRadius = shortlistByDistance(
-    online.map((d) => ({ email: d.id, position: d.data().position })),
+    online.map((d) => {
+      const data = d.data();
+      return {
+        email: d.id,
+        position: data.position,
+        heartbeatSeconds: data.heartbeatSeconds,
+        updatedAt: data.updatedAt,
+      };
+    }),
     pickup,
-    { attempted, busy, radiusKm: config.searchRadiusKm },
+    // An app that stopped checking in is left out: it would take the offer
+    // and never show it.
+    { attempted, busy, radiusKm: config.searchRadiusKm, now },
   );
 
   // Approved drivers only. The rules do not re-check approval on presence

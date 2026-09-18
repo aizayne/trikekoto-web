@@ -128,6 +128,16 @@ class ActiveDriver {
         'speed': speed,
         'currentRideId': currentRideId,
         'fcmToken': fcmToken,
+        // This app checks in at least this often while online. Dispatch
+        // treats a driver who has missed a few check-ins as gone — but only
+        // when this promise is on the document, so an older app that never
+        // made it is not cut off for being parked.
+        'heartbeatSeconds': presenceHeartbeatSeconds,
         'updatedAt': FieldValue.serverTimestamp(),
       };
+
+  /// How often an online driver's app checks in. `presenceHeartbeat` in
+  /// driver_controllers.dart is built from this, so the timer and the promise
+  /// written to the document cannot drift apart.
+  static const presenceHeartbeatSeconds = 120;
 }

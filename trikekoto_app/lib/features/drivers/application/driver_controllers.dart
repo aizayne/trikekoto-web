@@ -140,6 +140,17 @@ class PresenceController extends Notifier<bool> {
   StreamSubscription<Position>? _gpsSub;
   StreamSubscription<String>? _tokenSub;
 
+  /// Re-sends the last position while online, moving or not.
+  ///
+  /// The GPS stream only fires after 50 m of movement, so a driver parked at
+  /// the terminal went quiet — and so did one whose app had been closed
+  /// without going offline. The server could not tell them apart, and kept
+  /// offering rides to the closed app, 15 seconds a time. A check-in every
+  /// [presenceHeartbeat] lets it: a live app keeps checking in, a dead one
+  /// stops, and dispatch skips drivers who have missed a few.
+  Timer? _heartbeat;
+  Position? _lastPosition;
+
   /// Filled in by push registration after going online, and kept current by
   /// token refreshes. Read on every ping.
   String? _pushToken;
@@ -149,6 +160,7 @@ class PresenceController extends Notifier<bool> {
     ref.onDispose(() {
       _gpsSub?.cancel();
       _tokenSub?.cancel();
+      _heartbeat?.cancel();
     });
     return false;
   }
@@ -251,6 +263,14 @@ class PresenceController extends Notifier<bool> {
       onError: (Object e, StackTrace s) =>
           CrashReporter.recordNonFatal(e, s, context: 'gps stream'),
     );
+
+    _heartbeat?.cancel();
+    _heartbeat = Timer.periodic(presenceHeartbeat, (_) {
+      final last = _lastPosition;
+      if (last == null || !state) return;
+      _publish(last)
+          .catchError((Object e, StackTrace s) => _onPingFailed(e, s));
+    });
   }
 
   /// Asks for notification permission and a token, after the driver is
@@ -296,6 +316,9 @@ class PresenceController extends Notifier<bool> {
   /// Offline without deleting presence: for when the write that failed was the
   /// one that would have created it, so there is nothing to delete.
   Future<void> _stop() async {
+    _heartbeat?.cancel();
+    _heartbeat = null;
+    _lastPosition = null;
     await _gpsSub?.cancel();
     _gpsSub = null;
     await _tokenSub?.cancel();
@@ -321,6 +344,7 @@ class PresenceController extends Notifier<bool> {
     if (email.isEmpty || !state) return;
 
     final activeRide = ref.read(myActiveRideProvider).value;
+    _lastPosition = pos;
 
     try {
       await ref
@@ -385,6 +409,14 @@ class PresenceController extends Notifier<bool> {
 
 final presenceProvider =
     NotifierProvider<PresenceController, bool>(PresenceController.new);
+
+/// How often an online driver checks in when not moving.
+///
+/// Two minutes: 30 writes an hour for a parked driver, a small fraction of
+/// what a moving one already sends, and short enough that dispatch notices a
+/// closed app within a few minutes rather than never.
+const presenceHeartbeat =
+    Duration(seconds: ActiveDriver.presenceHeartbeatSeconds);
 
 /// Ride actions available to a driver.
 class RideActions {

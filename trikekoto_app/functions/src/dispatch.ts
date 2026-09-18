@@ -12,7 +12,32 @@ export type LatLng = { latitude: number; longitude: number };
 export type Candidate = { email: string; point: LatLng; km: number };
 
 /** A row of `active_drivers`, as much of it as ranking reads. */
-export type PresenceRow = { email: string; position?: { geopoint?: LatLng } };
+export type PresenceRow = {
+  email: string;
+  position?: { geopoint?: LatLng };
+  /** How often this driver's app promised to check in. Absent on old apps. */
+  heartbeatSeconds?: number;
+  updatedAt?: { toDate(): Date } | null;
+};
+
+/** Missed check-ins after which a driver is treated as gone. */
+export const MISSED_HEARTBEATS = 2.5;
+
+/**
+ * True when a driver's app has stopped checking in — closed, killed or out of
+ * signal — while its presence still says online.
+ *
+ * Only a row carrying `heartbeatSeconds` can be stale. An app older than the
+ * check-in writes only when it moves, so a parked driver on one looks exactly
+ * like a gone one; judging them by silence would cut off every driver waiting
+ * at the terminal until they update.
+ */
+export function isStale(row: PresenceRow, now: Date): boolean {
+  const every = row.heartbeatSeconds;
+  const at = row.updatedAt?.toDate();
+  if (!every || every <= 0 || !at) return false;
+  return now.getTime() - at.getTime() > every * MISSED_HEARTBEATS * 1000;
+}
 
 /** A ride, as much of it as knowing who holds an offer reads. */
 export type RideOfferState = {
@@ -54,10 +79,13 @@ export function shortlistByDistance(
     attempted: readonly string[];
     busy: ReadonlySet<string>;
     radiusKm: number;
+    /** When set, drivers who have stopped checking in are left out. */
+    now?: Date;
   },
 ): Candidate[] {
   return rows
     .filter((r) => !opts.attempted.includes(r.email) && !opts.busy.has(r.email))
+    .filter((r) => !opts.now || !isStale(r, opts.now))
     .flatMap((r) => {
       const point = r.position?.geopoint;
       if (!point) return [];

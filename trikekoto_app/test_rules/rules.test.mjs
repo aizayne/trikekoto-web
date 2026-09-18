@@ -882,6 +882,15 @@ describe('active_drivers', () => {
     );
   });
 
+  it('accepts the check-in promise newer apps send, on create and on every ping', async () => {
+    // Dispatch skips a driver who stops checking in, but only when the app
+    // promised to. If the rules refused the field, no driver on a new app
+    // could go online at all.
+    const promising = { ...presence(DRIVER_EMAIL), heartbeatSeconds: 120 };
+    await assertSucceeds(setDoc(doc(driver(), 'active_drivers', DRIVER_EMAIL), promising));
+    await assertSucceeds(setDoc(doc(driver(), 'active_drivers', DRIVER_EMAIL), promising));
+  });
+
   it('stops a driver from writing to another driver\'s presence doc', async () => {
     await assertFails(
       setDoc(
