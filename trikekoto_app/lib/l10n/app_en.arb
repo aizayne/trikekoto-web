@@ -355,5 +355,22 @@
   "bookServiceSpecial": "Special — whole tricycle",
   "bookServiceSpecialBody": "You agree to pay the fare for 5 passengers. The tricycle is yours alone.",
   "rideServiceRegular": "Regular — 1 passenger",
-  "rideServiceSpecial": "Special trip — fare for 5 passengers"
+  "rideServiceSpecial": "Special trip — fare for 5 passengers",
+  "historyTitle": "Ride history",
+  "historyEmptyTitle": "No rides yet",
+  "historyEmptyBody": "Your rides will appear here.",
+  "historyEmptyBodyAdmin": "Every ride in the chapter will appear here.",
+  "historyFailed": "Could not load the history",
+  "historyShowMore": "Show more",
+  "historyFilterAll": "All",
+  "historyCompleted": "Completed",
+  "historyCancelled": "Cancelled",
+  "historyCancelledByCommuter": "Cancelled by commuter",
+  "historyCancelledByDriver": "Cancelled by driver",
+  "historyNoDriver": "No driver found",
+  "historyInProgress": "In progress",
+  "historyDriverLine": "Driver: {name} · {plate}",
+  "historyDriverEmailLine": "Driver: {email}",
+  "historyCommuterLine": "Commuter: {name}",
+  "historyCommuterContact": "Commuter: {name} · {phone}"
 }

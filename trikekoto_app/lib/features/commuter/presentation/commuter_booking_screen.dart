@@ -492,6 +492,14 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
             label: Text(
                 _busy ? context.l.bookFinding : context.l.bookFindDriver),
           ),
+          const Gap(AppSpacing.md),
+          // Under the booking button rather than in the app bar, which is
+          // already full on a phone: the past sits below the next ride.
+          TextButton.icon(
+            onPressed: () => context.push('/commuter/history'),
+            icon: const Icon(Icons.history),
+            label: Text(context.l.historyTitle),
+          ),
         ],
       ),
     );

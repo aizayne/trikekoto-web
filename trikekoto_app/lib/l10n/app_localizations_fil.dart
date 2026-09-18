@@ -1227,4 +1227,64 @@ class LFil extends L {
 
   @override
   String get rideServiceSpecial => 'Special — bayad para sa 5 pasahero';
+
+  @override
+  String get historyTitle => 'Kasaysayan ng biyahe';
+
+  @override
+  String get historyEmptyTitle => 'Wala pang biyahe';
+
+  @override
+  String get historyEmptyBody => 'Lalabas dito ang mga biyahe mo.';
+
+  @override
+  String get historyEmptyBodyAdmin =>
+      'Lalabas dito ang lahat ng biyahe ng chapter.';
+
+  @override
+  String get historyFailed => 'Hindi ma-load ang kasaysayan';
+
+  @override
+  String get historyShowMore => 'Ipakita pa';
+
+  @override
+  String get historyFilterAll => 'Lahat';
+
+  @override
+  String get historyCompleted => 'Natapos';
+
+  @override
+  String get historyCancelled => 'Kinansela';
+
+  @override
+  String get historyCancelledByCommuter => 'Kinansela ng pasahero';
+
+  @override
+  String get historyCancelledByDriver => 'Kinansela ng driver';
+
+  @override
+  String get historyNoDriver => 'Walang nakitang driver';
+
+  @override
+  String get historyInProgress => 'Kasalukuyan';
+
+  @override
+  String historyDriverLine(String name, String plate) {
+    return 'Driver: $name · $plate';
+  }
+
+  @override
+  String historyDriverEmailLine(String email) {
+    return 'Driver: $email';
+  }
+
+  @override
+  String historyCommuterLine(String name) {
+    return 'Pasahero: $name';
+  }
+
+  @override
+  String historyCommuterContact(String name, String phone) {
+    return 'Pasahero: $name · $phone';
+  }
 }

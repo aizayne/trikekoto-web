@@ -18,6 +18,8 @@ import '../../features/landing/presentation/landing_screen.dart';
 import '../../features/landing/presentation/staff_login_screen.dart';
 import '../auth/session_controller.dart';
 import '../../features/identity/application/id_verification_service.dart';
+import '../../features/rides/application/ride_history.dart';
+import '../../features/rides/presentation/ride_history_screen.dart';
 
 /// Role-based routing.
 ///
@@ -133,6 +135,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, _) =>
                 const IdVerificationScreen(role: IdRole.rider),
           ),
+          GoRoute(
+            path: 'history',
+            builder: (_, _) =>
+                const RideHistoryScreen(audience: HistoryAudience.commuter),
+          ),
         ],
       ),
       GoRoute(
@@ -143,6 +150,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'id',
             builder: (_, _) =>
                 const IdVerificationScreen(role: IdRole.driver),
+          ),
+          GoRoute(
+            path: 'history',
+            builder: (_, _) =>
+                const RideHistoryScreen(audience: HistoryAudience.driver),
           ),
         ],
       ),
@@ -164,6 +176,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'ids',
             builder: (_, _) => const IdReviewScreen(),
+          ),
+          GoRoute(
+            path: 'rides',
+            builder: (_, _) =>
+                const RideHistoryScreen(audience: HistoryAudience.admin),
           ),
         ],
       ),

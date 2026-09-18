@@ -30,6 +30,11 @@ class DriverDashboardScreen extends ConsumerWidget {
         title: Text(context.l.driverTitle),
         actions: [
           IconButton(
+            tooltip: context.l.historyTitle,
+            icon: const Icon(Icons.history),
+            onPressed: () => context.push('/driver/history'),
+          ),
+          IconButton(
             tooltip: context.l.driverReportProblem,
             icon: const Icon(Icons.flag_outlined),
             onPressed: () =>

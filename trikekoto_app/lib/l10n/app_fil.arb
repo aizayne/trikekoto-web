@@ -719,5 +719,56 @@
   "bookServiceSpecial": "Special — buong tricycle",
   "bookServiceSpecialBody": "Pumapayag na magbayad ng pamasahe para sa 5 pasahero. Ang tricycle ay para sa inyo lang.",
   "rideServiceRegular": "Regular — 1 pasahero",
-  "rideServiceSpecial": "Special — bayad para sa 5 pasahero"
+  "rideServiceSpecial": "Special — bayad para sa 5 pasahero",
+  "historyTitle": "Kasaysayan ng biyahe",
+  "historyEmptyTitle": "Wala pang biyahe",
+  "historyEmptyBody": "Lalabas dito ang mga biyahe mo.",
+  "historyEmptyBodyAdmin": "Lalabas dito ang lahat ng biyahe ng chapter.",
+  "historyFailed": "Hindi ma-load ang kasaysayan",
+  "historyShowMore": "Ipakita pa",
+  "historyFilterAll": "Lahat",
+  "historyCompleted": "Natapos",
+  "historyCancelled": "Kinansela",
+  "historyCancelledByCommuter": "Kinansela ng pasahero",
+  "historyCancelledByDriver": "Kinansela ng driver",
+  "historyNoDriver": "Walang nakitang driver",
+  "historyInProgress": "Kasalukuyan",
+  "historyDriverLine": "Driver: {name} · {plate}",
+  "@historyDriverLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
+  "historyDriverEmailLine": "Driver: {email}",
+  "@historyDriverEmailLine": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "historyCommuterLine": "Pasahero: {name}",
+  "@historyCommuterLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "historyCommuterContact": "Pasahero: {name} · {phone}",
+  "@historyCommuterContact": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
+    }
+  }
 }

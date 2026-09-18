@@ -1218,4 +1218,64 @@ class LEn extends L {
 
   @override
   String get rideServiceSpecial => 'Special trip — fare for 5 passengers';
+
+  @override
+  String get historyTitle => 'Ride history';
+
+  @override
+  String get historyEmptyTitle => 'No rides yet';
+
+  @override
+  String get historyEmptyBody => 'Your rides will appear here.';
+
+  @override
+  String get historyEmptyBodyAdmin =>
+      'Every ride in the chapter will appear here.';
+
+  @override
+  String get historyFailed => 'Could not load the history';
+
+  @override
+  String get historyShowMore => 'Show more';
+
+  @override
+  String get historyFilterAll => 'All';
+
+  @override
+  String get historyCompleted => 'Completed';
+
+  @override
+  String get historyCancelled => 'Cancelled';
+
+  @override
+  String get historyCancelledByCommuter => 'Cancelled by commuter';
+
+  @override
+  String get historyCancelledByDriver => 'Cancelled by driver';
+
+  @override
+  String get historyNoDriver => 'No driver found';
+
+  @override
+  String get historyInProgress => 'In progress';
+
+  @override
+  String historyDriverLine(String name, String plate) {
+    return 'Driver: $name · $plate';
+  }
+
+  @override
+  String historyDriverEmailLine(String email) {
+    return 'Driver: $email';
+  }
+
+  @override
+  String historyCommuterLine(String name) {
+    return 'Commuter: $name';
+  }
+
+  @override
+  String historyCommuterContact(String name, String phone) {
+    return 'Commuter: $name · $phone';
+  }
 }

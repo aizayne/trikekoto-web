@@ -2232,6 +2232,108 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Special — bayad para sa 5 pasahero'**
   String get rideServiceSpecial;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kasaysayan ng biyahe'**
+  String get historyTitle;
+
+  /// No description provided for @historyEmptyTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang biyahe'**
+  String get historyEmptyTitle;
+
+  /// No description provided for @historyEmptyBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lalabas dito ang mga biyahe mo.'**
+  String get historyEmptyBody;
+
+  /// No description provided for @historyEmptyBodyAdmin.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lalabas dito ang lahat ng biyahe ng chapter.'**
+  String get historyEmptyBodyAdmin;
+
+  /// No description provided for @historyFailed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi ma-load ang kasaysayan'**
+  String get historyFailed;
+
+  /// No description provided for @historyShowMore.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipakita pa'**
+  String get historyShowMore;
+
+  /// No description provided for @historyFilterAll.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lahat'**
+  String get historyFilterAll;
+
+  /// No description provided for @historyCompleted.
+  ///
+  /// In fil, this message translates to:
+  /// **'Natapos'**
+  String get historyCompleted;
+
+  /// No description provided for @historyCancelled.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kinansela'**
+  String get historyCancelled;
+
+  /// No description provided for @historyCancelledByCommuter.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kinansela ng pasahero'**
+  String get historyCancelledByCommuter;
+
+  /// No description provided for @historyCancelledByDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kinansela ng driver'**
+  String get historyCancelledByDriver;
+
+  /// No description provided for @historyNoDriver.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang nakitang driver'**
+  String get historyNoDriver;
+
+  /// No description provided for @historyInProgress.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kasalukuyan'**
+  String get historyInProgress;
+
+  /// No description provided for @historyDriverLine.
+  ///
+  /// In fil, this message translates to:
+  /// **'Driver: {name} · {plate}'**
+  String historyDriverLine(String name, String plate);
+
+  /// No description provided for @historyDriverEmailLine.
+  ///
+  /// In fil, this message translates to:
+  /// **'Driver: {email}'**
+  String historyDriverEmailLine(String email);
+
+  /// No description provided for @historyCommuterLine.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pasahero: {name}'**
+  String historyCommuterLine(String name);
+
+  /// No description provided for @historyCommuterContact.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pasahero: {name} · {phone}'**
+  String historyCommuterContact(String name, String phone);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

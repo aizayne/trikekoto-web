@@ -99,7 +99,13 @@ class AdminDashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   const Gap(AppSpacing.md),
-                  const Expanded(child: SizedBox()),
+                  Expanded(
+                    child: _AdminLink(
+                      icon: Icons.history,
+                      label: context.l.historyTitle,
+                      onTap: () => context.push('/admin/rides'),
+                    ),
+                  ),
                 ],
               ),
               const Gap(AppSpacing.xxl),

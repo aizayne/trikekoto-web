@@ -107,9 +107,16 @@ class FirestoreRefs {
       .orderBy('createdAt', descending: true)
       .limit(1);
 
+  /// A driver's finished rides — completed or called off after accepting —
+  /// newest first. Backed by the same `assignedDriver + status + createdAt`
+  /// index as [activeRideFor]; the read rule admits each document via
+  /// `isAssignedDriver()`.
   Query<Ride> rideHistoryFor(String driverEmail) => rides
       .where('assignedDriver', isEqualTo: normalizeEmail(driverEmail))
-      .where('status', isEqualTo: RideStatus.completed.wire)
+      .where('status', whereIn: [
+        RideStatus.completed.wire,
+        RideStatus.cancelled.wire,
+      ])
       .orderBy('createdAt', descending: true);
 
   Query<Ride> ridesForCommuter(String uid) => rides
@@ -121,6 +128,16 @@ class FirestoreRefs {
   Query<Driver> get pendingDrivers => drivers
       .where('status', isEqualTo: DriverStatus.pending)
       .orderBy('createdAt');
+
+  /// Every ride, newest first, optionally one status only — the admin's ride
+  /// history. Unfiltered it needs only the single-field `createdAt` index;
+  /// filtered it uses `status + createdAt`. `list` on rides is admin-wide.
+  Query<Ride> recentRides({RideStatus? status}) {
+    final Query<Ride> base = status == null
+        ? rides
+        : rides.where('status', isEqualTo: status.wire);
+    return base.orderBy('createdAt', descending: true);
+  }
 
   Query<FeedbackReport> get openFeedback => feedback
       .where('resolved', isEqualTo: false)
