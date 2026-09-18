@@ -20,7 +20,7 @@ const {
   TableOfContents, TableRow, TextRun, WidthType, ImageRun,
 } = require('docx');
 
-const VERSION = '1.0.5 (6)';
+const VERSION = '1.0.6 (7)';
 const DATE = 'September 2026';
 
 // ── Content ─────────────────────────────────────────────────────────────
@@ -96,12 +96,25 @@ const content = [
   figure('The ID verification screen', 'fig-1-id-verification.png'),
   { steps: [
     `Choose your ID from ${L('Uri ng ID', 'ID type')}.`,
-    `Type the number printed on the card in ${L('Numero ng ID', 'ID number')}.`,
+    `Type the number printed on the card in ${L('Numero ng ID', 'ID number')}, without dashes or spaces. The box accepts only as many characters as that ID uses, and says how many below it (see the table).`,
     `Tap the photo area and choose ${L('Kunan ng litrato ang ID', 'Photograph the ID')} or ${L('Pumili sa gallery', 'Choose from gallery')}. Make sure the name and number can be read.`,
     `Read ${L('Paano gagamitin ang ID mo', 'How your ID is used')}, then tick ${L('Pumapayag ako na iproseso ang ID ko para sa pagkumpirma', 'I agree to my ID being processed for verification')}.`,
     `Tap ${L('Ipadala para sa review', 'Send for review')}.`,
   ] },
   { p: `The screen changes to ${L('Hinihintay ang review', 'Waiting for review')}. You do not need to keep it open.` },
+  { table: {
+    head: ['ID', 'ID number'],
+    widths: [4200, 5160],
+    rows: [
+      ['PhilSys National ID', 'Exactly 16 digits'],
+      ['Driver’s License (LTO)', 'Exactly 11 letters or digits (a letter and 10 digits)'],
+      ['UMID, PhilHealth ID', 'Exactly 12 digits'],
+      ['Passport', 'Exactly 9 letters or digits'],
+      ['Postal ID', '8 to 20 letters or digits'],
+      ['Voter’s ID', '8 to 30 letters or digits'],
+      ['Senior Citizen, Student and Barangay ID', '4 to 20 letters or digits'],
+    ],
+  } },
   { h2: '3.3 After review' },
   { table: {
     head: ['You see', 'What it means', 'What to do'],
@@ -133,9 +146,18 @@ const content = [
     `On ${L('Saan tayo?', 'Where to?')}, check ${L('Sundo', 'Pickup')}. The app fills it in with your current location. To change it, tap it and set it on the map (Section 4.3).`,
     `Tap ${L('Babaan', 'Drop-off')} and set where you are going.`,
     `Check the trip line, which shows the distance and about how many minutes the trip takes.`,
+    `Under ${L('Uri ng biyahe', 'Type of trip')}, choose ${L('Regular — 1 pasahero', 'Regular — 1 passenger')} or ${L('Special — buong tricycle', 'Special — whole tricycle')} (see the table below). Regular is chosen unless you change it.`,
     `Check your name and mobile number, so the driver can find and call you.`,
     `Tap ${L('Maghanap ng driver', 'Find a driver')}.`,
   ] },
+  { table: {
+    head: ['Type of trip', 'What it means'],
+    widths: [3000, 6360],
+    rows: [
+      [`${L('Regular — 1 pasahero', 'Regular — 1 passenger')}`, 'You pay the fare for one passenger. The driver may take other passengers going the same way.'],
+      [`${L('Special — buong tricycle', 'Special — whole tricycle')}`, 'You agree to pay the fare for five passengers, and the tricycle is yours alone. The driver sees this before accepting.'],
+    ],
+  } },
   { note: 'The app does not show or charge a fare. Pay the posted TODA fare to the driver in cash.' },
   { h2: '4.3 Setting a place on the map' },
   { p: 'There are three ways to place the pin:' },
@@ -184,6 +206,10 @@ const content = [
     `Add a contact in ${L('Contact (opsyonal)', 'Contact (optional)')} only if you want a reply.`,
     `Tap ${L('Ipadala ang report', 'Send report')}.`,
   ] },
+  { h2: '4.10 Your ride history' },
+  { p: `Tap ${L('Kasaysayan ng biyahe', 'Ride history')} below the ${L('Maghanap ng driver', 'Find a driver')} button. Your rides are listed newest first, 30 at a time; tap ${L('Ipakita pa', 'Show more')} for older ones.` },
+  figure('Ride history', 'fig-8-ride-history.png'),
+  { p: `Each ride shows the date, the route, how it ended — ${L('Natapos', 'Completed')}, ${L('Kinansela ng pasahero', 'Cancelled by commuter')}, ${L('Kinansela ng driver', 'Cancelled by driver')} or ${L('Walang nakitang driver', 'No driver found')} — whether it was Regular or Special, the driver’s name and plate, and the stars you gave.` },
 
   { pagebreak: true },
   { h1: '5. Driver Guide' },
@@ -234,6 +260,7 @@ const content = [
     `${L('Tanggapin', 'Accept')} — the ride is yours.`,
     `${L('Tanggihan', 'Decline')} — the ride goes to the next nearest driver.`,
   ] },
+  { p: `Each offer is labelled ${L('Regular — 1 pasahero', 'Regular — 1 passenger')} or ${L('Special — bayad para sa 5 pasahero', 'Special trip — fare for 5 passengers')}. On a special trip the commuter pays the fare for five passengers and has the tricycle alone, so do not take other passengers.` },
   { p: 'Each offer lasts about 15 seconds. If you do not answer in time, the ride goes to another driver. If two drivers accept at the same moment, only one gets the ride, and the app tells the other.' },
   { h2: '5.5 During the ride' },
   { p: `The ${L('Kasalukuyang biyahe', 'Current ride')} card shows a map to ${L('Sunduin sa …', 'Pick up at …')} and then ${L('Ibaba sa …', 'Drop off at …')}.` },
@@ -249,6 +276,8 @@ const content = [
   { p: `To call off a ride, tap ${L('Kanselahin', 'Cancel')}.` },
   { h2: '5.6 Going offline' },
   { p: 'Slide the switch back to **Offline**. You stop receiving offers and the app stops using your location. Go offline when you finish your shift — staying online uses battery and data.' },
+  { h2: '5.7 Your ride history' },
+  { p: `Tap the clock icon at the top of the driver screen to open ${L('Kasaysayan ng biyahe', 'Ride history')}. It lists your completed and cancelled rides, newest first, with the route, the trip type, the passenger’s name and their rating. Passengers’ phone numbers are not shown once a ride is over.` },
 
   { pagebreak: true },
   { h1: '6. Administrator Guide' },
@@ -260,7 +289,7 @@ const content = [
   ] },
   { p: 'You only confirm your email once. If you are taken to the driver screen instead, your administrator entry does not match your email address; contact the project team.' },
   { h2: '6.2 The dashboard' },
-  { p: 'The administrator dashboard has shortcuts to **Feedback**, **Dispatch** and **ID review**, a ride summary, and the list of drivers.' },
+  { p: `The administrator dashboard has shortcuts to **Feedback**, **Dispatch**, **ID review** and ${L('Kasaysayan ng biyahe', 'Ride history')}, a ride summary, and the list of drivers.` },
   figure('The administrator dashboard', 'fig-6-admin-dashboard.png'),
   { h3: 'Ride summary' },
   { p: `Choose **Today**, **7 days** or **30 days**, then tap ${L('I-refresh', 'Refresh')}. The summary does not update live while you watch it; tap it again to load the latest rides.` },
@@ -308,6 +337,8 @@ const content = [
   { p: `Tap ${L('I-save ang settings', 'Save settings')} after editing.` },
   { h3: 'Stopping bookings' },
   { p: `To halt the service, turn off ${L('Tumatanggap ng booking', 'Accepting bookings')} and confirm with ${L('Ihinto ang booking', 'Stop bookings')}. Commuters cannot book until you turn it back on. **Rides already in progress finish normally.**` },
+  { h2: '6.7 Ride history' },
+  { p: `Open ${L('Kasaysayan ng biyahe', 'Ride history')} from the dashboard. Every ride in the chapter is listed, newest first, with the commuter’s name and number, the driver, the trip type, the outcome and the rating. Use ${L('Lahat', 'All')}, ${L('Natapos', 'Completed')}, ${L('Kinansela', 'Cancelled')} or ${L('Walang nakitang driver', 'No driver found')} to show one outcome only.` },
 
   { pagebreak: true },
   { h1: '7. Your Data and Privacy' },
@@ -351,6 +382,7 @@ const content = [
     rows: [
       [`${L('Kailangan ng litrato ng ID.', 'A photo of the ID is required.')}`, 'Add a photo of the card before sending.'],
       [`${L('Kailangan mong pumayag muna.', 'You need to agree first.')}`, 'Tick the agreement box.'],
+      [`${L('Kailangan ng 16 numero', 'Must be exactly 16 digits')} (or another count)`, 'The number is too short or too long for the ID type chosen. Check the ID type, then type every digit on the card, without dashes.'],
       [`${L('Hindi tinanggap ng server ang litrato…', 'The server refused the photo…')}`, 'Your ID may already be approved. Go back; if the app still asks for an ID, contact your TODA officer.'],
     ],
   } },

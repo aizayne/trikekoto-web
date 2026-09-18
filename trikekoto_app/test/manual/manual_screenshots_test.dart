@@ -36,7 +36,9 @@ import 'package:trikekoto_app/features/identity/application/id_verification_serv
 import 'package:trikekoto_app/features/identity/data/id_submission.dart';
 import 'package:trikekoto_app/features/identity/presentation/id_review_screen.dart';
 import 'package:trikekoto_app/features/identity/presentation/id_verification_screen.dart';
+import 'package:trikekoto_app/features/rides/application/ride_history.dart';
 import 'package:trikekoto_app/features/rides/data/ride.dart';
+import 'package:trikekoto_app/features/rides/presentation/ride_history_screen.dart';
 import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 /// Screenshots for the end-user manual (docs/manual/*.png).
@@ -58,7 +60,7 @@ import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 const _enabled = bool.fromEnvironment('MANUAL_SCREENSHOTS');
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT');
-const _version = '1.0.5 (6)';
+const _version = '1.0.6 (7)';
 const _outDir = 'docs/manual';
 const _phone = Size(390, 844);
 
@@ -352,7 +354,7 @@ void main() {
 
 
   testWidgets('1 · ID verification', skip: !_enabled, (tester) async {
-    await _size(tester, const Size(390, 1140));
+    await _size(tester, const Size(390, 1175));
     await tester.pumpWidget(_app(
       const IdVerificationScreen(role: IdRole.rider),
       [
@@ -381,7 +383,9 @@ void main() {
 
   testWidgets('3 · booking', skip: !_enabled, (tester) async {
     GeolocatorPlatform.instance = _FakeLocation();
-    await _size(tester, _phone);
+    // Taller than a phone: the trip-type choice pushes the button down, and
+    // the picture should show the whole form.
+    await _size(tester, const Size(390, 1180));
     await tester.pumpWidget(_app(const CommuterBookingScreen(), [
       commuter.myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
       myRiderProfileProvider.overrideWith((ref) => Stream.value(null)),
@@ -508,7 +512,8 @@ void main() {
               'subjectUid': 'rider-uid-1',
               'role': 'rider',
               'idType': 'national_id',
-              'idNumber': '1234-5678-9012-3456',
+              // Stored without dashes, as the app now saves it.
+              'idNumber': '1234567890123456',
               'status': 'pending',
             }, 'rider-uid-1'),
           ])),
@@ -520,6 +525,48 @@ void main() {
     await tester.pump();
     await _settleImages(tester);
     await _save(tester, 'fig-7-id-review');
+  });
+
+  testWidgets('8 · ride history', skip: !_enabled, (tester) async {
+    Ride past(String id, String status,
+            {String? by, int? rating, String service = 'regular', int daysAgo = 0}) =>
+        Ride.fromMap({
+          'commuterUid': 'rider-uid',
+          'commuterName': 'Maria',
+          'commuterPhone': '09181234567',
+          'status': status,
+          'cancelledBy': ?by,
+          'rating': rating,
+          'serviceType': service,
+          'pickup': {'label': 'Plaza, San Marcelino'},
+          'dropoff': {'label': 'Palengke'},
+          'assignedDriver': status == 'expired' ? null : 'juan@toda.ph',
+          'driverSnapshot': status == 'expired'
+              ? null
+              : {
+                  'email': 'juan@toda.ph',
+                  'firstName': 'Juan',
+                  'phone': '09171234567',
+                  'plateNumber': 'ABC 1234',
+                },
+          'createdAt':
+              Timestamp.fromDate(DateTime(2026, 9, 18 - daysAgo, 8 + daysAgo, 15)),
+        }, id);
+
+    await _size(tester, const Size(390, 960));
+    await tester.pumpWidget(_app(
+      const RideHistoryScreen(audience: HistoryAudience.commuter),
+      [
+        rideHistoryProvider.overrideWith((ref, _) => Stream.value([
+              past('h1', 'completed', rating: 5),
+              past('h2', 'completed', rating: 4, service: 'special', daysAgo: 1),
+              past('h3', 'cancelled', by: 'commuter', daysAgo: 2),
+              past('h4', 'expired', daysAgo: 3),
+            ])),
+      ],
+    ));
+    await tester.pumpAndSettle();
+    await _save(tester, 'fig-8-ride-history');
   });
 }
 
