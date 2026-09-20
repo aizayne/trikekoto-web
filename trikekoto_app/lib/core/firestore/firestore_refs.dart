@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/drivers/data/active_driver.dart';
 import '../../features/drivers/data/driver.dart';
 import '../../features/feedback/data/feedback_report.dart';
+import '../../features/notifications/data/app_notification.dart';
 import '../../features/rides/data/ride.dart';
 import 'collection_paths.dart';
 
@@ -13,6 +14,9 @@ import 'collection_paths.dart';
 /// is one the security rules provably allow and `firestore.indexes.json`
 /// covers — building queries ad hoc elsewhere is how you end up with a
 /// `permission-denied` or a missing-index error in production.
+/// Notices a screen asks for at a time. See [FirestoreRefs.recentNotices].
+const noticePageSize = 30;
+
 class FirestoreRefs {
   FirestoreRefs(this._db);
 
@@ -51,6 +55,29 @@ class FirestoreRefs {
           );
 
   DocumentReference<Ride> ride(String rideId) => rides.doc(rideId);
+
+  /// One person's in-app notices. Under their uid, so the rule that admits a
+  /// read is a comparison on the path — a query for somebody else's notices
+  /// cannot be written, let alone refused.
+  CollectionReference<AppNotification> notices(String uid) => _db
+      .collection(FsCollections.notifications)
+      .doc(uid)
+      .collection(FsCollections.notificationItems)
+      .withConverter<AppNotification>(
+        fromFirestore: AppNotification.fromFirestore,
+        toFirestore: (n, _) => n.toMap(),
+      );
+
+  DocumentReference<AppNotification> notice(String uid, String noticeId) =>
+      notices(uid).doc(noticeId);
+
+  /// The newest notices, which is all a screen or a badge ever shows.
+  ///
+  /// A cap rather than the collection: notices accumulate for the life of an
+  /// account, each one listed bills a read, and nobody scrolls to the notice
+  /// that told them they were approved two years ago.
+  Query<AppNotification> recentNotices(String uid) =>
+      notices(uid).orderBy('createdAt', descending: true).limit(noticePageSize);
 
   CollectionReference<FeedbackReport> get feedback => _db
       .collection(FsCollections.feedback)

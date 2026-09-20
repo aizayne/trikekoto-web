@@ -15,6 +15,7 @@ import '../../features/identity/presentation/id_review_screen.dart';
 import '../../features/identity/presentation/id_verification_screen.dart';
 import '../../features/drivers/presentation/driver_register_screen.dart';
 import '../../features/landing/presentation/landing_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/landing/presentation/staff_login_screen.dart';
 import '../auth/session_controller.dart';
 import '../../features/identity/application/id_verification_service.dart';
@@ -155,6 +156,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'history',
             builder: (_, _) =>
                 const RideHistoryScreen(audience: HistoryAudience.driver),
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (_, _) => const NotificationsScreen(),
           ),
         ],
       ),

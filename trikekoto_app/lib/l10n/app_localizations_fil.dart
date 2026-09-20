@@ -496,6 +496,29 @@ class LFil extends L {
   }
 
   @override
+  String get noticesTitle => 'Mga abiso';
+
+  @override
+  String get noticesEmptyTitle => 'Wala pang abiso';
+
+  @override
+  String get noticesEmptyBody =>
+      'Dito lalabas ang mga mensahe tungkol sa account mo.';
+
+  @override
+  String get noticesFailed => 'Hindi makuha ang mga abiso';
+
+  @override
+  String get noticesMarkAllRead => 'Basa na lahat';
+
+  @override
+  String get noticeApprovedTitle => 'Aprubado na ang account mo';
+
+  @override
+  String get noticeApprovedBody =>
+      'Inaprubahan ng admin ang account mo. Puwede ka nang mag-log in.';
+
+  @override
   String driverPickupAway(String km) {
     return 'Sundo: $km km ang layo';
   }

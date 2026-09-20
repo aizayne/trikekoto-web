@@ -493,6 +493,29 @@ class LEn extends L {
   }
 
   @override
+  String get noticesTitle => 'Notifications';
+
+  @override
+  String get noticesEmptyTitle => 'No notifications yet';
+
+  @override
+  String get noticesEmptyBody =>
+      'Messages about your account will appear here.';
+
+  @override
+  String get noticesFailed => 'Could not load your notifications';
+
+  @override
+  String get noticesMarkAllRead => 'Mark all read';
+
+  @override
+  String get noticeApprovedTitle => 'Account approved';
+
+  @override
+  String get noticeApprovedBody =>
+      'Your account has been approved by the admin. You can now log in.';
+
+  @override
   String driverPickupAway(String km) {
     return 'Pickup: $km km away';
   }

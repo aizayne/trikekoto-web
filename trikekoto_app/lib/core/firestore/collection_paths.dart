@@ -44,6 +44,16 @@ class FsCollections {
   /// only by the onIdReviewed function; it outlives the submission.
   static const idVerified = 'id_verified';
 
+  /// In-app notices for one person, at `notifications/{uid}/items/{id}`.
+  ///
+  /// Under the owner's uid rather than in one flat collection, so the rule
+  /// that admits a read is a uid comparison on the path — no query can be
+  /// written that asks for somebody else's notices in the first place.
+  /// Written only by Cloud Functions; the owner's one power is to mark one
+  /// read.
+  static const notifications = 'notifications';
+  static const notificationItems = 'items';
+
   /// The singleton runtime-config document: `config/app`.
   static const configAppDoc = 'app';
 }

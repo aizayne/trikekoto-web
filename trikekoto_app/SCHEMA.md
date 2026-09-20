@@ -283,6 +283,44 @@ technical one.
 
 ---
 
+## `notifications/{ownerUid}/items/{noticeId}`
+
+In-app notices. One document per thing the system has told somebody, under
+the uid of the person it was told to.
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | What the notice is about — `account_approved` today. The app renders its own wording from this. |
+| `title` | string | The server's English wording. Shown by a build that does not know `type`, and carried by the push. |
+| `body` | string | As above. `"Your account has been approved by the admin. You can now log in."` |
+| `createdAt` | timestamp | Server time. The screen sorts on it. |
+| `readAt` | timestamp \| null | Null until the owner opens it. The unread count is exactly the notices with null here. |
+
+**Written only by Cloud Functions.** A client able to create one could say
+anything in the app's own voice — *"send your ID again to this number"* — and
+the entire worth of a notice is that the system said it. Not even an admin
+writes one: an admin's power is to approve a driver, and `onDriverApproved`
+turns that into this. The owner's single power is to set `readAt`, and the
+rules admit that field and no other.
+
+**Under the uid, not keyed by it.** A flat collection with an `ownerUid` field
+would need every query to carry a matching `where` clause for the rules to
+admit it. Nested, the rule is a comparison on the path: a query for somebody
+else's notices cannot be written in the first place.
+
+**The document is the notice; the push is a convenience.** A driver is
+approved hours or days after registering, with the app closed and — since
+they have never been able to go online — usually no FCM token stored at all.
+The push is sent when there is a token and forgotten when there is not; the
+document waits.
+
+**One notice per driver per approval.** The document ID is the type, so a
+retried delivery of the same event rewrites the same row instead of stacking
+a second. A suspension followed by a re-approval replaces it, unread again,
+because that is genuinely new.
+
+---
+
 ## Indexes
 
 `firestore.indexes.json` carries no inline comments because the CLI validates
@@ -297,6 +335,9 @@ that file against a strict schema. What each one is for:
 | `active_drivers` | `isOnline`, `availability`, `position.geohash` | the greedy nearest-driver sweep |
 | `drivers` | `status`, `createdAt ↑` | admin verification queue, oldest first |
 | `feedback` | `resolved`, `createdAt ↓` | admin feedback queue |
+
+`notifications/{uid}/items` needs no entry: ordering one collection by one
+field is served by the single-field index Firestore builds by default.
 
 The `fieldOverrides` entries switch **off** indexing for `position.geopoint`,
 `position.updatedAt`, `driverLocation` and `driverLocationAt`. Those fields are

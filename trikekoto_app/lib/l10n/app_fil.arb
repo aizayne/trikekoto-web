@@ -290,6 +290,13 @@
       }
     }
   },
+  "noticesTitle": "Mga abiso",
+  "noticesEmptyTitle": "Wala pang abiso",
+  "noticesEmptyBody": "Dito lalabas ang mga mensahe tungkol sa account mo.",
+  "noticesFailed": "Hindi makuha ang mga abiso",
+  "noticesMarkAllRead": "Basa na lahat",
+  "noticeApprovedTitle": "Aprubado na ang account mo",
+  "noticeApprovedBody": "Inaprubahan ng admin ang account mo. Puwede ka nang mag-log in.",
   "driverPickupAway": "Sundo: {km} km ang layo",
   "@driverPickupAway": {
     "placeholders": {

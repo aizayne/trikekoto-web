@@ -949,6 +949,48 @@ abstract class L {
   /// **'{from}  →  {to}'**
   String driverRoute(String from, String to);
 
+  /// No description provided for @noticesTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mga abiso'**
+  String get noticesTitle;
+
+  /// No description provided for @noticesEmptyTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang abiso'**
+  String get noticesEmptyTitle;
+
+  /// No description provided for @noticesEmptyBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dito lalabas ang mga mensahe tungkol sa account mo.'**
+  String get noticesEmptyBody;
+
+  /// No description provided for @noticesFailed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi makuha ang mga abiso'**
+  String get noticesFailed;
+
+  /// No description provided for @noticesMarkAllRead.
+  ///
+  /// In fil, this message translates to:
+  /// **'Basa na lahat'**
+  String get noticesMarkAllRead;
+
+  /// No description provided for @noticeApprovedTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Aprubado na ang account mo'**
+  String get noticeApprovedTitle;
+
+  /// No description provided for @noticeApprovedBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Inaprubahan ng admin ang account mo. Puwede ka nang mag-log in.'**
+  String get noticeApprovedBody;
+
   /// No description provided for @driverPickupAway.
   ///
   /// In fil, this message translates to:

@@ -10,6 +10,7 @@ import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
+import '../../notifications/application/notifications.dart';
 import '../application/driver_controllers.dart';
 import '../data/driver.dart';
 import 'driver_ride_map.dart';
@@ -25,11 +26,25 @@ class DriverDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myDriverProfileProvider);
     final idVerified = ref.watch(myIdVerifiedProvider).value == true;
+    final unread = ref.watch(unreadNoticeCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l.driverTitle),
         actions: [
+          // First of the actions: a driver waiting on approval is told here,
+          // and the count is the only thing on this screen that asks to be
+          // looked at.
+          IconButton(
+            tooltip: context.l.noticesTitle,
+            icon: unread == 0
+                ? const Icon(Icons.notifications_none_outlined)
+                : Badge.count(
+                    count: unread,
+                    child: const Icon(Icons.notifications),
+                  ),
+            onPressed: () => context.push('/driver/notifications'),
+          ),
           IconButton(
             tooltip: context.l.historyTitle,
             icon: const Icon(Icons.history),

@@ -25,6 +25,7 @@
 //   admins/{adminEmail}          admin allowlist (Console-managed)
 //   feedback/{feedbackId}        issue reports
 //   config/{configId}            runtime tunables (dispatch, fares)
+//   notifications/{uid}/items/{id}  in-app notices, written by functions
 // ============================================================
 
 rules_version = '2';
@@ -671,6 +672,29 @@ service cloud.firestore {
       allow get: if (isSignedIn() && subjectUid == uid()) || isAdmin();
       allow list: if isAdmin();
       allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  notifications/{ownerUid}/items/{noticeId}
+    // ═══════════════════════════════════════════════════════
+    // In-app notices — today, the one telling a driver an admin approved
+    // their registration.
+    //
+    // Written only by Cloud Functions. A client able to create a notice could
+    // say anything in the app's own voice — "your account was suspended",
+    // "send your ID again to this number" — and the entire worth of a notice
+    // is that the system said it. Not even an admin writes one directly; an
+    // admin's power is to approve a driver, and onDriverApproved turns that
+    // into this.
+    //
+    // The owner's one power is to mark a notice read. `readAt` and nothing
+    // else, because a notice its own reader can edit is a record of nothing.
+    match /notifications/{ownerUid}/items/{noticeId} {
+      allow get, list: if isSignedIn() && ownerUid == uid();
+      allow update: if isSignedIn() && ownerUid == uid()
+        && onlyChanged(['readAt'])
+        && request.resource.data.readAt == request.time;
+      allow create, delete: if false;
     }
 
     // ═══════════════════════════════════════════════════════

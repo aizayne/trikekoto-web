@@ -40,6 +40,12 @@ import {
   shortlistByDistance,
   unavailableDrivers,
 } from './dispatch';
+import {
+  ACCOUNT_APPROVED,
+  DriverState,
+  justApproved,
+  NOTICE_ACCOUNT_APPROVED,
+} from './notifications';
 
 initializeApp();
 const db = getFirestore();
@@ -817,6 +823,71 @@ function emptyDispatch(): RideDispatch {
 // ════════════════════════════════════════════════════════════
 // 39b · ID gate — record THAT someone is verified, not who they are.
 // ════════════════════════════════════════════════════════════
+/**
+ * Tells a driver their account was approved, the moment an admin approves it.
+ *
+ * The approval itself is a field on the profile, and the dashboard already
+ * reacts to it — but only for a driver who happens to be looking. Registration
+ * is followed by a wait of hours or days, nobody watches a screen for that
+ * long, and the TODA was telling people by text message from a personal
+ * phone. This writes the fact where the app can show it later and pushes it
+ * to a phone that is listening.
+ *
+ * **One document per driver, at a known ID.** A retried delivery of the same
+ * event rewrites the same notice rather than stacking a second one; a
+ * suspension followed by a re-approval is genuinely new and replaces it,
+ * unread again.
+ *
+ * **Only functions write notices.** A client able to create one could say
+ * anything in the app's own voice, and the whole worth of a notice is that
+ * the system said it. The rules refuse every client write; see the
+ * notifications match block in firestore.rules.
+ */
+export const onDriverApproved = onDocumentUpdated(
+  { document: 'drivers/{driverEmail}', region: REGION },
+  async (event) => {
+    const before = event.data?.before.data() as DriverState | undefined;
+    const after = event.data?.after.data() as DriverState | undefined;
+    if (!justApproved(before, after) || !after) return;
+
+    // Profiles written by the previous web build predate `uid`, and a notice
+    // has nowhere to go without one. Logged rather than thrown: the approval
+    // still stands, and a retry would fail the same way forever.
+    const uid = after.uid;
+    if (!uid) {
+      logger.warn('Driver approved with no uid on the profile; no notice written');
+      return;
+    }
+
+    await db
+      .collection('notifications')
+      .doc(uid)
+      .collection('items')
+      .doc(NOTICE_ACCOUNT_APPROVED)
+      .set({
+        type: ACCOUNT_APPROVED.type,
+        title: ACCOUNT_APPROVED.title,
+        body: ACCOUNT_APPROVED.body,
+        createdAt: FieldValue.serverTimestamp(),
+        // Explicitly unread, rather than absent: the app sorts and counts on
+        // this field, and "missing" and "not yet read" should not be two
+        // different shapes for one state.
+        readAt: null,
+      });
+
+    // Best effort. A driver waiting on approval has never been online, so
+    // there is usually no token yet — which is exactly why the notice above
+    // is a document and not only a push.
+    await sendTo(
+      after.fcmToken,
+      { title: ACCOUNT_APPROVED.title, body: ACCOUNT_APPROVED.body },
+      { type: NOTICE_ACCOUNT_APPROVED },
+    );
+    logger.info('Approval notice written for a driver');
+  },
+);
+
+
 /**
  * Writes `id_verified/{uid}` the moment a submission is approved.
  *
