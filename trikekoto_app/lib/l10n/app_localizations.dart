@@ -949,6 +949,54 @@ abstract class L {
   /// **'{from}  →  {to}'**
   String driverRoute(String from, String to);
 
+  /// No description provided for @adminRemove.
+  ///
+  /// In fil, this message translates to:
+  /// **'Alisin'**
+  String get adminRemove;
+
+  /// No description provided for @adminRemoveQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Alisin si {name}?'**
+  String adminRemoveQuestion(String name);
+
+  /// No description provided for @adminRemoveWhatGoes.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mabubura ang profile, ang ID, at ang account na pang-log in. Hindi na siya makakapag-log in.'**
+  String get adminRemoveWhatGoes;
+
+  /// No description provided for @adminRemoveWhatStays.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mananatili ang mga natapos na biyahe bilang record ng TODA, pero aalisin ang numero niya roon.'**
+  String get adminRemoveWhatStays;
+
+  /// No description provided for @adminRemoveIrreversible.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi na ito maibabalik.'**
+  String get adminRemoveIrreversible;
+
+  /// No description provided for @adminRemoveNo.
+  ///
+  /// In fil, this message translates to:
+  /// **'Huwag'**
+  String get adminRemoveNo;
+
+  /// No description provided for @adminRemoved.
+  ///
+  /// In fil, this message translates to:
+  /// **'Inalis na si {name}'**
+  String adminRemoved(String name);
+
+  /// No description provided for @adminRemoveBlocked.
+  ///
+  /// In fil, this message translates to:
+  /// **'May biyahe pa — suspindihin muna'**
+  String get adminRemoveBlocked;
+
   /// No description provided for @noticesTitle.
   ///
   /// In fil, this message translates to:

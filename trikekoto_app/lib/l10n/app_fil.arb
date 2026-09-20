@@ -290,6 +290,28 @@
       }
     }
   },
+  "adminRemove": "Alisin",
+  "adminRemoveQuestion": "Alisin si {name}?",
+  "@adminRemoveQuestion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRemoveWhatGoes": "Mabubura ang profile, ang ID, at ang account na pang-log in. Hindi na siya makakapag-log in.",
+  "adminRemoveWhatStays": "Mananatili ang mga natapos na biyahe bilang record ng TODA, pero aalisin ang numero niya roon.",
+  "adminRemoveIrreversible": "Hindi na ito maibabalik.",
+  "adminRemoveNo": "Huwag",
+  "adminRemoved": "Inalis na si {name}",
+  "@adminRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRemoveBlocked": "May biyahe pa — suspindihin muna",
   "noticesTitle": "Mga abiso",
   "noticesEmptyTitle": "Wala pang abiso",
   "noticesEmptyBody": "Dito lalabas ang mga mensahe tungkol sa account mo.",

@@ -789,6 +789,24 @@ describe('drivers — registration and verification', () => {
     );
   });
 
+  it('lets an admin remove a driver', async () => {
+    // Deleting this one document is the whole of what the admin panel does;
+    // onDriverRemoved takes apart everything else the profile was attached to.
+    await seedAdmin();
+    await seedDriver(DRIVER_EMAIL, 'approved');
+    await assertSucceeds(deleteDoc(doc(admin(), 'drivers', DRIVER_EMAIL)));
+  });
+
+  it('and nobody else — not the driver, not another driver', async () => {
+    await seedDriver(DRIVER_EMAIL, 'approved');
+    await seedDriver(OTHER_DRIVER_EMAIL, 'approved');
+    // Removal cancels rides and deletes a sign-in account. A driver who could
+    // do it to themselves could do it mid-ride, and to somebody else.
+    await assertFails(deleteDoc(doc(driver(), 'drivers', DRIVER_EMAIL)));
+    await assertFails(deleteDoc(doc(driver(), 'drivers', OTHER_DRIVER_EMAIL)));
+    await assertFails(deleteDoc(doc(commuter(), 'drivers', DRIVER_EMAIL)));
+  });
+
   it('keeps driver phone numbers away from commuters', async () => {
     await seedDriver(DRIVER_EMAIL);
     await assertFails(getDoc(doc(commuter(), 'drivers', DRIVER_EMAIL)));

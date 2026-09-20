@@ -493,6 +493,36 @@ class LEn extends L {
   }
 
   @override
+  String get adminRemove => 'Remove';
+
+  @override
+  String adminRemoveQuestion(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get adminRemoveWhatGoes =>
+      'The profile, the ID and the sign-in account are deleted. They will not be able to log in again.';
+
+  @override
+  String get adminRemoveWhatStays =>
+      'Finished rides stay as the TODA\'s record, with their phone number removed.';
+
+  @override
+  String get adminRemoveIrreversible => 'This cannot be undone.';
+
+  @override
+  String get adminRemoveNo => 'Keep';
+
+  @override
+  String adminRemoved(String name) {
+    return '$name removed';
+  }
+
+  @override
+  String get adminRemoveBlocked => 'On a ride — suspend instead';
+
+  @override
   String get noticesTitle => 'Notifications';
 
   @override

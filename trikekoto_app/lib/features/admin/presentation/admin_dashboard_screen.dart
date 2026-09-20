@@ -25,6 +25,22 @@ final allDriversProvider = StreamProvider<List<Driver>>((ref) {
       .map((s) => s.docs.map((d) => d.data()).toList());
 });
 
+/// Whether this driver is carrying or collecting a passenger right now.
+///
+/// Removal is refused while they are: the ride would be cancelled under a
+/// commuter who is standing at the kerb watching a tricycle approach. The
+/// officer suspends them instead, and removes them when the trip is over.
+///
+/// autoDispose and family: one listener per tile, ended with the screen.
+final driverIsOnARideProvider =
+    StreamProvider.autoDispose.family<bool, String>((ref, email) {
+  return ref
+      .watch(refsProvider)
+      .activeRideFor(email)
+      .snapshots()
+      .map((s) => s.docs.isNotEmpty);
+});
+
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -262,9 +278,62 @@ class _DriverTile extends ConsumerWidget {
     }
   }
 
+  /// Removes the driver, after asking.
+  ///
+  /// Deletes one document. Everything else — the presence row, the ID and its
+  /// photo, the verification marker, the notices, the sign-in account, and
+  /// the contact details denormalised onto past rides — is done by the
+  /// onDriverRemoved function, because none of it is reachable from a client
+  /// and half of it is refused to every client by design.
+  Future<void> _remove(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l.adminRemoveQuestion(driver.fullName)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(dialogContext.l.adminRemoveWhatGoes),
+            const Gap(AppSpacing.sm),
+            Text(dialogContext.l.adminRemoveWhatStays),
+            const Gap(AppSpacing.sm),
+            Text(dialogContext.l.adminRemoveIrreversible,
+                style: dialogContext.text.bodySmall),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.l.adminRemoveNo),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+                foregroundColor: dialogContext.semantic.danger),
+            child: Text(dialogContext.l.adminRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(refsProvider).driver(driver.email).delete();
+      if (context.mounted) {
+        showSnack(context, context.l.adminRemoved(driver.fullName));
+      }
+    } catch (e) {
+      if (context.mounted) showSnack(context, describeError(e), error: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semantic = context.semantic;
+    // A driver mid-ride cannot be removed; the tile says so where the button
+    // would be, rather than offering one that fails.
+    final onARide = ref.watch(driverIsOnARideProvider(driver.email)).value ?? false;
     final (statusColor, statusBg) = switch (driver.status) {
       DriverStatus.approved => (semantic.success, semantic.successContainer),
       DriverStatus.suspended => (semantic.danger, semantic.dangerContainer),
@@ -335,6 +404,25 @@ class _DriverTile extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Left of the status actions and set apart: the destructive
+                // one should not sit where a thumb lands after approving.
+                if (onARide)
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: Text(context.l.adminRemoveBlocked,
+                        style: context.text.bodySmall
+                            ?.copyWith(color: semantic.warning)),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () => _remove(context, ref),
+                    icon: const Icon(Icons.person_remove_outlined,
+                        size: AppSpacing.iconSm),
+                    label: Text(context.l.adminRemove),
+                    style:
+                        TextButton.styleFrom(foregroundColor: semantic.danger),
+                  ),
+                const Spacer(),
                 if (driver.status != DriverStatus.approved)
                   TextButton.icon(
                     onPressed: () =>

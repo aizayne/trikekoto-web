@@ -74,6 +74,37 @@ that matters: they cannot accept new rides.
 
 Suspension is reversible: press **Approve** to reinstate.
 
+### Removing a driver
+
+**Suspend first, remove later.** Suspension is the everyday tool: it stops
+someone driving and can be undone. Removal is for a registration that should
+never have been made — a duplicate, a test account, somebody who is not a
+member of the chapter — or for a member who has left for good.
+
+Press **Remove** on the driver's card and confirm. It deletes:
+
+- their profile and their place in the roster;
+- their ID photo and the record that it was checked;
+- their notifications;
+- their sign-in account, so they cannot log in or register again with that
+  address.
+
+It keeps their **finished rides**. Who drove, which tricycle, when, and how it
+was rated stays in the ride history: that is the chapter's record of service,
+and it is what you will be asked for if there is ever a complaint or an
+insurance claim. Their phone number is stripped from those rides, because its
+only purpose was reaching them during the trip.
+
+**A driver on a ride cannot be removed.** The card shows *"On a ride — suspend
+instead"* until the trip ends. If a driver is somehow removed while carrying a
+passenger, that ride is cancelled and the commuter is told to rebook — but a
+passenger standing at the kerb watching a tricycle approach should not have it
+called off from an office, so suspend, wait for the trip to finish, then
+remove.
+
+**This cannot be undone.** A removed driver registers again from scratch, and
+their ID has to be checked again.
+
 ---
 
 ## Reading feedback

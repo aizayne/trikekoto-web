@@ -72,6 +72,7 @@ Widget _harness({
   List<Ride>? rides,
   int openFeedback = 0,
   bool emailVerified = true,
+  bool onARide = false,
 }) {
   return ProviderScope(
     overrides: [
@@ -87,6 +88,8 @@ Widget _harness({
           .overrideWith((ref) async => _analytics(rides ?? const [])),
       openFeedbackCountProvider
           .overrideWith((ref) => Stream.value(openFeedback)),
+      driverIsOnARideProvider
+          .overrideWith((ref, email) => Stream.value(onARide)),
     ],
     child: MaterialApp(
       // Pinned rather than defaulted: these tests assert English
@@ -119,6 +122,59 @@ Future<void> pumpTall(WidgetTester tester, Widget widget) async {
 }
 
 void main() {
+  group('admin dashboard — removing a driver', () {
+    // The deletion itself is covered where it happens: the rules tests prove
+    // only an admin may delete a driver document, and the emulator test
+    // proves onDriverRemoved cleans up everything the document was attached
+    // to. What these cover is the part a person touches — that the button is
+    // there, that it asks first, and that it is absent when using it would
+    // strand a passenger.
+
+    testWidgets('a driver can be removed, after confirming', (tester) async {
+      await pumpTall(tester, _harness(
+        drivers: [_driver('juan@toda.ph', DriverStatus.pending)],
+      ));
+
+      expect(find.text('Remove'), findsOneWidget);
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remove Juan juan?'), findsOneWidget);
+      expect(
+          find.textContaining('sign-in account are deleted'), findsOneWidget);
+      // The record is not the admin's to erase, and the dialog says so.
+      expect(find.textContaining("stay as the TODA's record"), findsOneWidget);
+    });
+
+    testWidgets('and nothing happens if they think better of it',
+        (tester) async {
+      await pumpTall(tester, _harness(
+        drivers: [_driver('juan@toda.ph', DriverStatus.approved)],
+      ));
+
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remove Juan juan?'), findsNothing);
+      // Still listed, still approved.
+      expect(find.text('Suspend'), findsOneWidget);
+    });
+
+    testWidgets('a driver mid-ride is not removable', (tester) async {
+      await pumpTall(tester, _harness(
+        drivers: [_driver('juan@toda.ph', DriverStatus.approved)],
+        onARide: true,
+      ));
+
+      expect(find.text('Remove'), findsNothing);
+      expect(find.text('On a ride — suspend instead'), findsOneWidget);
+      // Suspending still works: that is what the officer does instead.
+      expect(find.text('Suspend'), findsOneWidget);
+    });
+  });
+
   group('admin dashboard — verification queue', () {
     testWidgets('a pending driver appears with an Approve action',
         (tester) async {

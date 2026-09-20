@@ -22,6 +22,7 @@
  */
 
 import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, GeoPoint, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
@@ -40,6 +41,7 @@ import {
   shortlistByDistance,
   unavailableDrivers,
 } from './dispatch';
+import { actionForRide, RideRow, shouldDeleteAccount } from './removal';
 import {
   ACCOUNT_APPROVED,
   DriverState,
@@ -1033,6 +1035,161 @@ export const purgeExpiredIds = onSchedule(
       `${ID_RETENTION_DAYS} days` +
       (imageFailures > 0 ? `; ${imageFailures} image deletes deferred` : ''),
     );
+  },
+);
+
+
+
+// ════════════════════════════════════════════════════════════
+// 37d · Driver removal — erase the person, keep the record.
+// ════════════════════════════════════════════════════════════
+/**
+ * Cleans up after an admin removes a driver.
+ *
+ * Deleting `drivers/{email}` is what the admin panel does, and on its own it
+ * would be a half-removal: the account could sign in and register again, the
+ * presence row would keep the tricycle in the dispatch index, a passenger
+ * already aboard would be left attached to a profile that no longer exists,
+ * and the ID photo would sit in Storage with nothing pointing at it.
+ *
+ * Runs on the deletion rather than in a callable, for the same reason every
+ * other job here does: the admin panel is the same sideloaded APK as the
+ * driver app, App Check refuses its callables, and a Firestore write is
+ * something it can always make. It mirrors `onRiderDeleted`, which is the
+ * same problem for the other kind of account.
+ *
+ * **What survives.** Finished rides. Who drove, which tricycle, when, and
+ * what the passenger thought of it is the chapter's record of service — the
+ * thing a TODA is asked for when there is a complaint or an insurance claim —
+ * and removing a member is not authority to rewrite it. What goes from those
+ * rides is the phone number, whose only purpose was reaching the driver
+ * during that trip.
+ */
+export const onDriverRemoved = onDocumentDeleted(
+  { document: 'drivers/{driverEmail}', region: REGION },
+  async (event) => {
+    const email = event.params.driverEmail.toLowerCase();
+    const gone = event.data?.data() as { uid?: string | null } | undefined;
+    const uid = gone?.uid ?? null;
+
+    // Presence first. While this row exists the tricycle is still in the
+    // dispatch index, and every second it stays is a second a passenger can
+    // be sent to a driver who has been removed.
+    await db.collection('active_drivers').doc(email).delete();
+
+    // Rides they are attached to right now. Bounded: a correct system has at
+    // most one of each, and a broken one must not turn a deletion into an
+    // unbounded write storm.
+    const attached = await db
+      .collection('rides')
+      .where('assignedDriver', '==', email)
+      .where('status', 'in', ['accepted', 'in_transit'])
+      .limit(10)
+      .get();
+
+    for (const snap of attached.docs) {
+      const ride = { ...(snap.data() as RideRow), id: snap.id };
+      if (actionForRide(ride, email) !== 'cancel') continue;
+      // onRideStatusChanged tells the commuter, so they learn the ride is off
+      // rather than waiting for a tricycle that is not coming.
+      await snap.ref.update({
+        status: 'cancelled',
+        cancelledBy: 'admin',
+        cancelledAt: FieldValue.serverTimestamp(),
+      });
+      logger.info(`Ride ${snap.id} cancelled: its driver was removed`);
+    }
+
+    // An offer open at this second. Clearing it is exactly what a decline
+    // does, and advanceDispatch moves to the next nearest driver.
+    const offered = await db
+      .collection('rides')
+      .where('dispatch.offeredTo', '==', email)
+      .where('status', '==', 'searching')
+      .limit(10)
+      .get();
+
+    for (const snap of offered.docs) {
+      const ride = { ...(snap.data() as RideRow), id: snap.id };
+      if (actionForRide(ride, email) !== 'release') continue;
+      await snap.ref.update({
+        'dispatch.offeredTo': null,
+        'dispatch.offerExpiresAt': null,
+      });
+      logger.info(`Ride ${snap.id} re-offered: its candidate was removed`);
+    }
+
+    // Finished rides: the record stays, the contact detail goes. Batched at
+    // 400, below Firestore's 500-write limit, so a long career commits.
+    const history = await db
+      .collection('rides')
+      .where('assignedDriver', '==', email)
+      .limit(400)
+      .get();
+
+    if (!history.empty) {
+      const batch = db.batch();
+      for (const snap of history.docs) {
+        batch.update(snap.ref, {
+          'driverSnapshot.phone': null,
+          driverFcmToken: null,
+        });
+      }
+      await batch.commit();
+      logger.info(`Cleared contact details from ${history.size} past rides`);
+    }
+
+    if (!uid) {
+      // Profiles written by the previous web build predate `uid`. Everything
+      // keyed by email is already gone; what is keyed by uid cannot be found.
+      logger.warn('Removed a driver profile with no uid; account left in place');
+      return;
+    }
+
+    // The ID and the fact of its approval. Both are keyed by uid, and neither
+    // has a reason to outlive the account it belonged to.
+    const submission = await db.collection('id_submissions').doc(uid).get();
+    if (submission.exists) {
+      const path =
+        (submission.data()?.idPhotoPath as string | undefined) ??
+        `ids/${uid}/card`;
+      try {
+        await getStorage().bucket().file(path).delete({ ignoreNotFound: true });
+        await submission.ref.delete();
+      } catch (e) {
+        // Leave the document: it is the only remaining pointer to the image,
+        // and the retention job will try the pair again.
+        logger.error(`Could not delete ${path}; keeping the submission`, e);
+      }
+    }
+    await db.collection('id_verified').doc(uid).delete();
+
+    // Their notices. Written for a person who no longer has an account.
+    const notices = await db
+      .collection('notifications')
+      .doc(uid)
+      .collection('items')
+      .get();
+    for (const notice of notices.docs) await notice.ref.delete();
+
+    // The sign-in account last, so a failure anywhere above leaves something
+    // to retry against rather than an orphaned login.
+    const isAdmin = (await db.collection('admins').doc(email).get()).exists;
+    if (!shouldDeleteAccount({ uid, isAdmin })) {
+      logger.info('Driver profile removed; the account is an admin and stays');
+      return;
+    }
+    try {
+      await getAuth().deleteUser(uid);
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code;
+      // Already gone is the desired end state, not a failure.
+      if (code !== 'auth/user-not-found') {
+        logger.error('Could not delete the sign-in account', e);
+        return;
+      }
+    }
+    logger.info('Driver removed: profile, presence, ID and account');
   },
 );
 

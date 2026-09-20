@@ -283,6 +283,34 @@ technical one.
 
 ---
 
+## Removing an account
+
+Two paths, one shape: a client deletes the one document it is allowed to
+delete, and a function takes apart everything that document was attached to.
+Neither cascade is reachable from a client — half of it is refused to every
+client by design, and the sign-in account needs the Admin SDK.
+
+| | Rider | Driver |
+|---|---|---|
+| Deleted by | the rider, from their profile | an admin, from the panel |
+| Document | `riders/{uid}` | `drivers/{email}` |
+| Function | `onRiderDeleted` | `onDriverRemoved` |
+| Also deleted | `id_verified/{uid}` | presence, ID + photo, `id_verified`, notices, the sign-in account |
+| Rides | kept, commuter anonymised | kept, driver's phone cleared |
+
+A finished ride survives either removal. It is the TODA's record of service —
+who drove, which tricycle, when, what it was rated — and the personal details
+that go are the ones whose purpose ended with the trip: the commuter's
+identity in one case, the driver's phone number in the other.
+
+`onDriverRemoved` also handles what the person was attached to at that second:
+a ride under way is cancelled (which tells the commuter to rebook), and an
+open offer is released so dispatch moves to the next nearest driver. The
+sign-in account is kept in one case only — when the same address is also an
+admin, since deleting it would lock the chapter out of its own panel.
+
+---
+
 ## `notifications/{ownerUid}/items/{noticeId}`
 
 In-app notices. One document per thing the system has told somebody, under
