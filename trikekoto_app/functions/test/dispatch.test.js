@@ -6,7 +6,7 @@ const {
   haversineKm,
   shortlistByDistance,
   pickByRoad,
-  driversHoldingOffers,
+  unavailableDrivers,
   msUntilLapsed,
   isStale,
 } = require('../lib/dispatch.js');
@@ -69,22 +69,48 @@ test('no candidates, no pick', () => {
   assert.equal(pickByRoad([], null), null);
 });
 
+const NOW_OFFERS = new Date('2026-09-17T08:00:00Z');
+const later = { toDate: () => new Date('2026-09-17T08:00:10Z') };
+const earlier = { toDate: () => new Date('2026-09-17T07:59:50Z') };
+
 test('only live offers on other searching rides make a driver busy', () => {
-  const now = new Date('2026-09-17T08:00:00Z');
-  const later = { toDate: () => new Date('2026-09-17T08:00:10Z') };
-  const earlier = { toDate: () => new Date('2026-09-17T07:59:50Z') };
-  const busy = driversHoldingOffers(
+  const busy = unavailableDrivers(
     [
       { id: 'r1', status: 'searching', dispatch: { offeredTo: 'live', offerExpiresAt: later } },
       { id: 'r2', status: 'searching', dispatch: { offeredTo: 'lapsed', offerExpiresAt: earlier } },
-      { id: 'r3', status: 'accepted', dispatch: { offeredTo: 'accepted', offerExpiresAt: later } },
       { id: 'r4', status: 'searching', dispatch: { offeredTo: 'self', offerExpiresAt: later } },
       { id: 'r5', status: 'searching', dispatch: { offeredTo: null, offerExpiresAt: null } },
     ],
-    now,
+    NOW_OFFERS,
     'r4',
   );
   assert.deepEqual([...busy], ['live']);
+});
+
+test('a driver carrying a passenger is busy, whatever their phone last said', () => {
+  // The bug this closes: between accepting and the next ping, presence still
+  // read `idle`, so the next booking went to a driver who already had someone
+  // aboard — and their app hides offers during a ride, so it went unanswered.
+  const busy = unavailableDrivers(
+    [
+      { id: 'r1', status: 'accepted', assignedDriver: 'carrying' },
+      { id: 'r2', status: 'in_transit', assignedDriver: 'driving' },
+    ],
+    NOW_OFFERS,
+  );
+  assert.deepEqual([...busy].sort(), ['carrying', 'driving']);
+});
+
+test('a finished ride frees its driver at once', () => {
+  const busy = unavailableDrivers(
+    [
+      { id: 'r1', status: 'completed', assignedDriver: 'free' },
+      { id: 'r2', status: 'cancelled', assignedDriver: 'also-free' },
+      { id: 'r3', status: 'expired', assignedDriver: null },
+    ],
+    NOW_OFFERS,
+  );
+  assert.equal(busy.size, 0);
 });
 
 test('the lapse check waits one second past expiry, never less than zero, capped', () => {

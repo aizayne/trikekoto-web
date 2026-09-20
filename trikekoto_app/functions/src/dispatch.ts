@@ -39,10 +39,11 @@ export function isStale(row: PresenceRow, now: Date): boolean {
   return now.getTime() - at.getTime() > every * MISSED_HEARTBEATS * 1000;
 }
 
-/** A ride, as much of it as knowing who holds an offer reads. */
+/** A ride, as much of it as knowing who is unavailable reads. */
 export type RideOfferState = {
   id: string;
   status?: string;
+  assignedDriver?: string | null;
   dispatch?: {
     offeredTo?: string | null;
     offerExpiresAt?: { toDate(): Date } | null;
@@ -120,19 +121,34 @@ export function pickByRoad(
 }
 
 /**
- * Drivers holding an unexpired offer on some other searching ride.
+ * Drivers who must not be offered a ride right now: those already carrying a
+ * passenger, and those holding an unexpired offer on another searching ride.
  *
- * Without this, two commuters booking near the same terminal were both
- * offered the one nearest driver, and whichever ride they did not take lost
- * a full timeout waiting on someone who was never going to answer it.
+ * Read from the rides themselves rather than from `active_drivers.availability`,
+ * which is written by the driver's phone and only refreshed when it pings —
+ * on movement, or at the check-in interval. Between accepting a ride and the
+ * next ping, that flag still said `idle`, so a second booking was offered to a
+ * driver who already had a passenger; their app hides new offers during a
+ * ride, so the offer sat unanswered for its whole timeout. The mirror case was
+ * worse in the other direction: for a while after dropping someone off, the
+ * flag still said `on_ride` and the nearest free driver was passed over.
+ *
+ * A ride document changes the instant a driver accepts or completes, so it
+ * cannot lag.
  */
-export function driversHoldingOffers(
+export function unavailableDrivers(
   rides: readonly RideOfferState[],
   now: Date,
   exceptRideId?: string,
 ): Set<string> {
   const busy = new Set<string>();
   for (const r of rides) {
+    // Carrying a passenger. The ride this dispatch is for cannot be one of
+    // these — it is still searching — so there is nothing to except.
+    if (r.status === 'accepted' || r.status === 'in_transit') {
+      if (r.assignedDriver) busy.add(r.assignedDriver);
+      continue;
+    }
     if (r.id === exceptRideId || r.status !== 'searching') continue;
     const to = r.dispatch?.offeredTo;
     const expires = r.dispatch?.offerExpiresAt?.toDate();

@@ -34,10 +34,10 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import {
-  driversHoldingOffers,
   msUntilLapsed,
   pickByRoad,
   shortlistByDistance,
+  unavailableDrivers,
 } from './dispatch';
 
 initializeApp();
@@ -557,13 +557,16 @@ async function dispatchNow(
   ride: Ride,
 ): Promise<DispatchOutcome> {
   const now = new Date();
-  const [config, online, searching] = await Promise.all([
+  const [config, online, searching, underway] = await Promise.all([
     readConfig(),
     onlineDrivers(),
     searchingRides(),
+    ridesUnderway(),
   ]);
-  const busy = driversHoldingOffers(
-    searching.docs.map((d) => ({ id: d.id, ...(d.data() as Ride) })),
+  const busy = unavailableDrivers(
+    [...searching.docs, ...underway.docs].map(
+      (d) => ({ id: d.id, ...(d.data() as Ride) }),
+    ),
     now,
     ref.id,
   );
@@ -584,12 +587,25 @@ async function approvedOnly<T extends { email: string }>(drivers: T[]): Promise<
   return drivers.filter((_, i) => profiles[i].data()?.status === 'approved');
 }
 
-/** The online, idle drivers — the index a commuter can no longer read. */
+/**
+ * Every driver who is online — the index a commuter can no longer read.
+ *
+ * Deliberately not filtered by `availability`. That field is written by the
+ * driver's phone and lags a ride by up to one check-in, in both directions:
+ * idle for a while after accepting, on_ride for a while after dropping off.
+ * Who is actually carrying a passenger comes from the rides; see
+ * [unavailableDrivers].
+ */
 function onlineDrivers() {
+  return db.collection('active_drivers').where('isOnline', '==', true).get();
+}
+
+/** Rides with a driver on board, to know who cannot take another. */
+function ridesUnderway() {
   return db
-    .collection('active_drivers')
-    .where('isOnline', '==', true)
-    .where('availability', '==', 'idle')
+    .collection('rides')
+    .where('status', 'in', ['accepted', 'in_transit'])
+    .limit(100)
     .get();
 }
 
@@ -744,13 +760,19 @@ export const sweepStaleRides = onSchedule(
 
     if (stale.empty) return;
 
-    // One read for the whole batch, not one per ride.
-    const online = await onlineDrivers();
+    // One read of each for the whole batch, not one per ride.
+    const [online, underway] = await Promise.all([
+      onlineDrivers(),
+      ridesUnderway(),
+    ]);
 
-    // Drivers holding a live offer, kept up to date as this run offers more,
-    // so two rides in one sweep never go to the same driver.
-    const busy = driversHoldingOffers(
-      stale.docs.map((d) => ({ id: d.id, ...(d.data() as Ride) })),
+    // Drivers carrying a passenger or holding a live offer, kept up to date
+    // as this run offers more, so two rides in one sweep never go to the same
+    // driver.
+    const busy = unavailableDrivers(
+      [...stale.docs, ...underway.docs].map(
+        (d) => ({ id: d.id, ...(d.data() as Ride) }),
+      ),
       now,
     );
 

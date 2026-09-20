@@ -5,10 +5,11 @@
 //   firebase emulators:exec --only functions,firestore --project demo-trikekoto \
 //     "node functions/test/dispatch.emulator.mjs"
 //
-// Seeds four drivers around a pickup — the nearest one suspended — books two
-// rides and watches the real triggers offer, move on after a decline, and
-// move on when an offer lapses. Routing points at a closed port, so ranking
-// falls back to straight-line distance and the test needs no network.
+// Seeds five drivers around a pickup — the nearest one suspended — books
+// rides and watches the real triggers offer, move on after a decline, move on
+// when an offer lapses, and skip a driver who is already carrying someone.
+// Routing points at a closed port, so ranking falls back to straight-line
+// distance and the test needs no network.
 import { initializeApp } from 'firebase-admin/app';
 import { GeoPoint, Timestamp, getFirestore } from 'firebase-admin/firestore';
 
@@ -122,6 +123,23 @@ check('an unanswered offer moves on when it lapses', r.to === 'd@toda.ph', `${r.
 // No sweep runs in the emulator (no Pub/Sub), so any move here came from the
 // lapse path, not from sweepStaleRides.
 console.log(`INFO lapse to next offer took ${r.seconds}s in the emulator`);
+
+// 5. Availability is read from the rides, not from the driver's phone.
+//    'a' is put on a ride without touching their presence, which still says
+//    idle; 'd' is marked on_ride in presence while having no ride at all
+//    (b and c are genuinely busy holding live offers by this point).
+//    The next booking must skip 'a' and still reach 'd'.
+await db.doc('rides/underway').set({
+  ...ride('u5'),
+  status: 'accepted',
+  assignedDriver: 'a@toda.ph',
+});
+await db.doc('active_drivers/d@toda.ph').update({ availability: 'on_ride' });
+
+await db.doc('rides/r6').set(ride('u6'));
+r = await waitForOffer('r6', null, 60000);
+check('a driver already carrying a passenger is skipped', r.to !== 'a@toda.ph', r.to);
+check('a driver whose phone still says on_ride is still offered', r.to === 'd@toda.ph', r.to);
 
 console.log(failures === 0 ? 'ALL PASS' : `${failures} FAILED`);
 process.exit(failures === 0 ? 0 : 1);
