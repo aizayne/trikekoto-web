@@ -158,6 +158,30 @@ export function unavailableDrivers(
 }
 
 /**
+ * How long a commuter waits before being told nobody has accepted.
+ *
+ * Mirrors `noDriverAfter` in commuter_booking_screen.dart: the app shows a
+ * dialog at three minutes, and this sends the push for the app that is closed
+ * or in a pocket. Both leave the search running for the remaining minutes.
+ */
+export const NO_DRIVER_NOTICE_MINUTES = 3;
+
+/**
+ * Whether this ride has waited long enough to say so, and has not been told
+ * already. Sent once per booking: a second "still nobody" is noise.
+ */
+export function needsNoDriverNotice(
+  ride: { createdAt?: { toDate(): Date }; noDriverNoticeSent?: boolean },
+  now: Date,
+  minutes: number = NO_DRIVER_NOTICE_MINUTES,
+): boolean {
+  if (ride.noDriverNoticeSent) return false;
+  const created = ride.createdAt?.toDate();
+  if (!created) return false;
+  return now.getTime() - created.getTime() >= minutes * 60_000;
+}
+
+/**
  * How long to wait before checking whether an offer lapsed: one second past
  * its expiry, so the check never lands a moment early; never negative; and
  * capped, so a bad timestamp cannot hold a function open until it times out.

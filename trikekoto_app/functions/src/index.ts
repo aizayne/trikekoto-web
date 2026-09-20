@@ -35,6 +35,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import {
   msUntilLapsed,
+  needsNoDriverNotice,
   pickByRoad,
   shortlistByDistance,
   unavailableDrivers,
@@ -85,6 +86,8 @@ type Ride = {
   createdAt?: FirebaseFirestore.Timestamp;
   rating?: number | null;
   ratingCounted?: boolean;
+  /** Set once the commuter has been told nobody has accepted yet. */
+  noDriverNoticeSent?: boolean;
   commuterName?: string;
   commuterFcmToken?: string | null;
   pickup?: { label?: string; geopoint?: GeoPoint };
@@ -450,6 +453,22 @@ async function attemptDispatch(
     if (!(await commitIfUnchanged(ref, seq, expire))) return 'held';
     logger.info(`Ride ${ref.id} expired after ${depth} candidates`);
     return 'expired';
+  }
+
+  // Still searching, and long enough that the commuter deserves to hear so.
+  // The app shows the same thing as a dialog; this reaches a phone in a
+  // pocket. Written before the push so a failed send cannot send it twice.
+  if (needsNoDriverNotice(ride, now)) {
+    await ref.update({ noDriverNoticeSent: true });
+    await sendTo(
+      ride.commuterFcmToken,
+      {
+        title: 'No driver has accepted yet',
+        body: 'We are still asking nearby drivers. Open the app to keep waiting or cancel.',
+      },
+      { type: 'no_driver_yet', rideId: ref.id },
+    );
+    logger.info(`Ride ${ref.id}: told the commuter nobody has accepted yet`);
   }
 
   const pickup = ride.pickup?.geopoint;

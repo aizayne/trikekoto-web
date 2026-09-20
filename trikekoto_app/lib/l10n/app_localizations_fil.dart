@@ -1284,6 +1284,19 @@ class LFil extends L {
   }
 
   @override
+  String get noDriverTitle => 'Wala pang tumatanggap';
+
+  @override
+  String get noDriverBody =>
+      '3 minuto na ang paghahanap at wala pang driver na tumatanggap. Puwede kang maghintay pa ng ilang minuto, o kanselahin at maghanap ng ibang sakay.';
+
+  @override
+  String get noDriverKeepWaiting => 'Maghintay pa';
+
+  @override
+  String get noDriverFound => 'Walang nakitang driver. Subukan ulit mamaya.';
+
+  @override
   String historyCommuterContact(String name, String phone) {
     return 'Pasahero: $name · $phone';
   }

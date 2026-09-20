@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +26,14 @@ import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/commuter_location.dart';
 import '../application/dispatch_controller.dart';
 import '../../../core/ui/locale_controller.dart';
+
+/// How long a commuter waits before the app says nobody has accepted.
+///
+/// Three minutes of the five the search runs for: long enough that a driver
+/// two streets away has had several offers to answer, short enough to leave
+/// time to decide to walk. `NO_DRIVER_NOTICE_MINUTES` in functions/src
+/// mirrors it for the push that reaches a closed app.
+const noDriverAfter = Duration(minutes: 3);
 
 class CommuterBookingScreen extends ConsumerStatefulWidget {
   const CommuterBookingScreen({super.key});
@@ -54,6 +64,18 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   /// True while the opening GPS fix and its address lookup are in flight, so
   /// the pickup field can say it is working rather than looking empty.
   bool _locating = false;
+
+  /// Says so when nobody has accepted after [noDriverAfter].
+  ///
+  /// The progress bar creeps and the count rises, but neither answers the
+  /// question a waiting passenger is actually asking — is anyone coming? At
+  /// three minutes this says plainly that nobody has taken it yet, and offers
+  /// the choice of waiting out the rest of the search or giving up and
+  /// walking. Once per booking: a dialog that returns uninvited is worse than
+  /// no dialog.
+  Timer? _noDriverTimer;
+  final _warned = <String>{};
+  String? _watchedRide;
 
   @override
   void initState() {
@@ -114,10 +136,62 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
   @override
   void dispose() {
+    _noDriverTimer?.cancel();
     for (final c in [_name, _phone]) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// Arms the no-driver notice for [ride], or disarms it.
+  ///
+  /// Timed from when the ride was created rather than from when this screen
+  /// opened, so closing the app and coming back does not restart the clock.
+  void _watchForNoDriver(Ride? ride) {
+    _noDriverTimer?.cancel();
+    _noDriverTimer = null;
+    if (ride == null ||
+        ride.status != RideStatus.searching ||
+        _warned.contains(ride.id)) {
+      return;
+    }
+
+    final started = ride.createdAt?.toDate() ?? DateTime.now();
+    final due = started.add(noDriverAfter).difference(DateTime.now());
+    _noDriverTimer = Timer(due.isNegative ? Duration.zero : due, () {
+      final current = ref.read(myActiveRideProvider).value;
+      // Re-checked on firing: a driver may have accepted while it counted
+      // down, and the ride may not even be this one any more.
+      if (!mounted ||
+          current == null ||
+          current.id != ride.id ||
+          current.status != RideStatus.searching) {
+        return;
+      }
+      _warned.add(current.id);
+      _showNoDriverYet(current);
+    });
+  }
+
+  Future<void> _showNoDriverYet(Ride ride) async {
+    final cancel = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: Text(context.l.noDriverTitle),
+        content: Text(context.l.noDriverBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(d, false),
+            child: Text(context.l.noDriverKeepWaiting),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(d, true),
+            child: Text(context.l.cancelRide),
+          ),
+        ],
+      ),
+    );
+    if (cancel == true) await _cancel(ride);
   }
 
   /// The road route between the two chosen points, once both exist.
@@ -292,6 +366,26 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   @override
   Widget build(BuildContext context) {
     final rideAsync = ref.watch(myActiveRideProvider);
+
+    // Re-armed whenever the booking being watched changes. Cheap and
+    // idempotent: it only sets or cancels a timer.
+    final ride = rideAsync.value;
+    final key = '${ride?.id}:${ride?.status.wire}';
+    if (key != _watchedRide) {
+      _watchedRide = key;
+      _watchForNoDriver(ride);
+    }
+
+    // The search giving up used to drop the commuter back on the booking form
+    // with no explanation at all.
+    ref.listen(myActiveRideProvider, (previous, next) {
+      final was = previous?.value;
+      final now = next.value;
+      if (was?.status == RideStatus.searching &&
+          now?.status == RideStatus.expired) {
+        showSnack(context, context.l.noDriverFound, error: true);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(

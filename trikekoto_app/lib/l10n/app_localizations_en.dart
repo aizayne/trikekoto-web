@@ -1275,6 +1275,19 @@ class LEn extends L {
   }
 
   @override
+  String get noDriverTitle => 'No driver has accepted yet';
+
+  @override
+  String get noDriverBody =>
+      'The search has been running for 3 minutes and no driver has taken it. You can keep waiting a few more minutes, or cancel and find another ride.';
+
+  @override
+  String get noDriverKeepWaiting => 'Keep waiting';
+
+  @override
+  String get noDriverFound => 'No driver found. Try again in a few minutes.';
+
+  @override
   String historyCommuterContact(String name, String phone) {
     return 'Commuter: $name · $phone';
   }

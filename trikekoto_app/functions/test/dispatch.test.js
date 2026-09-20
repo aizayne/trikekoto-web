@@ -9,6 +9,7 @@ const {
   unavailableDrivers,
   msUntilLapsed,
   isStale,
+  needsNoDriverNotice,
 } = require('../lib/dispatch.js');
 
 // San Marcelino plaza. One degree of latitude is about 111.2 km.
@@ -145,4 +146,23 @@ test('dispatch skips a driver whose app went quiet', () => {
     opts({ now: NOW }),
   );
   assert.deepEqual(emails(list), ['live', 'old-app']);
+});
+
+// ── Telling the commuter nobody has accepted ────────────────
+const created = (secondsAgo, sent) => ({
+  createdAt: { toDate: () => new Date(NOW.getTime() - secondsAgo * 1000) },
+  noDriverNoticeSent: sent,
+});
+
+test('the commuter is told once, after three minutes of nobody accepting', () => {
+  assert.equal(needsNoDriverNotice(created(179), NOW), false);
+  assert.equal(needsNoDriverNotice(created(181), NOW), true);
+});
+
+test('a commuter already told is not told again', () => {
+  assert.equal(needsNoDriverNotice(created(600, true), NOW), false);
+});
+
+test('a ride with no creation time is never judged late', () => {
+  assert.equal(needsNoDriverNotice({}, NOW), false);
 });

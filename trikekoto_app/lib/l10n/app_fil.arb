@@ -760,6 +760,10 @@
       }
     }
   },
+  "noDriverTitle": "Wala pang tumatanggap",
+  "noDriverBody": "3 minuto na ang paghahanap at wala pang driver na tumatanggap. Puwede kang maghintay pa ng ilang minuto, o kanselahin at maghanap ng ibang sakay.",
+  "noDriverKeepWaiting": "Maghintay pa",
+  "noDriverFound": "Walang nakitang driver. Subukan ulit mamaya.",
   "historyCommuterContact": "Pasahero: {name} · {phone}",
   "@historyCommuterContact": {
     "placeholders": {

@@ -372,5 +372,9 @@
   "historyDriverLine": "Driver: {name} · {plate}",
   "historyDriverEmailLine": "Driver: {email}",
   "historyCommuterLine": "Commuter: {name}",
+  "noDriverTitle": "No driver has accepted yet",
+  "noDriverBody": "The search has been running for 3 minutes and no driver has taken it. You can keep waiting a few more minutes, or cancel and find another ride.",
+  "noDriverKeepWaiting": "Keep waiting",
+  "noDriverFound": "No driver found. Try again in a few minutes.",
   "historyCommuterContact": "Commuter: {name} · {phone}"
 }

@@ -2329,6 +2329,30 @@ abstract class L {
   /// **'Pasahero: {name}'**
   String historyCommuterLine(String name);
 
+  /// No description provided for @noDriverTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang tumatanggap'**
+  String get noDriverTitle;
+
+  /// No description provided for @noDriverBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'3 minuto na ang paghahanap at wala pang driver na tumatanggap. Puwede kang maghintay pa ng ilang minuto, o kanselahin at maghanap ng ibang sakay.'**
+  String get noDriverBody;
+
+  /// No description provided for @noDriverKeepWaiting.
+  ///
+  /// In fil, this message translates to:
+  /// **'Maghintay pa'**
+  String get noDriverKeepWaiting;
+
+  /// No description provided for @noDriverFound.
+  ///
+  /// In fil, this message translates to:
+  /// **'Walang nakitang driver. Subukan ulit mamaya.'**
+  String get noDriverFound;
+
   /// No description provided for @historyCommuterContact.
   ///
   /// In fil, this message translates to:
