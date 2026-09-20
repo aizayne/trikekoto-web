@@ -600,6 +600,66 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   }
 }
 
+/// How far the trike still is, and from what.
+///
+/// Measured to the commuter's own phone when it knows where that is: a
+/// passenger who has walked to the shade across the road is no longer at the
+/// pin they dropped, and the distance to the pin stops being the distance to
+/// them. Falls back to the pickup, which is where the driver is headed
+/// anyway. Straight line — the same measure dispatch ranked the driver by.
+({double km, bool fromYou})? driverAwayKm(Ride ride, LatLng? me) {
+  final driver = ride.driverLocation;
+  if (driver == null) return null;
+  if (me != null) {
+    return (
+      km: haversineKm(
+          driver.latitude, driver.longitude, me.latitude, me.longitude),
+      fromYou: true,
+    );
+  }
+  final pickup = ride.pickup.geopoint;
+  if (pickup == null) return null;
+  return (km: distanceKmBetween(driver, pickup), fromYou: false);
+}
+
+String awayLabel(BuildContext context, ({double km, bool fromYou}) away) {
+  final km = away.km.toStringAsFixed(1);
+  return away.fromYou
+      ? context.l.trackAwayFromYou(km)
+      : context.l.trackAwayFromPickup(km);
+}
+
+/// The distance beside the driver's name, where the card is read.
+///
+/// The map already carried this number, but the map only appears once the
+/// driver's app has pinged, sits below the fold on a small phone, and is the
+/// first thing a commuter on a slow connection gives up on. The question
+/// being asked — how far away are they — deserves an answer in the line that
+/// names them.
+class _DriverDistance extends ConsumerWidget {
+  const _DriverDistance({required this.ride});
+
+  final Ride ride;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final away = driverAwayKm(ride, ref.watch(commuterPositionProvider).value);
+    if (away == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Row(
+        children: [
+          Icon(Icons.near_me_outlined,
+              size: AppSpacing.iconSm, color: context.scheme.onSurfaceVariant),
+          const Gap(AppSpacing.sm),
+          Text(awayLabel(context, away), style: context.text.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
 /// Live map of the trike approaching, embedded in the active-ride card.
 ///
 /// Deliberately non-interactive: it sits inside a scrolling column, and a
@@ -614,7 +674,6 @@ class _TrackingMap extends ConsumerWidget {
     final me = ref.watch(commuterPositionProvider).value;
     final driver = ride.driverLocation!.latLng;
     final pickup = ride.pickup.geopoint!.latLng;
-    final away = distanceKmBetween(ride.driverLocation!, ride.pickup.geopoint!);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -654,13 +713,6 @@ class _TrackingMap extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-        const Gap(AppSpacing.sm),
-        Text(
-          ride.status == RideStatus.inTransit
-              ? context.l.trackOnTheWay
-              : context.l.trackKmAway(away.toStringAsFixed(1)),
-          style: context.text.bodySmall,
         ),
       ],
     );
@@ -1067,6 +1119,11 @@ class _ActiveRideCard extends StatelessWidget {
                   ),
                 ],
               ),
+              // Only while they are coming to fetch you. Once the ride is
+              // under way the driver is beside the passenger, and a distance
+              // between the two is noise.
+              if (ride.status == RideStatus.accepted)
+                _DriverDistance(ride: ride),
             ],
             const Divider(height: AppSpacing.xxxl),
             _row(context, Icons.my_location, ride.pickup.label),

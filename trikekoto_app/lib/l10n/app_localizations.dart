@@ -691,17 +691,17 @@ abstract class L {
   /// **'Live tracking'**
   String get trackTitle;
 
-  /// No description provided for @trackOnTheWay.
+  /// No description provided for @trackAwayFromYou.
   ///
   /// In fil, this message translates to:
-  /// **'Papunta na sa babaan mo'**
-  String get trackOnTheWay;
+  /// **'{km} km ang layo sa iyo'**
+  String trackAwayFromYou(String km);
 
-  /// No description provided for @trackKmAway.
+  /// No description provided for @trackAwayFromPickup.
   ///
   /// In fil, this message translates to:
-  /// **'{km} km ang layo'**
-  String trackKmAway(String km);
+  /// **'{km} km ang layo sa sundo'**
+  String trackAwayFromPickup(String km);
 
   /// No description provided for @trackWorkingRoute.
   ///
@@ -948,6 +948,12 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'{from}  →  {to}'**
   String driverRoute(String from, String to);
+
+  /// No description provided for @driverPickupAway.
+  ///
+  /// In fil, this message translates to:
+  /// **'Sundo: {km} km ang layo'**
+  String driverPickupAway(String km);
 
   /// No description provided for @driverDecline.
   ///

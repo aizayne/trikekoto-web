@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
+import '../../../core/geo/geo_utils.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
@@ -435,6 +436,7 @@ class _OffersSection extends ConsumerWidget {
                           ),
                         ],
                       ),
+                      _PickupDistance(ride: ride),
                       const Gap(AppSpacing.lg),
                       Row(
                         children: [
@@ -476,6 +478,43 @@ Future<void> _run(BuildContext context, Future<void> Function() action) async {
   }
 }
 
+
+/// How far the pickup is from where the driver is standing.
+///
+/// The offer names a place, and "Plaza" is either around the corner or across
+/// town depending on where the shift started — so a driver weighing fifteen
+/// seconds of offer had to guess at the one number that decides it. Straight
+/// line, like the search that picked them: a sense of scale, not a route.
+class _PickupDistance extends ConsumerWidget {
+  const _PickupDistance({required this.ride});
+
+  final Ride ride;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(driverPositionProvider);
+    final pickup = ride.pickup.geopoint;
+    // No fix yet, or a ride booked by the old web build, which wrote labels
+    // without coordinates. The rest of the offer still reads fine.
+    if (me == null || pickup == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Row(
+        children: [
+          Icon(Icons.near_me_outlined,
+              size: AppSpacing.iconSm, color: context.scheme.onSurfaceVariant),
+          const Gap(AppSpacing.sm),
+          Text(
+            context.l.driverPickupAway(
+                distanceKmBetween(me, pickup).toStringAsFixed(1)),
+            style: context.text.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// The commuter's face, where the driver already sees their name.
 ///

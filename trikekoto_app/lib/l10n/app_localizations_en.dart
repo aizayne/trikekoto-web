@@ -336,11 +336,13 @@ class LEn extends L {
   String get trackTitle => 'Live tracking';
 
   @override
-  String get trackOnTheWay => 'On the way to your drop-off';
+  String trackAwayFromYou(String km) {
+    return '$km km from you';
+  }
 
   @override
-  String trackKmAway(String km) {
-    return '$km km away';
+  String trackAwayFromPickup(String km) {
+    return '$km km from the pickup';
   }
 
   @override
@@ -488,6 +490,11 @@ class LEn extends L {
   @override
   String driverRoute(String from, String to) {
     return '$from  →  $to';
+  }
+
+  @override
+  String driverPickupAway(String km) {
+    return 'Pickup: $km km away';
   }
 
   @override

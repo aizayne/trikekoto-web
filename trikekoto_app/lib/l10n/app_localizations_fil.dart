@@ -339,11 +339,13 @@ class LFil extends L {
   String get trackTitle => 'Live tracking';
 
   @override
-  String get trackOnTheWay => 'Papunta na sa babaan mo';
+  String trackAwayFromYou(String km) {
+    return '$km km ang layo sa iyo';
+  }
 
   @override
-  String trackKmAway(String km) {
-    return '$km km ang layo';
+  String trackAwayFromPickup(String km) {
+    return '$km km ang layo sa sundo';
   }
 
   @override
@@ -491,6 +493,11 @@ class LFil extends L {
   @override
   String driverRoute(String from, String to) {
     return '$from  →  $to';
+  }
+
+  @override
+  String driverPickupAway(String km) {
+    return 'Sundo: $km km ang layo';
   }
 
   @override

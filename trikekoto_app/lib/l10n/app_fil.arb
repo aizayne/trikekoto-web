@@ -155,9 +155,16 @@
   "bookReportProblem": "Mag-report ng problema",
   "bookExit": "Lumabas",
   "trackTitle": "Live tracking",
-  "trackOnTheWay": "Papunta na sa babaan mo",
-  "trackKmAway": "{km} km ang layo",
-  "@trackKmAway": {
+  "trackAwayFromYou": "{km} km ang layo sa iyo",
+  "@trackAwayFromYou": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "trackAwayFromPickup": "{km} km ang layo sa sundo",
+  "@trackAwayFromPickup": {
     "placeholders": {
       "km": {
         "type": "String"
@@ -279,6 +286,14 @@
         "type": "String"
       },
       "to": {
+        "type": "String"
+      }
+    }
+  },
+  "driverPickupAway": "Sundo: {km} km ang layo",
+  "@driverPickupAway": {
+    "placeholders": {
+      "km": {
         "type": "String"
       }
     }

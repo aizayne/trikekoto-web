@@ -130,6 +130,25 @@ final presenceStatusProvider =
     NotifierProvider<PresenceStatusController, PresenceStatus>(
         PresenceStatusController.new);
 
+/// Where the driver's own phone last reported being.
+///
+/// Presence is already streaming GPS, so a screen that needs a distance —
+/// how far the pickup is, before accepting — reads the fix presence just
+/// wrote rather than opening a second location stream the battery pays for.
+/// Null while offline: there is no position to speak of, and a stale one
+/// would put a confident number next to a driver who has since driven home.
+class DriverPosition extends Notifier<GeoPoint?> {
+  @override
+  GeoPoint? build() => null;
+
+  void report(GeoPoint at) => state = at;
+
+  void forget() => state = null;
+}
+
+final driverPositionProvider =
+    NotifierProvider<DriverPosition, GeoPoint?>(DriverPosition.new);
+
 /// Owns the driver's online presence and the GPS stream.
 ///
 /// While online it writes `active_drivers/{email}`, which is what the greedy
@@ -319,6 +338,7 @@ class PresenceController extends Notifier<bool> {
     _heartbeat?.cancel();
     _heartbeat = null;
     _lastPosition = null;
+    ref.read(driverPositionProvider.notifier).forget();
     await _gpsSub?.cancel();
     _gpsSub = null;
     await _tokenSub?.cancel();
@@ -345,6 +365,9 @@ class PresenceController extends Notifier<bool> {
 
     final activeRide = ref.read(myActiveRideProvider).value;
     _lastPosition = pos;
+    ref
+        .read(driverPositionProvider.notifier)
+        .report(GeoPoint(pos.latitude, pos.longitude));
 
     try {
       await ref
