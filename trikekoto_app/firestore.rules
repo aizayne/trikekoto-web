@@ -529,7 +529,15 @@ service cloud.firestore {
       // Deleting the profile is how a rider leaves. Their past rides
       // stay — those are the audit trail, and they carry a uid rather
       // than a name.
-      allow delete: if isSelfRider();
+      //
+      // An admin may also delete one, from a ride in the history: a
+      // chapter has to be able to remove an account used to harass
+      // drivers, and asking the person who did it to please delete
+      // themselves is not a control. Deliberately narrow — `get` and
+      // `list` above stay refused to admins, so this is the power to
+      // erase a commuter already identified on a ride, never the power
+      // to browse the people who use the app.
+      allow delete: if isSelfRider() || isAdmin();
     }
 
     // ═══════════════════════════════════════════════════════

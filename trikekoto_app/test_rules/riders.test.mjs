@@ -111,6 +111,16 @@ beforeEach(async () => {
 });
 
 // ════════════════════════════════════════════════════════════
+async function seedAdminDoc() {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'admins', ADMIN_EMAIL), {
+      email: ADMIN_EMAIL,
+      displayName: 'Ops',
+      createdAt: new Date(),
+    });
+  });
+}
+
 describe('creating a rider account', () => {
   it('a phone-verified rider can create their own document', async () => {
     await assertSucceeds(
@@ -317,12 +327,30 @@ describe('editing a rider account', () => {
     await assertSucceeds(deleteDoc(doc(rider(), 'riders', RIDER_UID)));
   });
 
-  it('nobody else can delete it', async () => {
+  it('another rider cannot delete it', async () => {
     await seedRider();
     await assertFails(
       deleteDoc(doc(rider(OTHER_UID, OTHER_PHONE), 'riders', RIDER_UID)),
     );
-    await assertFails(deleteDoc(doc(adminCtx(), 'riders', RIDER_UID)));
+  });
+
+  it('an admin can remove an account, from a ride in the history', async () => {
+    // A chapter has to be able to remove an account used to harass drivers,
+    // and asking the person who did it to please delete themselves is not a
+    // control.
+    await seedAdminDoc();
+    await seedRider();
+    await assertSucceeds(deleteDoc(doc(adminCtx(), 'riders', RIDER_UID)));
+  });
+
+  it('but still cannot read or browse one', async () => {
+    // The whole point of the narrow grant: the power to erase a commuter
+    // already identified on a ride, never the power to look through the
+    // people who use the app.
+    await seedAdminDoc();
+    await seedRider();
+    await assertFails(getDoc(doc(adminCtx(), 'riders', RIDER_UID)));
+    await assertFails(getDocs(collection(adminCtx(), 'riders')));
   });
 });
 

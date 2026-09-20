@@ -292,11 +292,18 @@ client by design, and the sign-in account needs the Admin SDK.
 
 | | Rider | Driver |
 |---|---|---|
-| Deleted by | the rider, from their profile | an admin, from the panel |
+| Deleted by | the rider, from their profile — or an admin, from a ride in the history | an admin, from the panel |
 | Document | `riders/{uid}` | `drivers/{email}` |
 | Function | `onRiderDeleted` | `onDriverRemoved` |
-| Also deleted | `id_verified/{uid}` | presence, ID + photo, `id_verified`, notices, the sign-in account |
+| Also deleted | ID + photo, `id_verified`, notices, the sign-in account | the same, plus the presence row |
+| Live ride | cancelled | cancelled; an open offer is released |
 | Rides | kept, commuter anonymised | kept, driver's phone cleared |
+
+An admin may delete `riders/{uid}` but still cannot `get` or `list` one. The
+grant is deliberately that narrow: a chapter has to be able to remove an
+account used to harass drivers, and a ride is where such an account is already
+identified — so the power is to erase a commuter named on a ride, never to
+browse the people who use the app.
 
 A finished ride survives either removal. It is the TODA's record of service —
 who drove, which tricycle, when, what it was rated — and the personal details

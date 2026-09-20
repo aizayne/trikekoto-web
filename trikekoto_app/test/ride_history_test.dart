@@ -27,9 +27,10 @@ Ride _ride(
   int? rating,
   bool withDriver = true,
   String service = 'regular',
+  String commuterUid = 'u1',
 }) =>
     Ride.fromMap({
-      'commuterUid': 'u1',
+      'commuterUid': commuterUid,
       'commuterName': 'Maria',
       'commuterPhone': '09181234567',
       'status': status,
@@ -67,6 +68,55 @@ Future<void> _pump(
 }
 
 void main() {
+  group('removing a commuter', () {
+    // The rules refuse an admin `list` on riders, so a ride is the one place
+    // a commuter is already identified — and therefore the only place they
+    // can be acted on. The deletion itself is proved in the rules tests and
+    // against the emulator; what these pin is who is offered it.
+
+    testWidgets('an admin is offered it on a ride', (tester) async {
+      await _pump(tester, HistoryAudience.admin, [_ride('r1')]);
+
+      expect(find.text('Remove commuter'), findsOneWidget);
+      await tester.tap(find.text('Remove commuter'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Remove Maria's account?"), findsOneWidget);
+      expect(find.textContaining('sign-in account are deleted'), findsOneWidget);
+      expect(find.textContaining("stay as the TODA's record"), findsOneWidget);
+    });
+
+    testWidgets('and nothing happens if they think better of it',
+        (tester) async {
+      await _pump(tester, HistoryAudience.admin, [_ride('r1')]);
+
+      await tester.tap(find.text('Remove commuter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Remove Maria's account?"), findsNothing);
+      expect(find.text('Remove commuter'), findsOneWidget);
+    });
+
+    testWidgets('a commuter already erased has nothing left to remove',
+        (tester) async {
+      // onRiderDeleted clears commuterUid, which is what makes the remaining
+      // rows unjoinable into one person's travel history.
+      await _pump(tester, HistoryAudience.admin, [_ride('r1', commuterUid: '')]);
+
+      expect(find.text('Remove commuter'), findsNothing);
+    });
+
+    testWidgets('a driver and a commuter are never offered it', (tester) async {
+      await _pump(tester, HistoryAudience.driver, [_ride('r1')]);
+      expect(find.text('Remove commuter'), findsNothing);
+
+      await _pump(tester, HistoryAudience.commuter, [_ride('r1')]);
+      expect(find.text('Remove commuter'), findsNothing);
+    });
+  });
+
   testWidgets('a commuter sees the route, the outcome, the driver and the rating',
       (tester) async {
     await _pump(tester, HistoryAudience.commuter, [_ride('r1', rating: 5)]);

@@ -955,6 +955,30 @@ abstract class L {
   /// **'Alisin'**
   String get adminRemove;
 
+  /// No description provided for @adminRemoveCommuter.
+  ///
+  /// In fil, this message translates to:
+  /// **'Alisin ang pasahero'**
+  String get adminRemoveCommuter;
+
+  /// No description provided for @adminRemoveCommuterQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Alisin ang account ni {name}?'**
+  String adminRemoveCommuterQuestion(String name);
+
+  /// No description provided for @adminRemoveCommuterWhatGoes.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mabubura ang profile, ang ID, at ang account na pang-log in. Kakanselahin din ang biyaheng hinihintay pa niya.'**
+  String get adminRemoveCommuterWhatGoes;
+
+  /// No description provided for @adminRemoveCommuterWhatStays.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mananatili ang mga biyahe bilang record ng TODA, pero aalisin ang pangalan at numero niya roon.'**
+  String get adminRemoveCommuterWhatStays;
+
   /// No description provided for @adminRemoveQuestion.
   ///
   /// In fil, this message translates to:

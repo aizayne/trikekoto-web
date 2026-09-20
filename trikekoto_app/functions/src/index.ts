@@ -41,7 +41,12 @@ import {
   shortlistByDistance,
   unavailableDrivers,
 } from './dispatch';
-import { actionForRide, RideRow, shouldDeleteAccount } from './removal';
+import {
+  actionForRide,
+  isLiveRide,
+  RideRow,
+  shouldDeleteAccount,
+} from './removal';
 import {
   ACCOUNT_APPROVED,
   DriverState,
@@ -1146,52 +1151,69 @@ export const onDriverRemoved = onDocumentDeleted(
       return;
     }
 
-    // The ID and the fact of its approval. Both are keyed by uid, and neither
-    // has a reason to outlive the account it belonged to.
-    const submission = await db.collection('id_submissions').doc(uid).get();
-    if (submission.exists) {
-      const path =
-        (submission.data()?.idPhotoPath as string | undefined) ??
-        `ids/${uid}/card`;
-      try {
-        await getStorage().bucket().file(path).delete({ ignoreNotFound: true });
-        await submission.ref.delete();
-      } catch (e) {
-        // Leave the document: it is the only remaining pointer to the image,
-        // and the retention job will try the pair again.
-        logger.error(`Could not delete ${path}; keeping the submission`, e);
-      }
-    }
-    await db.collection('id_verified').doc(uid).delete();
-
-    // Their notices. Written for a person who no longer has an account.
-    const notices = await db
-      .collection('notifications')
-      .doc(uid)
-      .collection('items')
-      .get();
-    for (const notice of notices.docs) await notice.ref.delete();
-
-    // The sign-in account last, so a failure anywhere above leaves something
-    // to retry against rather than an orphaned login.
     const isAdmin = (await db.collection('admins').doc(email).get()).exists;
-    if (!shouldDeleteAccount({ uid, isAdmin })) {
-      logger.info('Driver profile removed; the account is an admin and stays');
-      return;
-    }
-    try {
-      await getAuth().deleteUser(uid);
-    } catch (e: unknown) {
-      const code = (e as { code?: string })?.code;
-      // Already gone is the desired end state, not a failure.
-      if (code !== 'auth/user-not-found') {
-        logger.error('Could not delete the sign-in account', e);
-        return;
-      }
-    }
+    await eraseAccountArtifacts(uid, {
+      deleteAccount: shouldDeleteAccount({ uid, isAdmin }),
+    });
     logger.info('Driver removed: profile, presence, ID and account');
   },
 );
+
+/**
+ * Everything keyed to a uid that has no reason to outlive the account: the
+ * ID and its photo, the record that it was checked, the notices written for
+ * that person, and the sign-in itself.
+ *
+ * Shared by both removal paths, because "delete my account" and "remove this
+ * member" should leave the same thing behind — nothing — and two copies of
+ * this list would drift the first time one of them gained a collection.
+ *
+ * The account goes last, so a failure anywhere above leaves a login to retry
+ * against rather than orphaned data nobody can reach. [deleteAccount] is
+ * false only for an address that is also an admin.
+ */
+async function eraseAccountArtifacts(
+  uid: string,
+  opts: { deleteAccount: boolean },
+) {
+  const submission = await db.collection('id_submissions').doc(uid).get();
+  if (submission.exists) {
+    const path =
+      (submission.data()?.idPhotoPath as string | undefined) ??
+      `ids/${uid}/card`;
+    try {
+      await getStorage().bucket().file(path).delete({ ignoreNotFound: true });
+      await submission.ref.delete();
+    } catch (e) {
+      // Leave the document: it is the only remaining pointer to the image,
+      // and the retention job will try the pair again.
+      logger.error(`Could not delete ${path}; keeping the submission`, e);
+    }
+  }
+  await db.collection('id_verified').doc(uid).delete();
+
+  const notices = await db
+    .collection('notifications')
+    .doc(uid)
+    .collection('items')
+    .get();
+  for (const notice of notices.docs) await notice.ref.delete();
+
+  if (!opts.deleteAccount) {
+    logger.info('Profile removed; the sign-in account stays');
+    return;
+  }
+  try {
+    await getAuth().deleteUser(uid);
+  } catch (e: unknown) {
+    const code = (e as { code?: string })?.code;
+    // Already gone is the desired end state, not a failure — a rider who
+    // deletes their own account removes the sign-in from the app first.
+    if (code !== 'auth/user-not-found') {
+      logger.error('Could not delete the sign-in account', e);
+    }
+  }
+}
 
 
 // ════════════════════════════════════════════════════════════
@@ -1214,21 +1236,35 @@ export const onDriverRemoved = onDocumentDeleted(
  * go, and `commuterUid` is cleared so the remaining rows cannot be joined back
  * together into one person's travel history.
  *
- * Runs on the deletion of `riders/{uid}`, which the rider performs themselves.
- * A client cannot do this: the ride rules admit no clause for rewriting these
- * fields, and widening them so a commuter could edit their own historical
- * rides would be a far larger hole than the one it closed.
+ * Runs on the deletion of `riders/{uid}` — by the rider, from their profile,
+ * or by an admin, from a ride in the history. A client cannot do the rest of
+ * this: the ride rules admit no clause for rewriting these fields, and
+ * widening them so a commuter could edit their own historical rides would be
+ * a far larger hole than the one it closed.
  */
 export const onRiderDeleted = onDocumentDeleted(
   { document: 'riders/{riderUid}', region: REGION },
   async (event) => {
     const uid = event.params.riderUid;
 
-    // The verification marker goes with the person. It holds no ID data, but
-    // it is still a record that this uid was a verified individual, and an
-    // erased account should leave nothing that says so. Done before the ride
-    // query, which returns early for someone who never rode.
-    await db.collection('id_verified').doc(uid).delete();
+    // A booking still open. Left alone it would keep a driver heading for
+    // someone whose account no longer exists, or sit in dispatch offering a
+    // ride nobody can be handed over to. Cancelling is what tells the driver.
+    const live = await db
+      .collection('rides')
+      .where('commuterUid', '==', uid)
+      .limit(10)
+      .get();
+
+    for (const snap of live.docs) {
+      if (!isLiveRide((snap.data() as RideRow).status)) continue;
+      await snap.ref.update({
+        status: 'cancelled',
+        cancelledBy: 'admin',
+        cancelledAt: FieldValue.serverTimestamp(),
+      });
+      logger.info(`Ride ${snap.id} cancelled: its commuter's account is gone`);
+    }
 
     // Bounded per run. A rider with an implausible number of rides should not
     // turn one deletion into a multi-minute write storm; the tail is picked
@@ -1241,6 +1277,7 @@ export const onRiderDeleted = onDocumentDeleted(
       .get();
 
     if (rides.empty) {
+      await eraseAccountArtifacts(uid, { deleteAccount: true });
       logger.info('Rider deleted with no ride history');
       return;
     }
@@ -1258,6 +1295,8 @@ export const onRiderDeleted = onDocumentDeleted(
       });
     }
     await batch.commit();
+
+    await eraseAccountArtifacts(uid, { deleteAccount: true });
 
     // A count, never the uid. Logging it would put the identifier back into
     // the log retention window, which is the record this job just removed.

@@ -140,6 +140,53 @@ async function main() {
     'the chapter would have been locked out of its own panel',
   );
 
+  // ── An admin removes a commuter, from a ride in the history ─────────
+  const commuter = await auth.createUser({ phoneNumber: '+639171234567' });
+  await db.doc(`riders/${commuter.uid}`).set({
+    phone: '+639171234567', name: 'Maria', savedAddresses: [],
+    ratingSum: 0, ratingCount: 0, createdAt: new Date(),
+  });
+  await db.doc(`id_verified/${commuter.uid}`).set({ role: 'rider', verifiedAt: new Date() });
+  await db.doc(`id_submissions/${commuter.uid}`).set({
+    role: 'rider', status: 'approved', idType: 'national_id',
+    idPhotoPath: `ids/${commuter.uid}/card`, submittedAt: new Date(),
+  });
+  const booking = (id, extra) => db.doc(`rides/${id}`).set({
+    commuterUid: commuter.uid, commuterName: 'Maria', commuterPhone: '09181234567',
+    pickup: { label: 'Plaza', geopoint: at }, dropoff: { label: 'Palengke' },
+    serviceType: 'regular', createdAt: new Date(), ...extra,
+  });
+  await booking('hers-done', { status: 'completed', assignedDriver: RIVAL, rating: 4 });
+  await booking('hers-open', { status: 'searching', dispatch: { depth: 0, attemptedDrivers: [] } });
+
+  await db.doc(`riders/${commuter.uid}`).delete();
+
+  check(
+    'a booking they were still waiting on is called off',
+    await waitFor(async () =>
+      (await db.doc('rides/hers-open').get()).data()?.status === 'cancelled'),
+  );
+  check(
+    'their name and number leave every ride they took',
+    await waitFor(async () => {
+      const row = (await db.doc('rides/hers-done').get()).data();
+      return row?.commuterName === 'Deleted account' &&
+        row?.commuterPhone === null && row?.commuterUid === null;
+    }),
+  );
+  const hers = (await db.doc('rides/hers-done').get()).data();
+  check('while the ride itself stays as the record',
+    hers?.status === 'completed' && hers?.rating === 4);
+  check('their ID goes', await waitFor(gone(db.doc(`id_submissions/${commuter.uid}`))));
+  check('their verification marker goes',
+    await waitFor(gone(db.doc(`id_verified/${commuter.uid}`))));
+  check(
+    'and their sign-in account goes',
+    await waitFor(async () => {
+      try { await auth.getUser(commuter.uid); return false; } catch { return true; }
+    }),
+  );
+
   console.log(failures === 0 ? '\nALL PASS' : `\n${failures} FAILED`);
   process.exit(failures === 0 ? 0 : 1);
 }

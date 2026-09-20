@@ -2,7 +2,11 @@
 // Run: npm test   (compiles, then runs these against lib/)
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { actionForRide, shouldDeleteAccount } = require('../lib/removal.js');
+const {
+  actionForRide,
+  isLiveRide,
+  shouldDeleteAccount,
+} = require('../lib/removal.js');
 
 const EMAIL = 'juan@toda.ph';
 
@@ -64,6 +68,20 @@ test('a mixed-case address still matches its own ride', () => {
     actionForRide({ id: 'r8', status: 'accepted', assignedDriver: 'Juan@Toda.ph' }, EMAIL),
     'cancel',
   );
+});
+
+test('a ride with somebody in it, or about to be, is live', () => {
+  // Removing an account while one of these is open would leave a passenger
+  // or a driver attached to a profile that no longer exists.
+  for (const status of ['searching', 'accepted', 'in_transit']) {
+    assert.equal(isLiveRide(status), true, status);
+  }
+});
+
+test('a finished one is not, and neither is a ride with no status', () => {
+  for (const status of ['completed', 'cancelled', 'expired', undefined]) {
+    assert.equal(isLiveRide(status), false, String(status));
+  }
 });
 
 test('the sign-in account goes with the profile', () => {

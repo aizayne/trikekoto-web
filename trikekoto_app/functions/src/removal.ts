@@ -9,6 +9,17 @@
  * admin's to erase.
  */
 
+/**
+ * A ride with somebody in it, or about to be.
+ *
+ * Removing an account while one of these is open would leave a passenger or
+ * a driver attached to a profile that no longer exists, so both removal paths
+ * call these off rather than letting them dangle.
+ */
+export function isLiveRide(status?: string): boolean {
+  return status === 'searching' || status === 'accepted' || status === 'in_transit';
+}
+
 /** A ride, as much of it as removal reads. */
 export type RideRow = {
   id: string;

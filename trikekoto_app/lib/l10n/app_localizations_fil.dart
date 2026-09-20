@@ -499,6 +499,22 @@ class LFil extends L {
   String get adminRemove => 'Alisin';
 
   @override
+  String get adminRemoveCommuter => 'Alisin ang pasahero';
+
+  @override
+  String adminRemoveCommuterQuestion(String name) {
+    return 'Alisin ang account ni $name?';
+  }
+
+  @override
+  String get adminRemoveCommuterWhatGoes =>
+      'Mabubura ang profile, ang ID, at ang account na pang-log in. Kakanselahin din ang biyaheng hinihintay pa niya.';
+
+  @override
+  String get adminRemoveCommuterWhatStays =>
+      'Mananatili ang mga biyahe bilang record ng TODA, pero aalisin ang pangalan at numero niya roon.';
+
+  @override
   String adminRemoveQuestion(String name) {
     return 'Alisin si $name?';
   }

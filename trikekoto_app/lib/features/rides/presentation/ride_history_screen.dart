@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/firestore/collection_paths.dart';
+import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../application/ride_history.dart';
@@ -137,14 +138,73 @@ class _StatusFilter extends ConsumerWidget {
   }
 }
 
-class _HistoryTile extends StatelessWidget {
+class _HistoryTile extends ConsumerWidget {
   const _HistoryTile({required this.ride, required this.audience});
 
   final Ride ride;
   final HistoryAudience audience;
 
+  /// Whether this row offers to remove the commuter who booked it.
+  ///
+  /// The admin panel cannot list riders — the rules refuse it, so that an
+  /// officer cannot browse the people who use the app — which leaves a ride
+  /// as the one place a commuter is already identified, and therefore the
+  /// one place they can be acted on. A row whose commuter has already been
+  /// erased has nothing left to remove.
+  bool get _canRemoveCommuter =>
+      audience == HistoryAudience.admin && ride.commuterUid.isNotEmpty;
+
+  /// Removes the commuter's account, after asking.
+  ///
+  /// Deletes `riders/{uid}` and nothing else. onRiderDeleted does the rest:
+  /// it calls off a booking still open, strips the name and number from
+  /// every ride they ever took, and deletes their ID and sign-in.
+  Future<void> _removeCommuter(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+            dialogContext.l.adminRemoveCommuterQuestion(ride.commuterName)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(dialogContext.l.adminRemoveCommuterWhatGoes),
+            const Gap(AppSpacing.sm),
+            Text(dialogContext.l.adminRemoveCommuterWhatStays),
+            const Gap(AppSpacing.sm),
+            Text(dialogContext.l.adminRemoveIrreversible,
+                style: dialogContext.text.bodySmall),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.l.adminRemoveNo),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+                foregroundColor: dialogContext.semantic.danger),
+            child: Text(dialogContext.l.adminRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(refsProvider).rider(ride.commuterUid).delete();
+      if (context.mounted) {
+        showSnack(context, context.l.adminRemoved(ride.commuterName));
+      }
+    } catch (e) {
+      if (context.mounted) showSnack(context, describeError(e), error: true);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final lines = _partyLines(context);
 
     return Card(
@@ -193,6 +253,22 @@ class _HistoryTile extends StatelessWidget {
             for (final line in lines) ...[
               const Gap(AppSpacing.xs),
               Text(line, style: context.text.bodySmall),
+            ],
+            // Under the parties, where the commuter is named, rather than in
+            // the header: this acts on the person, not on the ride.
+            if (_canRemoveCommuter) ...[
+              const Gap(AppSpacing.xs),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _removeCommuter(context, ref),
+                  icon: const Icon(Icons.person_remove_outlined,
+                      size: AppSpacing.iconSm),
+                  label: Text(context.l.adminRemoveCommuter),
+                  style: TextButton.styleFrom(
+                      foregroundColor: context.semantic.danger),
+                ),
+              ),
             ],
           ],
         ),

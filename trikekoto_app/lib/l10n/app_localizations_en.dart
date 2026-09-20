@@ -496,6 +496,22 @@ class LEn extends L {
   String get adminRemove => 'Remove';
 
   @override
+  String get adminRemoveCommuter => 'Remove commuter';
+
+  @override
+  String adminRemoveCommuterQuestion(String name) {
+    return 'Remove $name\'s account?';
+  }
+
+  @override
+  String get adminRemoveCommuterWhatGoes =>
+      'The profile, the ID and the sign-in account are deleted, and any booking they are still waiting on is cancelled.';
+
+  @override
+  String get adminRemoveCommuterWhatStays =>
+      'The rides stay as the TODA\'s record, with their name and number removed.';
+
+  @override
   String adminRemoveQuestion(String name) {
     return 'Remove $name?';
   }

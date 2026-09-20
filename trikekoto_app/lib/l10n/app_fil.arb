@@ -291,6 +291,17 @@
     }
   },
   "adminRemove": "Alisin",
+  "adminRemoveCommuter": "Alisin ang pasahero",
+  "adminRemoveCommuterQuestion": "Alisin ang account ni {name}?",
+  "@adminRemoveCommuterQuestion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRemoveCommuterWhatGoes": "Mabubura ang profile, ang ID, at ang account na pang-log in. Kakanselahin din ang biyaheng hinihintay pa niya.",
+  "adminRemoveCommuterWhatStays": "Mananatili ang mga biyahe bilang record ng TODA, pero aalisin ang pangalan at numero niya roon.",
   "adminRemoveQuestion": "Alisin si {name}?",
   "@adminRemoveQuestion": {
     "placeholders": {

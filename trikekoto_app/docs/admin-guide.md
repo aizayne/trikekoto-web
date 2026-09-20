@@ -105,6 +105,24 @@ remove.
 **This cannot be undone.** A removed driver registers again from scratch, and
 their ID has to be checked again.
 
+### Removing a commuter
+
+Open **History** from the dashboard and find a ride the person booked. Their
+name and number are on the row; under them is **Remove commuter**.
+
+This is for an account being used to abuse the service — repeated bookings
+nobody turns up for, or a passenger harassing drivers. It deletes their
+profile, their ID, their sign-in account, and cancels any booking they are
+still waiting on. Their rides stay as the chapter's record, with the name
+replaced by *"Deleted account"* and the number removed, so the rows can no
+longer be joined back together into one person's travel history.
+
+**You cannot browse commuters, by design.** There is no list of them anywhere
+in the panel: a ride is the only place a commuter is identified, and therefore
+the only place you can act on one. That is deliberate — an officer should be
+able to remove someone who caused a problem, not read where everybody in town
+has been going.
+
 ---
 
 ## Reading feedback
