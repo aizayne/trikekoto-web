@@ -97,8 +97,9 @@ arrives worried about their licence has already had a worse session.
 **"Ano ang gagawin ninyo sa number ko?"** — *Commuters:* the app sends one SMS
 code to it, and you delete the account together the same day; the number is
 also removed from their test rides. *Drivers* never give one — they register
-with the test details you hand them, because a driver's account cannot be
-deleted from inside the app and test rides are never deleted at all.
+with the test details you hand them. The test account is removed from the
+admin panel the same day, but the finished test rides stay as the chapter's
+record, still carrying the driver's name, plate and email.
 
 **"Gagamitin ba ito ng TODA namin?"** — You do not know. Say so. The pilot
 plan is step 89 and it is the chapter's decision, not yours.

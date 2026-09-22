@@ -211,7 +211,7 @@ code {
 <div class="wrap">
 
 <section class="intro">
-  <p class="eyebrow">Roadmap step 78 · print pack · app version 1.0.5 (6)</p>
+  <p class="eyebrow">Roadmap step 78 · print pack · app version 1.0.9 (10)</p>
   <h1>TrikeKoTo UAT Field Pack</h1>
   <p class="standfirst">
     Eight sheets to print and take to the terminal. Each starts on its own page.
@@ -241,7 +241,10 @@ code {
     <b>Replaces the August pack.</b> Destroy any printed copy of the old consent form: it said
     <i>walang panganib</i> and mentioned neither the phone number the app requires nor the ID it
     photographs. This pack also corrects what the September kit still got wrong — test rides cannot
-    be deleted, the ID step cannot be skipped, and driver accounts are not deleted from inside the app.
+    be deleted and the ID step cannot be skipped. <b>Revised 23 September for 1.0.9 (10):</b> an admin now removes
+    a test driver from the panel instead of the Firebase console; dummy ID cards must be printed as Barangay ID so the
+    number fits; the consent&rsquo;s location line is corrected; and the observation sheets watch the trip type, the
+    distance line, the notification area, the three-minute dialog and ride history.
   </div>
 </section>
 
@@ -276,7 +279,7 @@ code {
   <header>
     <p class="kicker">Sheet 2 · isa bawat araw ng session</p>
     <h2>Setup and cleanup</h2>
-    <p class="sub">Every booking needs a second person on the other role’s phone. Without the helper phones, tasks 5–9 cannot happen.</p>
+    <p class="sub">Every booking needs a second person on the other role’s phone. Without the helper phones, commuter tasks 5–10 and driver tasks 6–10 cannot happen.</p>
   </header>
 
   <div class="fields">
@@ -287,26 +290,27 @@ code {
 
   <h3>Before the first session</h3>
   <ul class="checks">
-    <li><span class="box"></span><span><b>Latest app on every phone you bring</b>, installed over mobile data. The bottom of the landing screen must read <code>TrikeKoTo 1.0.5 (6)</code> or newer.</span></li>
-    <li><span class="box"></span><span><b>Admin phone</b> signed in as an administrator, email already confirmed. Open <b>ID review</b>. Remember: <b>Aprubahan</b> stays disabled until you tap <b>Tingnan ang ID</b>.</span></li>
-    <li><span class="box"></span><span><b>Helper driver phone</b> (for commuter sessions): a verified, approved test driver, switched <b>Online</b> near the venue.</span></li>
+    <li><span class="box"></span><span><b>Latest app on every phone you bring</b>, installed over mobile data. The bottom of the landing screen must read <code>TrikeKoTo 1.0.9 (10)</code> or newer.</span></li>
+    <li><span class="box"></span><span><b>Admin phone — the Android app, not the web panel</b> (opening an ID on the web creates a shareable link to the photo). Signed in as an administrator, email already confirmed. Open <b>ID review</b>. Remember: <b>Aprubahan</b> stays disabled until you tap <b>Tingnan ang ID</b>.</span></li>
+    <li><span class="box"></span><span><b>Helper driver phone</b> (for commuter sessions): a verified, approved test driver, switched <b>Online</b> near the venue. For commuter task 10 it goes <b>Offline</b> for three minutes.</span></li>
     <li><span class="box"></span><span><b>Helper commuter phone</b> (for driver sessions): a verified test commuter, ready to book a pickup near the venue.</span></li>
     <li><span class="box"></span><span><b>Dispatch → Tumatanggap ng booking</b> is on.</span></li>
-    <li><span class="box"></span><span><b>Dummy ID cards</b>, one per participant — a blank card with a made-up name and number. Never a real ID.</span></li>
+    <li><span class="box"></span><span><b>Dummy ID cards</b>, one per participant, printed <b>BARANGAY ID — SAMPLE</b> with a made-up name and a number like <code>UAT-0001</code>. The app checks the number against the ID type: a Barangay ID takes 4–20 letters and digits, a PhilSys number would have to be exactly 16 digits. Never a real ID.</span></li>
     <li><span class="box"></span><span><b>Driver test-detail slips</b> filled in (Sheet 4).</span></li>
     <li><span class="box"></span><span>Printed consent forms, observation sheets, SUS and debrief sheets.</span></li>
   </ul>
 
   <h3>After each participant</h3>
   <ul class="checks">
-    <li><span class="box"></span><span><b>Commuter:</b> in front of them, <b>Profile → Burahin ang account</b>. This deletes their name, number, photo, the dummy-ID photo and the verification. Their test rides stay, with name and number removed.</span></li>
-    <li><span class="box"></span><span><b>Driver:</b> the app has no delete button for drivers. Note the test email below; the project maintainer deletes the account from the Firebase console the same day (Authentication user; Firestore <code>drivers</code>, <code>active_drivers</code>, <code>id_submissions</code>, <code>id_verified</code>; Storage <code>ids/…/card</code>). Test rides stay, carrying only the test details.</span></li>
+    <li><span class="box"></span><span><b>Commuter:</b> in front of them, <b>Profile → Burahin ang account</b> (task 11). This deletes their name, number, photo, the dummy-ID photo, the verification and the sign-in. Their test rides stay, with name and number removed. <i>If it asks for a fresh sign-in and cannot finish:</i> admin phone → <b>Kasaysayan ng biyahe</b> → a ride of theirs → <b>Alisin ang pasahero</b> → <b>Alisin</b>.</span></li>
+    <li><span class="box"></span><span><b>Driver, after the debrief:</b> admin phone → the test driver’s card → <b>Alisin</b> → <b>Alisin</b>. Removes profile, presence, dummy-ID photo, verification, notices and sign-in in one action. Refused while they are on a ride (<i>May biyahe pa — suspindihin muna</i>) — finish or cancel the test ride first. Test rides stay, with the test name, plate and email and no phone number.</span></li>
+    <li><span class="box"></span><span><b>End of the day:</b> remove the helper driver and helper commuter the same way.</span></li>
     <li><span class="box"></span><span>Offer to uninstall the app from their phone.</span></li>
   </ul>
 
   <h3>Cleanup log</h3>
   <div class="scroll"><table>
-    <thead><tr><th class="n">#</th><th>Participant ID</th><th>Role</th><th>Test email (drivers)</th><th>Deleted by</th><th>Time</th></tr></thead>
+    <thead><tr><th class="n">#</th><th>Participant ID</th><th>Role</th><th>Test email (drivers)</th><th>Removed by</th><th>Time</th></tr></thead>
     <tbody>
       <tr><td class="n">1</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
       <tr><td class="n">2</td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td><td><span class="blank"></span></td></tr>
@@ -339,7 +343,7 @@ code {
   <ul class="checks">
     <li><span class="box"></span><span><b>Pasahero — number ninyo.</b> Magpapadala po ang app ng code sa SMS sa inyong mobile number. Libre po ang code.</span></li>
     <li><span class="box"></span><span><b>Driver — test na detalye.</b> Hindi po kailangan ang inyong email, plate number o mobile number. Bibigyan ko po kayo ng test na detalye na ilalagay sa app.</span></li>
-    <li><span class="box"></span><span><b>Lokasyon.</b> Hihingi po ng permiso ang telepono para sa lokasyon habang ginagamit ang app. Kapag naka-Online ang driver, nakikita ng malapit na pasahero ang kanyang lokasyon.</span></li>
+    <li><span class="box"></span><span><b>Lokasyon.</b> Hihingi po ng permiso ang telepono para sa lokasyon habang ginagamit ang app. Kapag tinanggap ng driver ang isang booking, ang pasaherong iyon lang ang nakakakita ng lokasyon ng driver, hanggang matapos ang biyahe. Ang pickup na pipiliin ng pasahero ay makikita ng driver na tatanggap nito.</span></li>
     <li><span class="box"></span><span><b>Litrato ng ID.</b> Hindi po magamit ang app nang walang ID. <b>Huwag pong gamitin ang totoong ID ninyo</b> — bibigyan ko po kayo ng pekeng card. Ang proseso po ang sinusubukan, hindi kung sino kayo. Kung ayaw ninyong magpadala ng litrato, kahit ng pekeng card, puwede pong huminto dito.</span></li>
   </ul>
 
@@ -408,13 +412,15 @@ code {
     <tbody>
       <tr><td class="n">1</td><td>“Buksan ninyo po ang app at tingnan muna. Ano sa palagay ninyo ang magagawa dito?”<br><span class="cue">First impression — hindi task</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">2</td><td>“Gusto ninyong mag-book. Simulan ninyo po.”<br><span class="cue">Done at the ID screen. TIME THIS — sign-in, SMS code, name.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">3</td><td><span class="cue">(Iabot ang pekeng card.)</span> “Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala.”<br><span class="cue">Watch the consent tick: read / ticked blind / asked.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">3</td><td><span class="cue">(Iabot ang pekeng card.)</span> “Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala.”<br><span class="cue">Watch the consent tick: read / ticked blind / asked. Did they pick Barangay ID from the card?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">4</td><td><span class="cue">(Admin phone: Tingnan ang ID → Aprubahan. Say nothing.)</span> “May nagbago po ba?”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">5</td><td>“Mag-book po kayo ng tricycle papuntang ______________.”<br><span class="cue">Did they notice the pickup filled itself in?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">6</td><td><span class="cue">(Helper driver phone: Tanggapin.)</span> “Gusto ninyong malaman kung nasaan na ang driver.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">5</td><td>“Mag-book po kayo ng tricycle papuntang ______________.”<br><span class="cue">Did they notice the pickup filled itself in? Trip type: read / took the default. Can they say what Special means?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">6</td><td><span class="cue">(Helper driver phone: Tanggapin.)</span> “Gusto ninyong malaman kung nasaan na ang driver.”<br><span class="cue">Did they read “… km ang layo sa iyo” by the driver’s name, or only the map?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">7</td><td>“Nagbago ang isip ninyo. Ayaw ninyo nang sumakay.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">8</td><td><span class="cue">(Have them book again. Helper driver phone: Tanggapin → Simulan → Tapusin.)</span> “Tapos na po ang biyahe ninyo. May gusto pa po kayong gawin?”<br><span class="cue">Do not mention the rating.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">9</td><td>“Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?”<br><span class="cue">Do not help. Then delete it together for real (Sheet 2).</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">9</td><td>“Saan po ninyo makikita ang mga nakaraan ninyong biyahe?”<br><span class="cue">Done at Kasaysayan ng biyahe, with the ride from task 8.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">10</td><td><span class="cue">(Helper driver phone: Offline. Optional — run with at least two.)</span> “Mag-book po kayo ulit papuntang ______________.”<br><span class="cue">At 3 min: Wala pang tumatanggap. Chose Maghintay pa / Kanselahin? Could they say why? Helper back Online after.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">11</td><td>“Kung ayaw na ninyong gamitin ang app, paano ninyo buburahin ang account ninyo?”<br><span class="cue">Do not help. Then delete it together for real (Sheet 2).</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
     </tbody>
   </table></div>
 
@@ -427,7 +433,7 @@ code {
   <header>
     <p class="kicker">Sheet 6 · isa bawat driver</p>
     <h2>Observation — Driver</h2>
-    <p class="sub">Tasks 4 and 9 matter most. Do not prompt on either. Italic lines are what you do on the other phones.</p>
+    <p class="sub">Tasks 4 and 9 matter most. Do not prompt on either. Italic lines are what you do on the other phones. Remove the account after the debrief (Sheet 2).</p>
   </header>
 
   <div class="fields">
@@ -447,12 +453,13 @@ code {
       <tr><td class="n">1</td><td><span class="cue">(Iabot ang test-detail slip.)</span> “Gumawa po kayo ng account bilang driver gamit ang mga detalyeng ito.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">2</td><td><span class="cue">(Iabot ang pekeng card.)</span> “Hihingin po ng chapter ang ID ninyo bago gamitin ang app. Subukan ninyo pong ipadala.”<br><span class="cue">Note any hesitation.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">3</td><td>“Ano po ang nakikita ninyo ngayon? Puwede na po ba kayong tumanggap ng pasahero?”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">4</td><td><span class="cue">(Admin phone: Tingnan ang ID → Aprubahan; then approve the driver. Say nothing.)</span> “May nagbago po ba?”<br><span class="cue">Do they find Magpatuloy, then notice the banner change?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">4</td><td><span class="cue">(Admin phone: Tingnan ang ID → Aprubahan; then approve the driver. Say nothing.)</span> “May nagbago po ba?”<br><span class="cue">Do they find Magpatuloy, then notice the banner change? Do they open the bell (Mga abiso) and its count?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">5</td><td>“Ipakita ninyo pong available na kayo.”<br><span class="cue">Done when the switch reads Online. Red text under it? Photograph the screen.</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
-      <tr><td class="n">6</td><td><span class="cue">(Helper commuter phone: book a nearby pickup.)</span> “May pasahero po. Kunin ninyo.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">6</td><td><span class="cue">(Helper commuter phone: book a nearby pickup.)</span> “May pasahero po. Kunin ninyo.”<br><span class="cue">Before Tanggapin: did they read “Sundo: … km ang layo” and the trip type?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">7</td><td>“Nasa inyo na po ang pasahero.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">8</td><td>“Nakarating na po kayo.”</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
       <tr><td class="n">9</td><td><span class="cue">(Phone locked, in their pocket. Helper commuter phone: book again.)</span> “May dumating pong booking. Napansin ninyo po ba?”<br><span class="cue">Did they notice the push without being told to look?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
+      <tr><td class="n">10</td><td>“Saan po ninyo makikita ang mga naihatid ninyong pasahero?”<br><span class="cue">Done at Kasaysayan ng biyahe. It shows the passenger’s name, not their number — expected?</span></td><td class="tick">☐</td><td class="tick">☐</td><td class="tick">☐</td><td class="tick"></td><td><span class="blank"></span><span class="blank"></span></td></tr>
     </tbody>
   </table></div>
 
