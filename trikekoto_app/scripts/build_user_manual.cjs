@@ -20,7 +20,7 @@ const {
   TableOfContents, TableRow, TextRun, WidthType, ImageRun,
 } = require('docx');
 
-const VERSION = '1.0.6 (7)';
+const VERSION = '1.0.9 (10)';
 const DATE = 'September 2026';
 
 // ── Content ─────────────────────────────────────────────────────────────
@@ -78,6 +78,8 @@ const content = [
     rows: [
       ['**EN** or **FIL**', 'Switches the whole app between Filipino and English. The label shows the language you will switch **to**. Your choice is remembered.'],
       ['Moon or sun icon', 'Switches between light and dark colours. Your choice is remembered.'],
+      ['Bell icon', `Opens ${L('Mga abiso', 'Notifications')} (Section 5.8). A number on the bell counts the notices you have not read yet. Found on the driver screen.`],
+      ['Clock icon', `Opens ${L('Kasaysayan ng biyahe', 'Ride history')}. Found on the driver screen; commuters find it below the booking button.`],
       ['Flag icon', 'Reports a problem or suggestion to the TODA administrator (Section 4.9). Found on the booking and driver screens.'],
       ['Exit icon', 'Signs you out of the app.'],
     ],
@@ -171,11 +173,18 @@ const content = [
   { p: `The screen shows ${L('Naghahanap ng driver…', 'Looking for a driver…')}. The system offers your ride to the nearest available driver first. If that driver does not answer within 15 seconds, it asks the next nearest, and so on. The line ${L('Natanong na ang 3 sa 10 malapit na driver', 'Asked 3 of 10 nearby drivers')} shows how many have been asked.` },
   { bullets: [
     'The search continues even if you close the app.',
-    'If no driver accepts after 10 drivers or about 5 minutes, the search stops and the booking screen appears again. Try again later.',
+    `After **3 minutes** with no driver, the app says so: ${L('Wala pang tumatanggap', 'No driver has accepted yet')}. Tap ${L('Maghintay pa', 'Keep waiting')} to let the search go on, or ${L('Kanselahin ang ride', 'Cancel ride')} to look for another ride. If the app is closed, a notification says the same thing. You are told only once per booking.`,
+    `If no driver accepts after 10 drivers or about 5 minutes, the search stops, the app shows ${L('Walang nakitang driver. Subukan ulit mamaya.', 'No driver found. Try again in a few minutes.')}, and the booking screen appears again.`,
   ] },
+  figure('After three minutes with no driver', 'fig-9-no-driver-yet.png'),
   { h2: '4.5 When a driver accepts' },
   figure('Tracking an accepted ride', 'fig-4-tracking.png'),
-  { p: `The screen changes to ${L('Papunta na ang driver', 'Driver is on the way')} and shows the driver’s name and tricycle plate number. The map shows where the driver is and how far away.` },
+  { p: `The screen changes to ${L('Papunta na ang driver', 'Driver is on the way')} and shows the driver’s name and tricycle plate number. Below the name is how far away the driver is, and it updates as the tricycle moves:` },
+  { bullets: [
+    `${L('0.4 km ang layo sa iyo', '0.4 km from you')} — measured to where your phone is, when the app is allowed to use your location. If you walk away from the pin, this still measures to you.`,
+    `${L('0.4 km ang layo sa sundo', '0.4 km from the pickup')} — measured to the pickup pin, when the app cannot use your location.`,
+  ] },
+  { p: 'The map shows where the driver is, the pickup and drop-off pins, and a dot where you are. Tap the map to open it full screen. The distance is a straight line, so the road trip may be a little longer.' },
   { bullets: [
     `To call the driver, tap the phone button, ${L('Tawagan si …', 'Call …')}.`,
     `When the trip starts, the screen changes to ${L('Papunta na sa babaan mo', 'On the way to your drop-off')}.`,
@@ -234,6 +243,7 @@ const content = [
   } },
   { h2: '5.2 Waiting for approval' },
   { p: 'Two approvals are needed before you can take rides: your **ID** (Section 3) and your **driver registration**. The banner at the top of the driver screen shows your registration status and updates on its own.' },
+  { p: `When your registration is approved, a notice appears in ${L('Mga abiso', 'Notifications')} — ${L('Aprubado na ang account mo', 'Account approved')} — and the bell shows a number. If notifications are allowed on your phone, it may also appear as a phone notification. You do not need to wait on the screen: approval can take hours, and the notice stays until you open it (Section 5.8).` },
   { table: {
     head: ['Banner', 'Meaning'],
     widths: [3400, 5960],
@@ -252,16 +262,20 @@ const content = [
     'If asked, allow location access **while using the app**, and allow notifications.',
     `Wait while the switch shows ${L('Kumokonekta…', 'Connecting…')}. Do not tap it again.`,
   ] },
-  { p: `When the switch shows **Online**, you appear to nearby commuters and the screen says ${L('Naghihintay ng biyahe', 'Waiting for a ride')}.` },
+  { p: `When the switch shows **Online**, the system can offer you rides booked nearby, and the screen says ${L('Naghihintay ng biyahe', 'Waiting for a ride')}.` },
+  { note: 'Commuters do not see online drivers on a map. Only the passenger whose ride you accept sees where you are, and only until that trip ends. (The line under the switch says nearby commuters can see your location; that is out of date and will be corrected in a later version.)' },
+  { p: 'Keep TrikeKoTo open while you are online — you can lock the screen. The app checks in every two minutes, even when you are standing still. If it has not checked in for about **five minutes** — the app was closed, the phone was switched off, or there was no signal — you stop receiving offers until it checks in again. Open the app to come back.' },
   { p: 'If going online fails, a red message explains why (see Section 8). If a line starting with **Detalye para sa suporta** (Details for support) appears under the switch, take a screenshot and send it to your TODA officer.' },
   { h2: '5.4 Accepting a ride' },
-  { p: `When a commuter nearby books, your phone shows a notification and the screen shows ${L('Bagong ride offer', 'New ride offer')} with the pickup and drop-off.` },
+  { p: `When a commuter nearby books, the offer comes to you at once: your phone shows a notification and the screen shows ${L('Bagong ride offer', 'New ride offer')} with the trip type, the pickup and drop-off, the passenger’s name, and how far the pickup is from you — for example ${L('Sundo: 0.4 km ang layo', 'Pickup: 0.4 km away')}.` },
+  figure('A ride offer', 'fig-10-ride-offer.png'),
   { bullets: [
     `${L('Tanggapin', 'Accept')} — the ride is yours.`,
     `${L('Tanggihan', 'Decline')} — the ride goes to the next nearest driver.`,
   ] },
   { p: `Each offer is labelled ${L('Regular — 1 pasahero', 'Regular — 1 passenger')} or ${L('Special — bayad para sa 5 pasahero', 'Special trip — fare for 5 passengers')}. On a special trip the commuter pays the fare for five passengers and has the tricycle alone, so do not take other passengers.` },
   { p: 'Each offer lasts about 15 seconds. If you do not answer in time, the ride goes to another driver. If two drivers accept at the same moment, only one gets the ride, and the app tells the other.' },
+  { p: 'You are never offered a new ride while you are carrying a passenger, or while another offer is waiting for your answer. The pickup distance is a straight line from where your phone last reported being.' },
   { h2: '5.5 During the ride' },
   { p: `The ${L('Kasalukuyang biyahe', 'Current ride')} card shows a map to ${L('Sunduin sa …', 'Pick up at …')} and then ${L('Ibaba sa …', 'Drop off at …')}.` },
   { bullets: [
@@ -278,6 +292,15 @@ const content = [
   { p: 'Slide the switch back to **Offline**. You stop receiving offers and the app stops using your location. Go offline when you finish your shift — staying online uses battery and data.' },
   { h2: '5.7 Your ride history' },
   { p: `Tap the clock icon at the top of the driver screen to open ${L('Kasaysayan ng biyahe', 'Ride history')}. It lists your completed and cancelled rides, newest first, with the route, the trip type, the passenger’s name and their rating. Passengers’ phone numbers are not shown once a ride is over.` },
+  { h2: '5.8 Notifications' },
+  { p: `Tap the bell at the top of the driver screen to open ${L('Mga abiso', 'Notifications')}. Messages from the system about your account are kept here — today, the notice that the TODA has approved your registration.` },
+  figure('The notification area', 'fig-11-notifications.png'),
+  { bullets: [
+    'A notice you have not read has a coloured background and a dot, and is counted on the bell.',
+    'Tap a notice to mark it read. It stays in the list afterwards.',
+    `${L('Basa na lahat', 'Mark all read')} marks every notice read at once.`,
+    `If there are none, the screen says ${L('Wala pang abiso', 'No notifications yet')}.`,
+  ] },
 
   { pagebreak: true },
   { h1: '6. Administrator Guide' },
@@ -311,7 +334,18 @@ const content = [
     'Check the details against your chapter records. The app only records what the driver typed.',
     `Tap ${L('Aprubahan', 'Approve')}. The driver’s app updates within seconds.`,
   ] },
-  { p: `To stop a driver from accepting rides, tap ${L('I-suspend', 'Suspend')} on their entry in ${L('Lahat ng driver', 'All drivers')}. To reinstate them, tap ${L('Aprubahan', 'Approve')}.` },
+  { p: `The driver receives a notice that their account is approved (Section 5.8). You do not need to message them.` },
+  { p: `To stop a driver from accepting rides, tap ${L('I-suspend', 'Suspend')} on their entry in ${L('Lahat ng driver', 'All drivers')}. To reinstate them, tap ${L('Aprubahan', 'Approve')}. Suspending can be undone; use it for everyday problems.` },
+  { h3: 'Removing a driver' },
+  { p: 'Remove a driver only for a registration that should never have been made — a duplicate, a test account, someone who is not a chapter member — or for a member who has left for good. **It cannot be undone.**' },
+  { steps: [
+    `Find the driver in ${L('Naghihintay ng verification', 'Pending verification')} or ${L('Lahat ng driver', 'All drivers')}.`,
+    `Tap ${L('Alisin', 'Remove')}.`,
+    `Read the message, then tap ${L('Alisin', 'Remove')} again to confirm, or ${L('Huwag', 'Keep')} to cancel.`,
+  ] },
+  figure('Confirming that a driver should be removed', 'fig-12-remove-driver.png'),
+  { p: 'Removing deletes the driver’s profile, their ID and its photo, the record that their ID was checked, their notices, and their sign-in account, so they can no longer log in. Their **finished rides are kept** as the chapter’s record — who drove, which tricycle, when, and the rating — with the driver’s phone number removed.' },
+  { p: `A driver who is carrying or collecting a passenger cannot be removed: the card shows ${L('May biyahe pa — suspindihin muna', 'On a ride — suspend instead')}. Suspend them, wait for the trip to end, then remove them.` },
   { h2: '6.4 Reviewing IDs' },
   figure('Reviewing a submitted ID', 'fig-7-id-review.png'),
   { steps: [
@@ -320,7 +354,7 @@ const content = [
     `If the ID is valid and matches, tap ${L('Aprubahan', 'Approve')}.`,
     `If not, tap ${L('Hindi tanggap', 'Not accepted')}, type the reason (for example, a blurry photo), and tap ${L('Ipadala', 'Send')}. The person sees your reason.`,
   ] },
-  { note: `${L('Aprubahan', 'Approve')} stays disabled until you have opened the photo — an ID has to be seen before it can be approved. ID photos are never saved on your phone.` },
+  { note: `${L('Aprubahan', 'Approve')} stays disabled until you have opened the photo — an ID has to be seen before it can be approved. ID photos are never saved on your phone. **Review IDs in the Android app.** Opening an ID in the web version creates a link to the photo that anyone who has it could open.` },
   { h2: '6.5 Handling feedback' },
   { p: `Reports from drivers and commuters are listed under ${L('Kailangan ng atensyon', 'Needs attention')}. After acting on one, tap ${L('Markahang naresolba', 'Mark resolved')}. If the problem returns, tap ${L('Buksan ulit', 'Reopen')} under ${L('Naresolba', 'Resolved')}.` },
   { h2: '6.6 Dispatch settings' },
@@ -339,6 +373,14 @@ const content = [
   { p: `To halt the service, turn off ${L('Tumatanggap ng booking', 'Accepting bookings')} and confirm with ${L('Ihinto ang booking', 'Stop bookings')}. Commuters cannot book until you turn it back on. **Rides already in progress finish normally.**` },
   { h2: '6.7 Ride history' },
   { p: `Open ${L('Kasaysayan ng biyahe', 'Ride history')} from the dashboard. Every ride in the chapter is listed, newest first, with the commuter’s name and number, the driver, the trip type, the outcome and the rating. Use ${L('Lahat', 'All')}, ${L('Natapos', 'Completed')}, ${L('Kinansela', 'Cancelled')} or ${L('Walang nakitang driver', 'No driver found')} to show one outcome only.` },
+  { h3: 'Removing a commuter' },
+  { p: 'Use this for an account that is abusing the service — repeated bookings nobody turns up for, or a passenger harassing drivers. There is no list of commuters in the app, on purpose: a ride is the only place you can find one.' },
+  { steps: [
+    'In the ride history, find a ride the person booked.',
+    `Tap ${L('Alisin ang pasahero', 'Remove commuter')} under their name.`,
+    `Read the message, then tap ${L('Alisin', 'Remove')} to confirm.`,
+  ] },
+  { p: `Their profile, ID, the record that their ID was checked, and their sign-in account are deleted, and any booking they are still waiting on is cancelled. Their rides stay, but the name becomes **Deleted account** and the number is removed. **It cannot be undone.**` },
 
   { pagebreak: true },
   { h1: '7. Your Data and Privacy' },
@@ -358,6 +400,16 @@ const content = [
       ['A driver offered or assigned your ride', 'Your name, photo (if you added one), mobile number, pickup and drop-off.'],
       ['A commuter on your ride', 'The driver’s first name, plate number and live location.'],
       ['TODA administrators', 'Driver details, ride records, feedback, and submitted IDs for review.'],
+    ],
+  } },
+
+  { h2: '7.4 When an account is removed' },
+  { table: {
+    head: ['', 'Deleted', 'Kept'],
+    widths: [2300, 3700, 3360],
+    rows: [
+      ['A commuter deletes their account, or an administrator removes it', 'Profile, photo, ID and its photo, the record that the ID was checked, and the sign-in account. A booking still waiting is cancelled.', 'Past rides, with the name shown as **Deleted account** and the number removed.'],
+      ['An administrator removes a driver', 'Profile, ID and its photo, the record that the ID was checked, notices, and the sign-in account. A ride in progress is cancelled.', 'Finished rides, with the driver’s name and plate but not their phone number.'],
     ],
   } },
 
@@ -391,7 +443,8 @@ const content = [
     head: ['Problem or message', 'What to do'],
     widths: [4200, 5160],
     rows: [
-      ['No driver accepts and the booking screen comes back', 'No driver was available nearby. Try again in a few minutes.'],
+      [`${L('Wala pang tumatanggap', 'No driver has accepted yet')}`, `The search has run for 3 minutes. Tap ${L('Maghintay pa', 'Keep waiting')} to keep searching, or cancel.`],
+      [`${L('Walang nakitang driver. Subukan ulit mamaya.', 'No driver found. Try again in a few minutes.')}`, 'No driver was available nearby. Try again in a few minutes.'],
       [`${L('Walang nakitang … malapit dito', 'Nothing called … found near here')}`, 'Drag the map to the area first, or place the pin by hand.'],
       [`${L('Tinatantiya — hindi maabot ang route service', 'Approximate — could not reach the route service')}`, 'The distance is an estimate. You can still book.'],
       [`${L('Hindi mabuksan ang dialler…', 'Could not open the dialler…')}`, 'Dial the number shown in the message by hand.'],
@@ -408,10 +461,20 @@ const content = [
       [`${L('Hindi makakuha ng location…', 'Cannot get a location fix…')}`, 'Move outdoors or near a window, then try again.'],
       [`${L('Hindi pinayagan ng server na mag-online…', 'The server refused to put you online…')}`, 'Check that your ID and registration are approved. If they are, send a screenshot to your TODA officer.'],
       [`${L('Hindi naisave sa server ang location mo…', 'Your location could not be saved…')}`, 'Check your internet connection, then try again.'],
-      ['No offers arrive while Online', 'Check that notifications are allowed for TrikeKoTo, and that a commuter is within the search radius.'],
+      ['No offers arrive while Online', 'Open TrikeKoTo: if it was closed or out of signal for about five minutes, it has to check in again before offers resume. Check that notifications are allowed for TrikeKoTo, and that a commuter is within the search radius.'],
+      ['The bell shows a number', `You have an unread notice. Tap the bell to read it (Section 5.8).`],
     ],
   } },
-  { h2: '8.5 Getting help' },
+  { h2: '8.5 Administrators' },
+  { table: {
+    head: ['Message', 'What to do'],
+    widths: [4200, 5160],
+    rows: [
+      [`${L('May biyahe pa — suspindihin muna', 'On a ride — suspend instead')}`, 'The driver is carrying or collecting a passenger. Suspend them, wait for the trip to end, then remove them.'],
+      [`${L('Para sa seguridad, mag-sign in muli bago burahin ang account.', 'For security, sign in again before deleting the account.')}`, `Shown to a commuter deleting their own account. They sign out and in again first — or you remove the account from the ride history (Section 6.7).`],
+    ],
+  } },
+  { h2: '8.6 Getting help' },
   { p: 'Use the flag icon (Section 4.9) to send a report to your TODA administrator. Include what you were doing, and the message on screen if there was one. If the app closes unexpectedly, the error is recorded automatically for the project team.' },
 ];
 

@@ -430,7 +430,7 @@
 
   <div class="reality" style="margin-top:0">
     <div><div class="n" style="color:var(--done)">96%</div><div class="k">By step count</div></div>
-    <div><div class="n" style="color:var(--partial)">90%</div><div class="k">Weighted</div></div>
+    <div><div class="n" style="color:var(--partial)">91%</div><div class="k">Weighted</div></div>
     <div><div class="n">107<span style="color:var(--ink-faint);font-size:1rem">/111</span></div><div class="k">Steps complete</div></div>
     <div><div class="n">552</div><div class="k">Tests passing</div></div>
   </div>
@@ -439,7 +439,7 @@
     <strong>The two numbers have come apart again — and they should have.</strong> Six
     points now, where a week ago they met. Eleven steps were built and shipped in six days,
     which moves the step count; not one of them has been in front of a real booking, which is
-    why the weighted figure fell from 95% to 90% instead of rising with them.
+    why the weighted figure fell from 95% to 90% instead of rising with them. (It is 91% since the manual caught up.)
     <br><br>
     The larger part of that fall is not the new features. <em>Dispatch itself was
     rewritten</em>: offers now move the moment a ride is booked, declined or lapses rather than
@@ -458,9 +458,9 @@
     for a capstone, testing is a chapter rather than a coda.
     <br><br>
     Weighted so that proving the system counts for as much as building it, the honest figure
-    is <strong>about 90%</strong> — the mean of the six areas below, and not worth pretending
+    is <strong>about 91%</strong> — the mean of the six areas below, and not worth pretending
     is more precise than that. The build is nearly finished; the
-    evidence is barely started. Quote 90% and a panel will ask what has actually been
+    evidence is barely started. Quote 91% and a panel will ask what has actually been
     demonstrated.
     <br><br>
     <strong>Worth noticing what did <em>not</em> move it.</strong> The security review went
@@ -566,9 +566,9 @@
       </tr>
       <tr>
         <td class="task">Documentation</td>
-        <td class="pct">~90%</td>
-        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:90%;background:var(--done)"></i></div></td>
-        <td class="desc">Runbook, three role guides, 38 screen plates, re-traced flows, a rewritten field-test sheet, a revised UAT kit, recruitment drafts, and a copy-review sheet putting all 93 Filipino strings in front of a reader in one place. The read itself has not happened, and step 91 stays Draft until it does — preparing a review is not performing one. That read now gates two things rather than one: the in-app copy, and how the author introduces the project to a chapter. <strong>Down to 90%.</strong> The manual was brought to 1.0.6 (7) on 09-18 and is three releases behind now: notifications, removal, the distance line and the three-minute dialog are in the admin guide and <span class="mono">SCHEMA.md</span> or nowhere. Each of those releases also added Filipino strings nobody has read.</td>
+        <td class="pct">~95%</td>
+        <td><div style="height:6px;background:var(--rule);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:95%;background:var(--done)"></i></div></td>
+        <td class="desc">Runbook, three role guides, 38 screen plates, re-traced flows, a rewritten field-test sheet, a revised UAT kit, recruitment drafts, and a copy-review sheet putting all 93 Filipino strings in front of a reader in one place. The read itself has not happened, and step 91 stays Draft until it does — preparing a review is not performing one. That read now gates two things rather than one: the in-app copy, and how the author introduces the project to a chapter. <strong>Back to 95% on 2026-09-23.</strong> It fell to 90% because the manual was three releases behind; it now documents 1.0.9 (10) — notifications, removing a driver or a commuter, the distance line, the three-minute dialog, driver check-ins and what an account removal keeps — with twelve screenshots, four of them new. It stays below 100% for the same reason as before: the Filipino has not been read by a native speaker, and every release this week added to it.</td>
       </tr>
       <tr>
         <td class="task">Release engineering</td>
@@ -721,7 +721,7 @@
       <tr><td class="step">89</td><td class="task">Pilot rollout</td><td class="desc">Plan written, and the rollback it assumed now exists. An APK passed around over Wi-Fi cannot be recalled, so <span class="mono">config/app.acceptingRides</span> is a server-side stop button enforced by the rules — one switch in the admin panel halts new bookings on every phone within seconds, with no app update, while rides already in progress finish normally. Entry criteria, daily monitoring, stop thresholds and report structure in <span class="mono">docs/pilot-plan.md</span>. Awaits UAT and a live system.</td><td class="deps">78, 85</td><td class="deliv">pilot-plan.md · kill switch</td><td><span class="chip s-partial">Prepared</span></td></tr>
 
       <tr class="phase-start"><td class="phase" rowspan="4">14 · Docs &amp; ops</td><td class="step">90</td><td class="task">Technical documentation</td><td class="desc">Schema reference, rationale, and known limits.</td><td class="deps">6</td><td class="deliv">SCHEMA.md, README.md</td><td><span class="chip s-done">Done</span></td></tr>
-      <tr><td class="step">91</td><td class="task">End-user manuals</td><td class="desc">One manual for all three roles, <span class="mono">docs/user-manual.md</span> and a Word copy for the thesis appendix, both generated from <span class="mono">scripts/build_user_manual.cjs</span> so they cannot drift apart; the three older role guides are marked superseded. Eight sections: before you start, identity verification, commuter, driver and administrator guides, data and privacy, and troubleshooting keyed to the exact on-screen messages in Filipino with English beside them. <strong>The seven screenshots are now real screens</strong> (2026-09-14), rendered from the shipped widgets over made-up data by <span class="mono">test/manual/manual_screenshots_test.dart</span>, in Filipino, at version 1.0.5 (6). No live account was signed in to take them, so no real name, number or ID can end up in the appendix, and they regenerate in seconds when a screen changes. The ID in the review picture is a card drawn by the test and marked as a sample. Still Draft for one reason: the Filipino has not been read by a native speaker. The review sheet runs to 327 strings, 258 of them written during localisation and read by nobody; twenty minutes on the <em>[new]</em> lines is worth more than an hour spread evenly. <strong>Brought to 1.0.6 (7) on 09-18</strong> — ID number lengths, trip type, ride history, eight real screenshots. <strong>Three releases behind again:</strong> the notification area, removing a driver or a commuter, the distance line and the three-minute dialog are not in it, and each release added Filipino strings nobody has read.</td><td class="deps">4</td><td class="deliv">docs/*-guide.md</td><td><span class="chip s-partial">Draft</span></td></tr>
+      <tr><td class="step">91</td><td class="task">End-user manuals</td><td class="desc">One manual for all three roles, <span class="mono">docs/user-manual.md</span> and a Word copy for the thesis appendix, both generated from <span class="mono">scripts/build_user_manual.cjs</span> so they cannot drift apart; the three older role guides are marked superseded. Eight sections: before you start, identity verification, commuter, driver and administrator guides, data and privacy, and troubleshooting keyed to the exact on-screen messages in Filipino with English beside them. <strong>The seven screenshots are now real screens</strong> (2026-09-14), rendered from the shipped widgets over made-up data by <span class="mono">test/manual/manual_screenshots_test.dart</span>, in Filipino, at version 1.0.5 (6). No live account was signed in to take them, so no real name, number or ID can end up in the appendix, and they regenerate in seconds when a screen changes. The ID in the review picture is a card drawn by the test and marked as a sample. Still Draft for one reason: the Filipino has not been read by a native speaker. The review sheet runs to 327 strings, 258 of them written during localisation and read by nobody; twenty minutes on the <em>[new]</em> lines is worth more than an hour spread evenly. <strong>Brought to 1.0.6 (7) on 09-18</strong> — ID number lengths, trip type, ride history, eight real screenshots. <strong>Brought to 1.0.9 (10) on 09-23:</strong> the notification area, removing a driver or a commuter, the distance line, the three-minute dialog, driver check-ins, and a table of what each kind of account removal deletes and keeps; twelve screenshots, four new. Rendering the offer screen for it caught a live inaccuracy: the line under the driver&rsquo;s Online switch still says nearby commuters can see their location, which stopped being true on 10 September. The manual says so; the string is due a fix in the next release.</td><td class="deps">4</td><td class="deliv">docs/*-guide.md</td><td><span class="chip s-partial">Draft</span></td></tr>
       <tr><td class="step">92</td><td class="task">Operations runbook</td><td class="desc">Nine incident playbooks written from failure modes actually hit during the build, plus access prerequisites, rollback speeds, and backup gaps. Symptom-first, not architecture-first.</td><td class="deps">4</td><td class="deliv">docs/RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
       <tr><td class="step">93</td><td class="task">Maintenance cycle</td><td class="desc">Per-release, quarterly, and outgrow-the-chapter checklists, plus a register of debt carried deliberately with the reason each is acceptable now.</td><td class="deps">92</td><td class="deliv">RUNBOOK.md</td><td><span class="chip s-done">Done</span></td></tr>
 
@@ -913,7 +913,7 @@
         
         <li><strong>Stop the web admin panel minting ID download URLs</strong> (76, Medium) — review IDs on the Android admin app until it does</li>
         <li><strong>Restore the ID photo-swap check</strong> (76, Low) — behind a Storage emulator test, then a handset upload</li>
-        <li><strong>Bring the manual to 1.0.9 (10)</strong> (91) — three releases behind; the screenshot test regenerates the pictures, the new sections still need writing</li>
+        
         <li><strong>Run the functions tests in CI</strong> (84) — the 37 unit tests and the trigger checks are the half of the system that changed most this week, and a push tests none of it</li>
         <li><strong>Decide who approves IDs and drivers, and how fast</strong> — before the pilot. With the gate, one unavailable admin means nobody new can use the service</li>
         <li>Self-host OSRM before the pilot (58) — ranking now calls it on every offer, so throttling degrades who is chosen, not just a map line</li>

@@ -36,6 +36,9 @@ import 'package:trikekoto_app/features/identity/application/id_verification_serv
 import 'package:trikekoto_app/features/identity/data/id_submission.dart';
 import 'package:trikekoto_app/features/identity/presentation/id_review_screen.dart';
 import 'package:trikekoto_app/features/identity/presentation/id_verification_screen.dart';
+import 'package:trikekoto_app/features/notifications/application/notifications.dart';
+import 'package:trikekoto_app/features/notifications/data/app_notification.dart';
+import 'package:trikekoto_app/features/notifications/presentation/notifications_screen.dart';
 import 'package:trikekoto_app/features/rides/application/ride_history.dart';
 import 'package:trikekoto_app/features/rides/data/ride.dart';
 import 'package:trikekoto_app/features/rides/presentation/ride_history_screen.dart';
@@ -60,7 +63,7 @@ import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 const _enabled = bool.fromEnvironment('MANUAL_SCREENSHOTS');
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT');
-const _version = '1.0.6 (7)';
+const _version = '1.0.9 (10)';
 const _outDir = 'docs/manual';
 const _phone = Size(390, 844);
 
@@ -112,6 +115,21 @@ class _OnlinePresence extends PresenceController {
   @override
   bool build() => true;
 }
+
+/// A driver whose phone has already reported a fix, for the pickup distance.
+class _DriverAt extends DriverPosition {
+  @override
+  GeoPoint? build() => _trike;
+}
+
+/// The notice onDriverApproved writes, as the app reads it back.
+AppNotification _approvalNotice({bool read = false}) => AppNotification.fromMap({
+      'type': NoticeTypes.accountApproved,
+      'title': 'Account approved',
+      'body': 'Your account has been approved by the admin. You can now log in.',
+      'createdAt': Timestamp.fromDate(DateTime(2026, 9, 20, 9, 30)),
+      'readAt': read ? Timestamp.fromDate(DateTime(2026, 9, 20, 9, 40)) : null,
+    }, NoticeTypes.accountApproved);
 
 class _FakeIdService implements IdVerificationService {
   _FakeIdService(this.card);
@@ -428,6 +446,8 @@ void main() {
       myOffersProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
       presenceProvider.overrideWith(_OnlinePresence.new),
+      myNotificationsProvider
+          .overrideWith((ref) => Stream.value([_approvalNotice(read: true)])),
     ]));
     await tester.pumpAndSettle();
     await _save(tester, 'fig-5-driver-online');
@@ -488,6 +508,7 @@ void main() {
       openFeedbackCountProvider.overrideWith((ref) => Stream.value(1)),
       pendingIdSubmissionsProvider
           .overrideWith((ref) => Stream.value([pendingId])),
+      driverIsOnARideProvider.overrideWith((ref, _) => Stream.value(false)),
     ]));
     await tester.pumpAndSettle();
     await _save(tester, 'fig-6-admin-dashboard');
@@ -567,6 +588,98 @@ void main() {
     ));
     await tester.pumpAndSettle();
     await _save(tester, 'fig-8-ride-history');
+  });
+
+  testWidgets('9 · nobody has accepted yet', skip: !_enabled, (tester) async {
+    await _size(tester, _phone);
+    final searching = Ride.fromMap({
+      'commuterUid': 'rider-uid',
+      'commuterName': 'Maria',
+      'commuterPhone': '09181234567',
+      'status': 'searching',
+      'pickup': {'label': 'Plaza, San Marcelino', 'geopoint': _plaza},
+      'dropoff': {'label': 'Palengke', 'geopoint': _market},
+      'dispatch': {'depth': 4, 'attemptedDrivers': ['a', 'b', 'c', 'd']},
+      'createdAt': Timestamp.fromDate(
+          DateTime.now().subtract(const Duration(minutes: 3, seconds: 5))),
+    }, 'ride-2');
+    await tester.pumpWidget(_app(const CommuterBookingScreen(), [
+      commuter.myActiveRideProvider.overrideWith((ref) => Stream.value(searching)),
+      myRiderProfileProvider.overrideWith((ref) => Stream.value(null)),
+      geocodingServiceProvider.overrideWithValue(_FakeGeocoding()),
+    ]));
+    // Not pumpAndSettle: the searching card spins for as long as it searches.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
+    await _save(tester, 'fig-9-no-driver-yet');
+  });
+
+  testWidgets('10 · a ride offer', skip: !_enabled, (tester) async {
+    await _size(tester, _phone);
+    final offer = Ride.fromMap({
+      'commuterUid': 'rider-uid',
+      'commuterName': 'Maria',
+      'commuterPhone': '09181234567',
+      'status': 'searching',
+      'serviceType': 'special',
+      'pickup': {'label': 'Plaza, San Marcelino', 'geopoint': _plaza},
+      'dropoff': {'label': 'Palengke', 'geopoint': _market},
+      'dispatch': {'offeredTo': 'juan@toda.ph', 'depth': 1},
+    }, 'ride-3');
+    await tester.pumpWidget(_app(const DriverDashboardScreen(), [
+      myDriverProfileProvider.overrideWith((ref) => Stream.value(
+          _driver('juan@toda.ph', 'Juan', 'Dela Cruz', DriverStatus.approved))),
+      myIdVerifiedProvider.overrideWith((ref) => Stream.value(true)),
+      myOffersProvider.overrideWith((ref) => Stream.value([offer])),
+      myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      presenceProvider.overrideWith(_OnlinePresence.new),
+      driverPositionProvider.overrideWith(_DriverAt.new),
+      myNotificationsProvider
+          .overrideWith((ref) => Stream.value([_approvalNotice(read: true)])),
+    ]));
+    await tester.pumpAndSettle();
+    await _save(tester, 'fig-10-ride-offer');
+  });
+
+  testWidgets('11 · notifications', skip: !_enabled, (tester) async {
+    await _size(tester, const Size(390, 420));
+    await tester.pumpWidget(_app(const NotificationsScreen(), [
+      myNotificationsProvider
+          .overrideWith((ref) => Stream.value([_approvalNotice()])),
+    ]));
+    await tester.pumpAndSettle();
+    await _save(tester, 'fig-11-notifications');
+  });
+
+  testWidgets('12 · removing a driver', skip: !_enabled, (tester) async {
+    // Tall enough that the driver card, and its Remove button, are on screen:
+    // a tap below the fold never reaches the button.
+    await _size(tester, const Size(390, 900));
+    await tester.pumpWidget(_app(const AdminDashboardScreen(), [
+      sessionProvider.overrideWith(() => _FixedSession(const SessionState(
+            user: null,
+            role: AppRole.admin,
+            loading: false,
+            emailVerified: true,
+          ))),
+      allDriversProvider.overrideWith((ref) => Stream.value([
+            _driver('pedro@toda.ph', 'Pedro', 'Reyes', DriverStatus.approved),
+          ])),
+      rideAnalyticsProvider.overrideWith((ref) async => RideAnalytics.from(
+            const [],
+            window: AnalyticsWindow.today,
+            now: DateTime(2026, 9, 20, 16),
+          )),
+      openFeedbackCountProvider.overrideWith((ref) => Stream.value(0)),
+      pendingIdSubmissionsProvider
+          .overrideWith((ref) => Stream.value(const <IdSubmission>[])),
+      driverIsOnARideProvider.overrideWith((ref, _) => Stream.value(false)),
+    ]));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Alisin'));
+    await tester.pumpAndSettle();
+    await _save(tester, 'fig-12-remove-driver');
   });
 }
 
