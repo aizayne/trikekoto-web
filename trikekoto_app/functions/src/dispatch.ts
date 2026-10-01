@@ -65,6 +65,26 @@ export function haversineKm(a: LatLng, b: LatLng): number {
 }
 
 /**
+ * How long a driver's app can be silent before it is treated as gone rather
+ * than as out of signal.
+ *
+ * Far longer than the staleness window on purpose. Silence means one of two
+ * very different things — the app was closed, or the phone is in a dead spot
+ * — and from the server they look identical for the first few minutes. Half
+ * an hour is long enough that a driver riding through a weak patch is still
+ * in the running, and short enough that a phone switched off at the end of a
+ * shift stops taking offer slots.
+ */
+export const ABANDONED_AFTER_MINUTES = 30;
+
+export function isAbandoned(row: PresenceRow, now: Date): boolean {
+  const every = row.heartbeatSeconds;
+  const at = row.updatedAt?.toDate();
+  if (!every || every <= 0 || !at) return false;
+  return now.getTime() - at.getTime() > ABANDONED_AFTER_MINUTES * 60_000;
+}
+
+/**
  * Drivers who may be offered this ride, nearest first by straight line.
  *
  * Leaves out anyone already tried for this ride, anyone currently holding a
@@ -72,6 +92,18 @@ export function haversineKm(a: LatLng, b: LatLng): number {
  * the radius. Ties break on email so the same inputs always give the same
  * order — a dispatch that picks differently on a retry is impossible to
  * reason about from a log.
+ *
+ * **A weak signal costs a driver their place in the queue, not the queue.**
+ * Checking in late used to remove a driver outright, which made dispatch a
+ * test of signal strength: the terminal sits in a dead spot, so the drivers
+ * parked at it — the ones nearest almost every pickup — were the ones being
+ * skipped. Now a driver who has missed check-ins is simply ranked behind
+ * everyone who has not, and is asked only when nobody fresh is available.
+ * Being hard to reach makes a driver a worse bet than a driver who is not;
+ * it does not make them unavailable, and the commuter would rather wait 15
+ * seconds for a maybe than be told no driver exists.
+ *
+ * Only true silence — [ABANDONED_AFTER_MINUTES] — removes anyone.
  */
 export function shortlistByDistance(
   rows: readonly PresenceRow[],
@@ -80,20 +112,31 @@ export function shortlistByDistance(
     attempted: readonly string[];
     busy: ReadonlySet<string>;
     radiusKm: number;
-    /** When set, drivers who have stopped checking in are left out. */
+    /** When set, drivers who have gone quiet are ranked last, then dropped. */
     now?: Date;
   },
 ): Candidate[] {
-  return rows
+  const within = (rows: readonly PresenceRow[]): Candidate[] =>
+    rows
+      .flatMap((r) => {
+        const point = r.position?.geopoint;
+        if (!point) return [];
+        const km = haversineKm(pickup, point);
+        return km <= opts.radiusKm ? [{ email: r.email, point, km }] : [];
+      })
+      .sort((a, b) => a.km - b.km || a.email.localeCompare(b.email));
+
+  const eligible = rows
     .filter((r) => !opts.attempted.includes(r.email) && !opts.busy.has(r.email))
-    .filter((r) => !opts.now || !isStale(r, opts.now))
-    .flatMap((r) => {
-      const point = r.position?.geopoint;
-      if (!point) return [];
-      const km = haversineKm(pickup, point);
-      return km <= opts.radiusKm ? [{ email: r.email, point, km }] : [];
-    })
-    .sort((a, b) => a.km - b.km || a.email.localeCompare(b.email));
+    .filter((r) => !opts.now || !isAbandoned(r, opts.now));
+
+  if (!opts.now) return within(eligible);
+
+  // Two tiers, never mixed: road ranking happens inside whichever tier is
+  // offered, so a driver who went quiet can never be chosen over one who is
+  // checking in from the same street.
+  const fresh = eligible.filter((r) => !isStale(r, opts.now!));
+  return within(fresh.length > 0 ? fresh : eligible);
 }
 
 /**

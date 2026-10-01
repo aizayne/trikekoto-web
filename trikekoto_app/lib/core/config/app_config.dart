@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../firestore/collection_paths.dart';
+import '../geo/geo_utils.dart';
 import '../providers.dart';
 
 /// Dispatch tuning, read from `config/app`.
@@ -46,6 +49,77 @@ class DispatchConfig {
         'maxDriversToTry': maxDriversToTry,
       };
 }
+
+/// The area a chapter actually serves, as a centre and a radius.
+///
+/// **It warns; it does not refuse.** A resettlement's tricycles do leave the
+/// resettlement — the highway, the hospital, the market in the next barangay
+/// are all trips they take — so a booking outside the circle is flagged and
+/// allowed through. A fence would turn the most useful rides into errors.
+///
+/// Off until a chapter sets it. The radius starts at zero, and zero means no
+/// warning at all: a default centre guessed from a map would warn on every
+/// legitimate booking in a chapter that sits somewhere else, which teaches
+/// people to ignore warnings.
+class ServiceArea {
+  const ServiceArea({
+    required this.label,
+    required this.center,
+    required this.radiusKm,
+  });
+
+  /// What the area is called, in the warning: "outside Balaybay Resettlement".
+  final String label;
+  final GeoPoint center;
+
+  /// Zero turns the warning off.
+  final double radiusKm;
+
+  bool get warns => radiusKm > 0;
+
+  bool covers(GeoPoint p) =>
+      !warns || distanceKmBetween(center, p) <= radiusKm;
+
+  bool coversPoint(LatLng p) =>
+      !warns ||
+      haversineKm(center.latitude, center.longitude, p.latitude, p.longitude) <=
+          radiusKm;
+
+  /// The chapter this was built for, as a starting point for the map picker.
+  /// Nothing warns until an admin sets a radius.
+  static const fallback = ServiceArea(
+    label: 'Balaybay Resettlement',
+    center: GeoPoint(14.9747, 120.1577),
+    radiusKm: 0,
+  );
+
+  factory ServiceArea.fromMap(Object? value) {
+    final m = value is Map ? value : const <String, dynamic>{};
+    final lat = (m['lat'] as num?)?.toDouble();
+    final lng = (m['lng'] as num?)?.toDouble();
+    final label = (m['label'] as String?)?.trim();
+    return ServiceArea(
+      label: label == null || label.isEmpty ? fallback.label : label,
+      center: lat == null || lng == null
+          ? fallback.center
+          : GeoPoint(lat, lng),
+      // Negative or absurd values read as "off" rather than as a tiny circle
+      // that warns on everything.
+      radiusKm: ((m['radiusKm'] as num?)?.toDouble() ?? 0).clamp(0, 100),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'label': label,
+        'lat': center.latitude,
+        'lng': center.longitude,
+        'radiusKm': radiusKm,
+      };
+}
+
+final serviceAreaProvider = Provider<ServiceArea>((ref) {
+  return ServiceArea.fromMap(ref.watch(appConfigProvider).value?['serviceArea']);
+});
 
 /// The raw `config/app` document, streamed.
 ///

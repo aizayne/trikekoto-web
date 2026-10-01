@@ -774,6 +774,36 @@
       }
     }
   },
+  "bookOutsideArea": "Nasa labas ng {area} ang {ends}.",
+  "@bookOutsideArea": {
+    "placeholders": {
+      "ends": {
+        "type": "String"
+      },
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "bookOutsideAreaBody": "Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.",
+  "cfgAreaTitle": "Saklaw ng serbisyo",
+  "cfgAreaIntro": "Babala lang ito, hindi hadlang. Kapag nasa labas ng saklaw ang sundo o babaan, sasabihin ito sa pasahero pero puwede pa rin siyang mag-book. Gawing 0 ang lapad para patayin ang babala.",
+  "cfgAreaLabel": "Pangalan ng lugar",
+  "cfgAreaLabelHelp": "Ito ang lalabas sa babala, hal. Balaybay Resettlement.",
+  "cfgAreaRadiusLabel": "Lapad ng saklaw (km)",
+  "cfgAreaRadiusHelp": "0 = walang babala. Sukatin mula sa gitna.",
+  "cfgAreaCenter": "Gitna: {lat}, {lng}",
+  "@cfgAreaCenter": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "cfgAreaSetCenter": "Itakda ang gitna sa mapa",
   "bookServiceTitle": "Uri ng biyahe",
   "bookServiceRegular": "Regular — 1 pasahero",
   "bookServiceRegularBody": "Nagbabayad ng pamasahe para sa 1 pasahero. Puwedeng magsakay ang driver ng ibang pasaherong pareho ang daan.",

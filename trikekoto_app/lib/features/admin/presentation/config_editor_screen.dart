@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/locale_controller.dart';
+import '../../../core/map/location_picker_screen.dart';
 
 /// Edits `config/app` — the dispatch settings every client reads.
 ///
@@ -25,6 +27,12 @@ class ConfigEditorScreen extends ConsumerStatefulWidget {
 class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fields = <String, TextEditingController>{};
+
+  /// The service area is edited apart from the numeric fields: it carries a
+  /// name and a point, and [_save] parses everything in [_fields] as a number.
+  final _areaLabel = TextEditingController();
+  GeoPoint? _areaCenter;
+
   bool _busy = false;
   bool _loaded = false;
 
@@ -33,19 +41,43 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
     for (final c in _fields.values) {
       c.dispose();
     }
+    _areaLabel.dispose();
     super.dispose();
   }
 
   /// Seeds the form once, from whatever the document holds — or from the
   /// compiled defaults when it does not exist yet, which is the normal state
   /// on a fresh project.
-  void _seed(DispatchConfig dispatch) {
+  void _seed(DispatchConfig dispatch, ServiceArea area) {
     if (_loaded) return;
     _loaded = true;
     final values = configDocumentFrom(dispatch);
     for (final entry in values.entries) {
       _fields[entry.key] = TextEditingController(text: '${entry.value}');
     }
+    _fields['serviceAreaRadiusKm'] =
+        TextEditingController(text: '${area.radiusKm}');
+    _areaLabel.text = area.label;
+    _areaCenter = area.center;
+  }
+
+  /// Picks the centre of the area on the same map commuters set a pickup on.
+  Future<void> _pickCentre() async {
+    final here = _areaCenter ?? ServiceArea.fallback.center;
+    final picked = await Navigator.of(context).push<PickedLocation>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          title: context.l.cfgAreaSetCenter,
+          initialCenter: LatLng(here.latitude, here.longitude),
+          initialLabel: _areaLabel.text,
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _areaCenter = GeoPoint(picked.point.latitude, picked.point.longitude);
+      if (_areaLabel.text.trim().isEmpty) _areaLabel.text = picked.label;
+    });
   }
 
   Future<void> _save() async {
@@ -55,8 +87,18 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
     try {
       final payload = <String, dynamic>{};
       for (final entry in _fields.entries) {
+        if (entry.key == 'serviceAreaRadiusKm') continue;
         payload[entry.key] = num.parse(entry.value.text.trim());
       }
+
+      final centre = _areaCenter ?? ServiceArea.fallback.center;
+      final label = _areaLabel.text.trim();
+      payload['serviceArea'] = ServiceArea(
+        label: label.isEmpty ? ServiceArea.fallback.label : label,
+        center: centre,
+        radiusKm:
+            num.parse(_fields['serviceAreaRadiusKm']!.text.trim()).toDouble(),
+      ).toMap();
 
       // merge:true creates the document on first save and leaves any key this
       // screen does not manage — minAppVersion, for one — untouched.
@@ -76,7 +118,7 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _seed(ref.watch(dispatchConfigProvider));
+    _seed(ref.watch(dispatchConfigProvider), ref.watch(serviceAreaProvider));
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l.cfgTitle)),
@@ -120,6 +162,52 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
                 min: 1,
                 max: DispatchDefaults.maxDriversToTry.toDouble(),
                 integer: true,
+              ),
+
+              const Gap(AppSpacing.xxl),
+              Text(context.l.cfgAreaTitle, style: context.text.titleMedium),
+              const Gap(AppSpacing.md),
+              _Explainer(context.l.cfgAreaIntro),
+              const Gap(AppSpacing.md),
+              TextFormField(
+                controller: _areaLabel,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: context.l.cfgAreaLabel,
+                  helperText: context.l.cfgAreaLabelHelp,
+                ),
+              ),
+              const Gap(AppSpacing.md),
+              _numberField(
+                'serviceAreaRadiusKm',
+                context.l.cfgAreaRadiusLabel,
+                context.l.cfgAreaRadiusHelp,
+                min: 0,
+                max: 100,
+              ),
+              const Gap(AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l.cfgAreaCenter(
+                        (_areaCenter ?? ServiceArea.fallback.center)
+                            .latitude
+                            .toStringAsFixed(5),
+                        (_areaCenter ?? ServiceArea.fallback.center)
+                            .longitude
+                            .toStringAsFixed(5),
+                      ),
+                      style: context.text.bodySmall,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _busy ? null : _pickCentre,
+                    icon: const Icon(Icons.map_outlined,
+                        size: AppSpacing.iconSm),
+                    label: Text(context.l.cfgAreaSetCenter),
+                  ),
+                ],
               ),
 
               const Gap(AppSpacing.xxl),

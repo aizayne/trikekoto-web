@@ -9,6 +9,7 @@ const {
   unavailableDrivers,
   msUntilLapsed,
   isStale,
+  isAbandoned,
   needsNoDriverNotice,
 } = require('../lib/dispatch.js');
 
@@ -139,13 +140,44 @@ test('an app too old to promise check-ins is never judged by silence', () => {
   assert.equal(isStale({ ...row('old', 1), updatedAt: ago(86400) }, NOW), false);
 });
 
-test('dispatch skips a driver whose app went quiet', () => {
+test('a driver who went quiet is passed over while anyone else is checking in', () => {
   const list = shortlistByDistance(
     [checkingIn('ghost', 0.5, 900), checkingIn('live', 1, 30), row('old-app', 2)],
     pickup,
     opts({ now: NOW }),
   );
+  // 'ghost' is nearer than both and still not offered: a driver who is not
+  // checking in is a worse bet than one who is.
   assert.deepEqual(emails(list), ['live', 'old-app']);
+});
+
+test('but is asked when nobody else is available', () => {
+  // The terminal is a dead spot. Dropping these drivers outright made
+  // dispatch a test of signal strength, and told commuters no driver exists
+  // while three sat at the kerb.
+  const list = shortlistByDistance(
+    [checkingIn('ghost', 0.5, 900), checkingIn('quiet', 2, 600)],
+    pickup,
+    opts({ now: NOW }),
+  );
+  assert.deepEqual(emails(list), ['ghost', 'quiet']);
+});
+
+test('and is dropped once the silence is long enough to mean gone', () => {
+  assert.equal(isAbandoned(checkingIn('a', 1, 29 * 60), NOW), false);
+  assert.equal(isAbandoned(checkingIn('a', 1, 31 * 60), NOW), true);
+  const list = shortlistByDistance(
+    [checkingIn('gone', 0.5, 40 * 60), checkingIn('quiet', 2, 600)],
+    pickup,
+    opts({ now: NOW }),
+  );
+  assert.deepEqual(emails(list), ['quiet']);
+});
+
+test('an app too old to check in is never dropped for silence', () => {
+  // It only writes when it moves, so a parked driver on one looks exactly
+  // like a phone switched off.
+  assert.equal(isAbandoned({ ...row('old', 1), updatedAt: ago(86400) }, NOW), false);
 });
 
 // ── Telling the commuter nobody has accepted ────────────────

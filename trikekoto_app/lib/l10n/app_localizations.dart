@@ -2347,6 +2347,66 @@ abstract class L {
   /// **'{min} hanggang {max} letra o numero, walang gitling'**
   String idNumberHelperRange(int min, int max);
 
+  /// No description provided for @bookOutsideArea.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nasa labas ng {area} ang {ends}.'**
+  String bookOutsideArea(String ends, String area);
+
+  /// No description provided for @bookOutsideAreaBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.'**
+  String get bookOutsideAreaBody;
+
+  /// No description provided for @cfgAreaTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Saklaw ng serbisyo'**
+  String get cfgAreaTitle;
+
+  /// No description provided for @cfgAreaIntro.
+  ///
+  /// In fil, this message translates to:
+  /// **'Babala lang ito, hindi hadlang. Kapag nasa labas ng saklaw ang sundo o babaan, sasabihin ito sa pasahero pero puwede pa rin siyang mag-book. Gawing 0 ang lapad para patayin ang babala.'**
+  String get cfgAreaIntro;
+
+  /// No description provided for @cfgAreaLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pangalan ng lugar'**
+  String get cfgAreaLabel;
+
+  /// No description provided for @cfgAreaLabelHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ito ang lalabas sa babala, hal. Balaybay Resettlement.'**
+  String get cfgAreaLabelHelp;
+
+  /// No description provided for @cfgAreaRadiusLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Lapad ng saklaw (km)'**
+  String get cfgAreaRadiusLabel;
+
+  /// No description provided for @cfgAreaRadiusHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'0 = walang babala. Sukatin mula sa gitna.'**
+  String get cfgAreaRadiusHelp;
+
+  /// No description provided for @cfgAreaCenter.
+  ///
+  /// In fil, this message translates to:
+  /// **'Gitna: {lat}, {lng}'**
+  String cfgAreaCenter(String lat, String lng);
+
+  /// No description provided for @cfgAreaSetCenter.
+  ///
+  /// In fil, this message translates to:
+  /// **'Itakda ang gitna sa mapa'**
+  String get cfgAreaSetCenter;
+
   /// No description provided for @bookServiceTitle.
   ///
   /// In fil, this message translates to:

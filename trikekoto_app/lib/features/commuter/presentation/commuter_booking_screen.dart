@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/diagnostics/crash_reporter.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/firestore/collection_paths.dart';
@@ -459,6 +460,18 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
     );
   }
 
+  /// Which ends of the trip sit outside the chapter's area, if either.
+  List<String> _outsideArea(WidgetRef ref) {
+    final area = ref.watch(serviceAreaProvider);
+    if (!area.warns) return const [];
+    return [
+      if (_pickup != null && !area.coversPoint(_pickup!.point))
+        context.l.bookPickup,
+      if (_dropoff != null && !area.coversPoint(_dropoff!.point))
+        context.l.bookDropoff,
+    ];
+  }
+
   Widget _bookingForm() {
     return Form(
       key: _formKey,
@@ -521,6 +534,13 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
               ),
             ),
           ),
+
+          // Outside the chapter's area: said once, above the button, and
+          // never in the way of booking. See [ServiceArea].
+          if (_outsideArea(ref).isNotEmpty) ...[
+            const Gap(AppSpacing.md),
+            _OutsideAreaNotice(outside: _outsideArea(ref)),
+          ],
 
           // Distance and time appear as soon as both ends are known, so
           // nobody commits to a trip without knowing how far it is.
@@ -593,6 +613,53 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
             onPressed: () => context.push('/commuter/history'),
             icon: const Icon(Icons.history),
             label: Text(context.l.historyTitle),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Says a trip leaves the chapter's area, and then gets out of the way.
+///
+/// Deliberately not an error and not a blocker: the ride is allowed, and the
+/// only thing the commuter is told is the thing they could not otherwise
+/// know — that there may be no tricycle near that end of it.
+class _OutsideAreaNotice extends ConsumerWidget {
+  const _OutsideAreaNotice({required this.outside});
+
+  /// The ends that sit outside, already in the reader's language.
+  final List<String> outside;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final area = ref.watch(serviceAreaProvider);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: context.semantic.warningContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline,
+              size: AppSpacing.iconSm, color: context.semantic.warning),
+          const Gap(AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l.bookOutsideArea(outside.join(' / '), area.label),
+                  style: context.text.bodySmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const Gap(AppSpacing.xs),
+                Text(context.l.bookOutsideAreaBody,
+                    style: context.text.bodySmall),
+              ],
+            ),
           ),
         ],
       ),

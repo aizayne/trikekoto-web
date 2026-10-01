@@ -1302,6 +1302,43 @@ class LFil extends L {
   }
 
   @override
+  String bookOutsideArea(String ends, String area) {
+    return 'Nasa labas ng $area ang $ends.';
+  }
+
+  @override
+  String get bookOutsideAreaBody =>
+      'Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.';
+
+  @override
+  String get cfgAreaTitle => 'Saklaw ng serbisyo';
+
+  @override
+  String get cfgAreaIntro =>
+      'Babala lang ito, hindi hadlang. Kapag nasa labas ng saklaw ang sundo o babaan, sasabihin ito sa pasahero pero puwede pa rin siyang mag-book. Gawing 0 ang lapad para patayin ang babala.';
+
+  @override
+  String get cfgAreaLabel => 'Pangalan ng lugar';
+
+  @override
+  String get cfgAreaLabelHelp =>
+      'Ito ang lalabas sa babala, hal. Balaybay Resettlement.';
+
+  @override
+  String get cfgAreaRadiusLabel => 'Lapad ng saklaw (km)';
+
+  @override
+  String get cfgAreaRadiusHelp => '0 = walang babala. Sukatin mula sa gitna.';
+
+  @override
+  String cfgAreaCenter(String lat, String lng) {
+    return 'Gitna: $lat, $lng';
+  }
+
+  @override
+  String get cfgAreaSetCenter => 'Itakda ang gitna sa mapa';
+
+  @override
   String get bookServiceTitle => 'Uri ng biyahe';
 
   @override

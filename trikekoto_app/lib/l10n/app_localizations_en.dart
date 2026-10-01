@@ -1292,6 +1292,43 @@ class LEn extends L {
   }
 
   @override
+  String bookOutsideArea(String ends, String area) {
+    return 'The $ends is outside $area.';
+  }
+
+  @override
+  String get bookOutsideAreaBody =>
+      'You can still book, but there may be no driver nearby, so the wait may be longer.';
+
+  @override
+  String get cfgAreaTitle => 'Service area';
+
+  @override
+  String get cfgAreaIntro =>
+      'A warning, not a barrier. When a pickup or drop-off is outside the area, the commuter is told and can still book. Set the radius to 0 to turn the warning off.';
+
+  @override
+  String get cfgAreaLabel => 'Area name';
+
+  @override
+  String get cfgAreaLabelHelp =>
+      'What the warning calls it, e.g. Balaybay Resettlement.';
+
+  @override
+  String get cfgAreaRadiusLabel => 'Area radius (km)';
+
+  @override
+  String get cfgAreaRadiusHelp => '0 = no warning. Measured from the centre.';
+
+  @override
+  String cfgAreaCenter(String lat, String lng) {
+    return 'Centre: $lat, $lng';
+  }
+
+  @override
+  String get cfgAreaSetCenter => 'Set the centre on the map';
+
+  @override
   String get bookServiceTitle => 'Type of trip';
 
   @override
