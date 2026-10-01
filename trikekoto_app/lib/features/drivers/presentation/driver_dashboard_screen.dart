@@ -27,6 +27,10 @@ class DriverDashboardScreen extends ConsumerWidget {
     final profileAsync = ref.watch(myDriverProfileProvider);
     final idVerified = ref.watch(myIdVerifiedProvider).value == true;
     final unread = ref.watch(unreadNoticeCountProvider);
+    // Starts push registration for this driver. Watched rather than read so
+    // it runs once while the dashboard is open, whatever their status —
+    // approval is the message that has to reach a driver who is not online.
+    ref.watch(driverPushRegistrationProvider);
 
     return Scaffold(
       appBar: AppBar(

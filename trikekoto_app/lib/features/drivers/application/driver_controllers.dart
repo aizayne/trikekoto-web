@@ -130,6 +130,46 @@ final presenceStatusProvider =
     NotifierProvider<PresenceStatusController, PresenceStatus>(
         PresenceStatusController.new);
 
+/// Stores this driver's push token on their profile.
+///
+/// Presence carries a token too, but only while a driver is online — and the
+/// one message a driver most needs to receive arrives *before* they have ever
+/// been online: the chapter approving their registration. Without a token on
+/// the profile there is nowhere to send it, so the notice waits in the app
+/// until they next open it, which may be days.
+///
+/// Runs once per sign-in, from the dashboard. Asking for notification
+/// permission here rather than at the Online switch is deliberate: a driver
+/// waiting on approval cannot reach that switch.
+final driverPushRegistrationProvider = FutureProvider<void>((ref) async {
+  final email = ref.watch(driverEmailProvider);
+  if (email.isEmpty) return;
+
+  final push = ref.read(pushServiceProvider);
+  final token = await tokenOrNull(push.registerForOffers(),
+      limit: const Duration(seconds: 30));
+  if (token == null) return;
+
+  Future<void> save(String value) async {
+    try {
+      await ref.read(refsProvider).driver(email).update({
+        'fcmToken': value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e, s) {
+      // Best effort: a driver with no token still sees the notice in the app.
+      await CrashReporter.recordNonFatal(e, s, context: 'driver push token');
+    }
+  }
+
+  await save(token);
+
+  // Android reissues tokens on reinstall and cache clears. A stale one is a
+  // driver who silently stops being reachable.
+  final sub = push.tokenRefreshes.listen(save);
+  ref.onDispose(sub.cancel);
+});
+
 /// Where the driver's own phone last reported being.
 ///
 /// Presence is already streaming GPS, so a screen that needs a distance —

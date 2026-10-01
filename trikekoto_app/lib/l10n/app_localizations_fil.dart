@@ -496,6 +496,26 @@ class LFil extends L {
   }
 
   @override
+  String get reviewDeleteId => 'Burahin ang ID';
+
+  @override
+  String get reviewDeleteQuestion => 'Burahin ang litrato ng ID?';
+
+  @override
+  String get reviewDeleteAfterApproval =>
+      'Aprubado na. Burahin na ang litrato ng ID?';
+
+  @override
+  String get reviewDeleteBody =>
+      'Mabubura ang litrato at ang mga detalye ng ID. Mananatili ang pagkumpirma — hindi na kailangang magpadala ulit ng ID ang tao. Kusa rin itong mabubura 90 araw matapos ipadala.';
+
+  @override
+  String get reviewKeepId => 'Huwag muna';
+
+  @override
+  String get reviewDeleted => 'Nabura na ang ID';
+
+  @override
   String get adminRemove => 'Alisin';
 
   @override

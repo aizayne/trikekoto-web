@@ -493,6 +493,25 @@ class LEn extends L {
   }
 
   @override
+  String get reviewDeleteId => 'Delete the ID';
+
+  @override
+  String get reviewDeleteQuestion => 'Delete the ID photo?';
+
+  @override
+  String get reviewDeleteAfterApproval => 'Approved. Delete the ID photo now?';
+
+  @override
+  String get reviewDeleteBody =>
+      'The photo and the ID details are deleted. The verification stays, so this person never has to send an ID again. It is also deleted automatically 90 days after it was sent.';
+
+  @override
+  String get reviewKeepId => 'Keep for now';
+
+  @override
+  String get reviewDeleted => 'ID deleted';
+
+  @override
   String get adminRemove => 'Remove';
 
   @override

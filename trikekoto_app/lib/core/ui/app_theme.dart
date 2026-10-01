@@ -100,9 +100,16 @@ class AppSpacing {
   /// moving, so undersized targets are a safety problem, not just a polish one.
   static const minTouchTarget = 48.0;
 
-  static const radiusSm = 8.0;
-  static const radiusMd = 12.0;
-  static const radiusLg = 16.0;
+  // Corners. Raised on 2026-10-01 after the defence asked for round corners
+  // rather than square ones: a 12dp card on a 6-inch phone reads as a box at
+  // arm's length, which is the distance this is used at.
+  static const radiusSm = 10.0;
+  static const radiusMd = 16.0;
+  static const radiusLg = 20.0;
+
+  /// A fully rounded end — buttons and chips, where the shape itself says
+  /// "press me" before the label is read.
+  static const radiusPill = 999.0;
 
   static const iconSm = 18.0;
   static const iconMd = 24.0;
@@ -340,9 +347,7 @@ class AppTheme {
           disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
           minimumSize: const Size.fromHeight(AppSpacing.minTouchTarget + 4),
           textStyle: _display(15, FontWeight.w600, scheme),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
+          shape: const StadiumBorder(),
         ),
       ),
 
@@ -352,9 +357,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(AppSpacing.minTouchTarget),
           side: BorderSide(color: scheme.outlineVariant),
           textStyle: _display(15, FontWeight.w600, scheme),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
+          shape: const StadiumBorder(),
         ),
       ),
 
@@ -367,6 +370,7 @@ class AppTheme {
           minimumSize: const Size(AppSpacing.minTouchTarget,
               AppSpacing.minTouchTarget),
           textStyle: _display(15, FontWeight.w600, scheme),
+          shape: const StadiumBorder(),
         ),
       ),
 
@@ -431,9 +435,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         labelStyle: text.bodySmall,
         side: BorderSide(color: scheme.outlineVariant),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        ),
+        shape: const StadiumBorder(),
       ),
 
       snackBarTheme: SnackBarThemeData(
@@ -443,6 +445,62 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
+      ),
+
+      // Dialogs, sheets and menus carried Material's defaults, which do not
+      // match the cards they open over. Named here so one set of tokens
+      // decides every corner in the app.
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg + 8),
+        ),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusLg + 8),
+          ),
+        ),
+      ),
+
+      popupMenuTheme: PopupMenuThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          )),
+        ),
+      ),
+
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: scheme.inverseSurface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        ),
+        textStyle: TextStyle(color: scheme.onInverseSurface, fontSize: 13),
+      ),
+
+      // One motion for every screen change, on every platform this ships to.
+      // Android's default zoom and the web's instant cut made moving between
+      // screens feel like three different apps; this fades the old screen out
+      // and carries the new one in from the side, which is also the gentlest
+      // on a low-end phone because it animates opacity and offset only.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+        },
       ),
 
       dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1),

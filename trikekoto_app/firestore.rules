@@ -211,6 +211,17 @@ service cloud.firestore {
           && onlyChanged(['firstName', 'lastName', 'phone',
                           'plateNumber', 'todaChapter', 'updatedAt']))
         ||
+        // A push token, at any status. It is how the chapter reaches a
+        // driver who has never been online — the approval notice — and a
+        // suspended driver still has to be told when that changes. Nothing
+        // else may move with it, so this cannot become a way to edit a
+        // profile after approval.
+        (isSelf(driverEmail)
+          && onlyChanged(['fcmToken', 'updatedAt'])
+          && (request.resource.data.fcmToken == null
+              || (request.resource.data.fcmToken is string
+                  && request.resource.data.fcmToken.size() <= 4096)))
+        ||
         isAdmin();
 
       allow delete: if isAdmin();

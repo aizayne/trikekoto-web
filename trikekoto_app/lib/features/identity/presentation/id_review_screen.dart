@@ -138,6 +138,57 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
       }
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
+      return;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+
+    // Approval is the moment the ID has served its purpose: the person is
+    // verified for good, and the marker that says so holds no ID data. Asked
+    // rather than done, because a chapter may want the card on file until the
+    // officer has written the member up in their own records — but asked
+    // every time, so holding it is a decision rather than the default.
+    if (approve && mounted) await _deleteNow(justApproved: true);
+  }
+
+  /// Deletes the ID photo and its details, keeping the verification.
+  ///
+  /// Retention already removes every submission 90 days after it arrives.
+  /// This is the same deletion, by hand, for a reviewer who would rather not
+  /// hold a government ID for three months once they have finished looking at
+  /// it — which is the whole purpose the data was collected for.
+  Future<void> _deleteNow({required bool justApproved}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(justApproved
+            ? dialogContext.l.reviewDeleteAfterApproval
+            : dialogContext.l.reviewDeleteQuestion),
+        content: Text(dialogContext.l.reviewDeleteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.l.reviewKeepId),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+                foregroundColor: dialogContext.scheme.error),
+            child: Text(dialogContext.l.reviewDeleteId),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(idVerificationServiceProvider)
+          .withdraw(widget.sub.subjectUid);
+      if (mounted) showSnack(context, context.l.reviewDeleted);
+    } catch (e) {
+      if (mounted) showSnack(context, describeError(e), error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -276,6 +327,20 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                   ),
                 ),
               ],
+            ),
+            // Deleting without deciding: for a submission that is somebody's
+            // shopping receipt, or a second copy of a card already approved.
+            // The queue is not a place to park personal data while thinking.
+            const Gap(AppSpacing.sm),
+            Center(
+              child: TextButton.icon(
+                onPressed: _busy ? null : () => _deleteNow(justApproved: false),
+                icon: const Icon(Icons.delete_outline,
+                    size: AppSpacing.iconSm),
+                label: Text(context.l.reviewDeleteId),
+                style: TextButton.styleFrom(
+                    foregroundColor: context.scheme.error),
+              ),
             ),
           ],
         ),

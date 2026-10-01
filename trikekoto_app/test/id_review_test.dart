@@ -22,14 +22,19 @@ final _png = base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
 
 class _FakeIdService implements IdVerificationService {
+  final withdrawn = <String>[];
+
   @override
   Future<Uint8List?> reviewerImage(String uid) async => _png;
+
+  @override
+  Future<void> withdraw(String uid) async => withdrawn.add(uid);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Widget _harness() {
+Widget _harness([_FakeIdService? service]) {
   final sub = IdSubmission.fromMap(const {
     'subjectUid': 'driver-uid-1',
     'role': 'driver',
@@ -42,7 +47,8 @@ Widget _harness() {
   return ProviderScope(
     overrides: [
       pendingIdSubmissionsProvider.overrideWith((ref) => Stream.value([sub])),
-      idVerificationServiceProvider.overrideWithValue(_FakeIdService()),
+      idVerificationServiceProvider
+          .overrideWithValue(service ?? _FakeIdService()),
     ],
     child: MaterialApp(
       locale: const Locale('en'),
@@ -76,6 +82,44 @@ void main() {
 
     expect(_approve(tester).onPressed, isNotNull);
     expect(find.text('Open the ID before approving it.'), findsNothing);
+  });
+
+  testWidgets('an ID can be deleted without deciding on it', (tester) async {
+    // A submission that is somebody's shopping receipt, or a second copy of a
+    // card already approved. The queue is not a place to park personal data.
+    final svc = _FakeIdService();
+    await tester.pumpWidget(_harness(svc));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Delete the ID'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete the ID photo?'), findsOneWidget);
+    expect(find.textContaining('The verification stays'), findsOneWidget);
+
+    // The dialog's confirm carries the same label as the button that opened
+    // it, so scope the tap to the dialog.
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.widgetWithText(TextButton, 'Delete the ID'),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(svc.withdrawn, ['driver-uid-1']);
+  });
+
+  testWidgets('and kept when the reviewer thinks better of it', (tester) async {
+    final svc = _FakeIdService();
+    await tester.pumpWidget(_harness(svc));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Delete the ID'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Keep for now'));
+    await tester.pumpAndSettle();
+
+    expect(svc.withdrawn, isEmpty);
+    expect(find.text('Delete the ID photo?'), findsNothing);
   });
 
   testWidgets('rejecting never needs the photo', (tester) async {

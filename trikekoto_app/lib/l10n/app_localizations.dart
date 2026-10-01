@@ -949,6 +949,42 @@ abstract class L {
   /// **'{from}  →  {to}'**
   String driverRoute(String from, String to);
 
+  /// No description provided for @reviewDeleteId.
+  ///
+  /// In fil, this message translates to:
+  /// **'Burahin ang ID'**
+  String get reviewDeleteId;
+
+  /// No description provided for @reviewDeleteQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Burahin ang litrato ng ID?'**
+  String get reviewDeleteQuestion;
+
+  /// No description provided for @reviewDeleteAfterApproval.
+  ///
+  /// In fil, this message translates to:
+  /// **'Aprubado na. Burahin na ang litrato ng ID?'**
+  String get reviewDeleteAfterApproval;
+
+  /// No description provided for @reviewDeleteBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mabubura ang litrato at ang mga detalye ng ID. Mananatili ang pagkumpirma — hindi na kailangang magpadala ulit ng ID ang tao. Kusa rin itong mabubura 90 araw matapos ipadala.'**
+  String get reviewDeleteBody;
+
+  /// No description provided for @reviewKeepId.
+  ///
+  /// In fil, this message translates to:
+  /// **'Huwag muna'**
+  String get reviewKeepId;
+
+  /// No description provided for @reviewDeleted.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nabura na ang ID'**
+  String get reviewDeleted;
+
   /// No description provided for @adminRemove.
   ///
   /// In fil, this message translates to:

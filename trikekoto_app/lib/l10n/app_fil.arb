@@ -290,6 +290,12 @@
       }
     }
   },
+  "reviewDeleteId": "Burahin ang ID",
+  "reviewDeleteQuestion": "Burahin ang litrato ng ID?",
+  "reviewDeleteAfterApproval": "Aprubado na. Burahin na ang litrato ng ID?",
+  "reviewDeleteBody": "Mabubura ang litrato at ang mga detalye ng ID. Mananatili ang pagkumpirma — hindi na kailangang magpadala ulit ng ID ang tao. Kusa rin itong mabubura 90 araw matapos ipadala.",
+  "reviewKeepId": "Huwag muna",
+  "reviewDeleted": "Nabura na ang ID",
   "adminRemove": "Alisin",
   "adminRemoveCommuter": "Alisin ang pasahero",
   "adminRemoveCommuterQuestion": "Alisin ang account ni {name}?",

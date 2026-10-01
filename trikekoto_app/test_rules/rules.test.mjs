@@ -789,6 +789,52 @@ describe('drivers — registration and verification', () => {
     );
   });
 
+  it('lets a driver store a push token at any status', async () => {
+    // It is how the chapter reaches a driver who has never been online: the
+    // approval notice. A pending driver cannot go online, so presence — which
+    // carries the other token — never runs for them.
+    for (const status of ['pending', 'approved', 'suspended']) {
+      await seedDriver(DRIVER_EMAIL, status);
+      await assertSucceeds(
+        updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
+          fcmToken: 'token-abc',
+          updatedAt: serverTimestamp(),
+        }),
+      );
+    }
+  });
+
+  it('and cannot smuggle anything else in beside it', async () => {
+    await seedDriver(DRIVER_EMAIL, 'approved');
+    await assertFails(
+      updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
+        fcmToken: 'token-abc',
+        plateNumber: 'XYZ9999',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    // A real change of status, not the value it already holds: rewriting a
+    // field with what is already there changes no key at all, so the rule
+    // never sees it.
+    await assertFails(
+      updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
+        fcmToken: 'token-abc',
+        status: 'suspended',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("nor write one onto another driver's profile", async () => {
+    await seedDriver(OTHER_DRIVER_EMAIL, 'approved');
+    await assertFails(
+      updateDoc(doc(driver(), 'drivers', OTHER_DRIVER_EMAIL), {
+        fcmToken: 'token-abc',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
   it('lets an admin remove a driver', async () => {
     // Deleting this one document is the whole of what the admin panel does;
     // onDriverRemoved takes apart everything else the profile was attached to.
