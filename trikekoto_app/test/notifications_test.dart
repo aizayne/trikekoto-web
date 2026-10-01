@@ -104,6 +104,7 @@ Future<void> _pumpDashboard(
       myIdVerifiedProvider.overrideWith((ref) => Stream.value(true)),
       myOffersProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       presenceProvider.overrideWith(_OfflinePresence.new),
       myNotificationsProvider.overrideWith((ref) => Stream.value(notices)),
     ],

@@ -943,6 +943,24 @@ abstract class L {
   /// **'Bagong ride offer'**
   String get driverNewOffer;
 
+  /// No description provided for @driverSharedOffer.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kasabay na pasahero'**
+  String get driverSharedOffer;
+
+  /// No description provided for @driverSharedOfferBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dadaan ito sa daan ninyo ngayon. Kayo ang bahala kung kaya pa.'**
+  String get driverSharedOfferBody;
+
+  /// No description provided for @driverSharedRides.
+  ///
+  /// In fil, this message translates to:
+  /// **'{count} pasahero ang nasa inyo ngayon'**
+  String driverSharedRides(String count);
+
   /// No description provided for @driverRoute.
   ///
   /// In fil, this message translates to:
@@ -2358,6 +2376,60 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.'**
   String get bookOutsideAreaBody;
+
+  /// No description provided for @cfgSharingTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kasabay na pasahero'**
+  String get cfgSharingTitle;
+
+  /// No description provided for @cfgSharingIntro.
+  ///
+  /// In fil, this message translates to:
+  /// **'Sa regular na biyahe, puwedeng sunduin ng driver ang ibang pasaherong pareho ang daan. Hindi ito nangyayari sa special — binayaran na roon ang buong tricycle.'**
+  String get cfgSharingIntro;
+
+  /// No description provided for @cfgSharingSwitch.
+  ///
+  /// In fil, this message translates to:
+  /// **'Puwede ang kasabay'**
+  String get cfgSharingSwitch;
+
+  /// No description provided for @cfgSharingOn.
+  ///
+  /// In fil, this message translates to:
+  /// **'Inaalok ang driver na may pasahero kung pareho ang daan.'**
+  String get cfgSharingOn;
+
+  /// No description provided for @cfgSharingOff.
+  ///
+  /// In fil, this message translates to:
+  /// **'Isang pasahero lang bawat biyahe.'**
+  String get cfgSharingOff;
+
+  /// No description provided for @cfgSharingMaxLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Pinakamaraming pasahero'**
+  String get cfgSharingMaxLabel;
+
+  /// No description provided for @cfgSharingMaxHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kasama ang unang pasahero. 3 ang default.'**
+  String get cfgSharingMaxHelp;
+
+  /// No description provided for @cfgSharingDetourLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Dagdag na layo (km)'**
+  String get cfgSharingDetourLabel;
+
+  /// No description provided for @cfgSharingDetourHelp.
+  ///
+  /// In fil, this message translates to:
+  /// **'Gaano kalayo puwedeng lumihis para sa susunod na pasahero. 1.5 km ang default.'**
+  String get cfgSharingDetourHelp;
 
   /// No description provided for @cfgAreaTitle.
   ///

@@ -138,6 +138,7 @@ Future<void> _pumpDriver(WidgetTester tester, {GeoPoint? at}) async {
       myOffersProvider
           .overrideWith((ref) => Stream.value([_ride(RideStatus.searching)])),
       myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       presenceProvider.overrideWith(_OnlinePresence.new),
       driverPositionProvider.overrideWith(() => _FixedPosition(at)),
     ],

@@ -283,6 +283,33 @@ technical one.
 
 ---
 
+## `config/app` — shared rides and the service area
+
+Two settings added on 2026-10-02, both read by the dispatch functions and the
+app from the same document.
+
+| Field | Default | What it does |
+|---|---|---|
+| `sharedRidesEnabled` | `true` | Whether a driver carrying a regular passenger may be offered another ride going the same way. |
+| `maxSharedPassengers` | `3` | Passengers one tricycle may carry at once, the first included. Clamped to 1–5. |
+| `maxDetourKm` | `1.5` | How far the trike may go out of its way for the next passenger. Clamped to 0–20. |
+| `serviceArea` | — | `{label, lat, lng, radiusKm}`. A booking outside it is **flagged, not refused**. `radiusKm: 0` turns the warning off, which is the state of a chapter that has not configured one. |
+
+**Sharing is decided server-side**, in `canShare` (functions/src/dispatch.ts),
+from the rides a driver already holds. Four refusals: a special trip is the
+whole tricycle and neither shares nor joins; the tricycle fills up; the new
+trip has to stay within the detour budget measured against *every* passenger
+aboard, not the average; and a ride without coordinates cannot be measured, so
+it is not shared. The driver's app shows each ride as its own card with its own
+start and finish, because they end at different places.
+
+**The service area warns rather than fences.** A resettlement's tricycles do
+leave the resettlement, and refusing those trips would turn the most useful
+rides into errors. The warning tells a commuter the one thing they cannot
+otherwise know: there may be no driver near that end of the trip.
+
+---
+
 ## Removing an account
 
 Two paths, one shape: a client deletes the one document it is allowed to

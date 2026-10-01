@@ -86,4 +86,42 @@ void main() {
       expect(read.center.longitude, closeTo(_centre.longitude, 0.000001));
     });
   });
+
+  group('shared rides, as a chapter configures them', () {
+    test('a chapter that has never opened the screen shares', () {
+      // Sharing is how a regular trip has always worked at a terminal.
+      const d = SharingConfig();
+      expect(SharingConfig.fromMap(null).enabled, isTrue);
+      expect(SharingConfig.fromMap(const {}).maxPassengers, d.maxPassengers);
+      expect(SharingConfig.fromMap(const {}).maxDetourKm, d.maxDetourKm);
+    });
+
+    test('and one that has turned it off keeps it off', () {
+      expect(
+        SharingConfig.fromMap(const {'sharedRidesEnabled': false}).enabled,
+        isFalse,
+      );
+    });
+
+    test('impossible values are clamped rather than trusted', () {
+      final big = SharingConfig.fromMap(
+          const {'maxSharedPassengers': 40, 'maxDetourKm': 500});
+      expect(big.maxPassengers, 5);
+      expect(big.maxDetourKm, 20);
+
+      final small = SharingConfig.fromMap(
+          const {'maxSharedPassengers': 0, 'maxDetourKm': -3});
+      expect(small.maxPassengers, 1);
+      expect(small.maxDetourKm, 0);
+    });
+
+    test('round-trips through the document an admin saves', () {
+      const written = SharingConfig(
+          enabled: false, maxPassengers: 2, maxDetourKm: 0.8);
+      final read = SharingConfig.fromMap(written.toMap());
+      expect(read.enabled, isFalse);
+      expect(read.maxPassengers, 2);
+      expect(read.maxDetourKm, 0.8);
+    });
+  });
 }

@@ -70,11 +70,25 @@ class _FixedTheme extends ThemeController {
   ThemeMode build() => ThemeMode.light;
 }
 
+
+Ride _ride(String id, {String status = 'accepted', String commuter = 'Maria'}) =>
+    Ride.fromMap({
+      'commuterUid': 'u-$id',
+      'commuterName': commuter,
+      'commuterPhone': '09181234567',
+      'status': status,
+      'serviceType': 'regular',
+      'assignedDriver': 'juan@toda.ph',
+      'pickup': {'label': 'Plaza'},
+      'dropoff': {'label': 'Palengke'},
+    }, id);
+
 Widget _harness({
   required Driver? driver,
   bool online = false,
   List<Ride> offers = const [],
   Ride? activeRide,
+  List<Ride>? activeRides,
   PresenceController Function()? presence,
   PresenceStatus? status,
   bool idVerified = true,
@@ -86,6 +100,8 @@ Widget _harness({
       myIdVerifiedProvider.overrideWith((ref) => Stream.value(idVerified)),
       myOffersProvider.overrideWith((ref) => Stream.value(offers)),
       myActiveRideProvider.overrideWith((ref) => Stream.value(activeRide)),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value(
+          activeRides ?? (activeRide == null ? const <Ride>[] : [activeRide]))),
       presenceProvider
           .overrideWith(presence ?? () => _FakePresence(online: online)),
       if (status != null)
@@ -104,7 +120,70 @@ Widget _harness({
   );
 }
 
+/// Pumps on a tall surface: two ride cards do not fit the default 800x600
+/// test viewport, and a finder then reports "0 widgets" for content that
+/// renders perfectly on a phone.
+Future<void> _pumpTall(WidgetTester tester, Widget widget) async {
+  tester.view.physicalSize = const Size(1200, 3200);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+  await tester.pumpWidget(widget);
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  group('driver dashboard — shared rides', () {
+    testWidgets('two passengers at once are both on screen', (tester) async {
+      await _pumpTall(tester, _harness(
+        driver: _driver(DriverStatus.approved),
+        activeRides: [_ride('r1'), _ride('r2', commuter: 'Ana')],
+      ));
+
+      expect(find.text('2 passengers with you now'), findsOneWidget);
+      expect(find.text('Maria'), findsOneWidget);
+      expect(find.text('Ana'), findsOneWidget);
+      // Each ride keeps its own controls: they start and finish separately.
+      expect(find.text('Start trip'), findsNWidgets(2));
+    });
+
+    testWidgets('one passenger says nothing about sharing', (tester) async {
+      await _pumpTall(tester, _harness(
+        driver: _driver(DriverStatus.approved),
+        activeRides: [_ride('r1')],
+      ));
+
+      expect(find.textContaining('passengers with you'), findsNothing);
+      expect(find.text('Start trip'), findsOneWidget);
+    });
+
+    testWidgets('an offer mid-ride says why it arrived', (tester) async {
+      // The server only offers a share that stays on the way; the driver is
+      // told that, because an offer during a ride otherwise looks like a bug.
+      await _pumpTall(tester, _harness(
+        driver: _driver(DriverStatus.approved),
+        activeRides: [_ride('r1')],
+        offers: [_ride('r9', status: 'searching', commuter: 'Ben')],
+      ));
+
+      expect(find.text('Another passenger, same way'), findsOneWidget);
+      expect(find.textContaining('on your current route'), findsOneWidget);
+      expect(find.text('Accept'), findsOneWidget);
+    });
+
+    testWidgets('and no empty offer box while carrying someone',
+        (tester) async {
+      await _pumpTall(tester, _harness(
+        driver: _driver(DriverStatus.approved),
+        activeRides: [_ride('r1')],
+      ));
+
+      expect(find.text('Waiting for a ride'), findsNothing);
+    });
+  });
+
   group('driver dashboard — verification gate', () {
     testWidgets('an approved driver gets the online toggle', (tester) async {
       await tester.pumpWidget(_harness(driver: _driver(DriverStatus.approved)));

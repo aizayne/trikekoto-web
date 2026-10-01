@@ -297,15 +297,55 @@ class _ActiveRideSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rideAsync = ref.watch(myActiveRideProvider);
+    final ridesAsync = ref.watch(myActiveRidesProvider);
 
-    return rideAsync.when(
+    return ridesAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (e, _) => Text(describeError(e)),
-      data: (ride) {
-        if (ride == null) return const SizedBox.shrink();
-        final actions = ref.read(rideActionsProvider);
+      data: (rides) {
+        if (rides.isEmpty) return const SizedBox.shrink();
 
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Said once, above the cards, rather than on each: a driver
+            // carrying two passengers needs to know it at a glance, and the
+            // drop-off order is the order they are listed in.
+            if (rides.length > 1) ...[
+              Row(
+                children: [
+                  Icon(Icons.groups_outlined,
+                      size: AppSpacing.iconSm, color: context.scheme.primary),
+                  const Gap(AppSpacing.sm),
+                  Text(context.l.driverSharedRides('${rides.length}'),
+                      style: context.text.titleSmall),
+                ],
+              ),
+              const Gap(AppSpacing.md),
+            ],
+            for (final ride in rides) ...[
+              _ActiveRideCard(ride: ride),
+              if (ride != rides.last) const Gap(AppSpacing.md),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One ride a driver is carrying, with the controls for that ride alone.
+class _ActiveRideCard extends ConsumerWidget {
+  const _ActiveRideCard({required this.ride});
+
+  final Ride ride;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actions = ref.read(rideActionsProvider);
+
+    return Builder(
+      builder: (context) {
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
@@ -396,16 +436,17 @@ class _OffersSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offersAsync = ref.watch(myOffersProvider);
-    final activeRide = ref.watch(myActiveRideProvider).value;
-
-    // A driver already carrying someone should not be shown new offers.
-    if (activeRide != null) return const SizedBox.shrink();
+    final carrying = ref.watch(myActiveRidesProvider).value ?? const <Ride>[];
 
     return offersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Text(describeError(e)),
       data: (offers) {
         if (offers.isEmpty) {
+          // Nothing to say while a ride is under way: the ride cards above
+          // already fill the screen, and "waiting for a ride" under them
+          // would read as though the current one had ended.
+          if (carrying.isNotEmpty) return const SizedBox.shrink();
           final online = ref.watch(presenceProvider);
           return AppEmptyState(
             icon: online
@@ -432,8 +473,19 @@ class _OffersSection extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(context.l.driverNewOffer,
+                      Text(
+                          carrying.isEmpty
+                              ? context.l.driverNewOffer
+                              : context.l.driverSharedOffer,
                           style: Theme.of(context).textTheme.titleMedium),
+                      if (carrying.isNotEmpty) ...[
+                        const Gap(AppSpacing.xs),
+                        // Why this arrived mid-ride, in the driver's terms:
+                        // the server only offers a share that stays on the
+                        // way, and the driver decides whether it really does.
+                        Text(context.l.driverSharedOfferBody,
+                            style: context.text.bodySmall),
+                      ],
                       const Gap(AppSpacing.sm),
                       // Before the route: whether the driver may pick anyone
                       // else up decides the accept, not only the drive.

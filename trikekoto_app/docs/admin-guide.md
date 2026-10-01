@@ -105,6 +105,35 @@ remove.
 **This cannot be undone.** A removed driver registers again from scratch, and
 their ID has to be checked again.
 
+### Shared rides
+
+**Dispatch → Shared rides.** On a *regular* trip a driver may be offered a
+second passenger going the same way; on a *special* trip never, because that
+passenger has paid for the whole tricycle.
+
+- **Allow sharing** — off means one passenger per trip, chapter-wide.
+- **Most passengers at once** — counting the first. Three by default. A
+  tricycle seats more, but a driver juggling four drop-offs from a phone is
+  how somebody gets taken past their street.
+- **Extra distance (km)** — how far the trike may go out of its way for the
+  next passenger. 1.5 km by default. The check is made against *every*
+  passenger already aboard, so nobody is taken the long way round because the
+  average looked acceptable.
+
+The driver sees each ride as its own card, with its own **Simulan ang biyahe**
+and **Tapusin ang biyahe**, and a line above them saying how many passengers
+they are carrying.
+
+### The service area
+
+**Dispatch → Service area.** Set the centre by tapping the map, give the area
+a name and a radius, and a commuter whose pickup or drop-off falls outside it
+is told so — and can still book. It is a warning, not a barrier: trips to the
+highway or the hospital leave the area and are still trips the chapter takes.
+
+Leave the radius at **0** until you have set the centre; 0 means no warning at
+all, which is better than a warning that fires on every legitimate booking.
+
 ### Removing a commuter
 
 Open **History** from the dashboard and find a ride the person booked. Their

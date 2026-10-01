@@ -10,6 +10,9 @@ const {
   msUntilLapsed,
   isStale,
   isAbandoned,
+  canShare,
+  detourKm,
+  SHARING_FALLBACK,
   needsNoDriverNotice,
 } = require('../lib/dispatch.js');
 
@@ -84,7 +87,7 @@ test('only live offers on other searching rides make a driver busy', () => {
       { id: 'r5', status: 'searching', dispatch: { offeredTo: null, offerExpiresAt: null } },
     ],
     NOW_OFFERS,
-    'r4',
+    { exceptRideId: 'r4' },
   );
   assert.deepEqual([...busy], ['live']);
 });
@@ -178,6 +181,109 @@ test('an app too old to check in is never dropped for silence', () => {
   // It only writes when it moves, so a parked driver on one looks exactly
   // like a phone switched off.
   assert.equal(isAbandoned({ ...row('old', 1), updatedAt: ago(86400) }, NOW), false);
+});
+
+
+// ── Shared rides ────────────────────────────────────────────
+// San Marcelino plaza is `pickup`. These sit on a line north of it, so a
+// passenger going the same way adds almost nothing and one going back adds
+// twice the distance.
+const upRoad = (km) => ({ latitude: pickup.latitude + km / 111.2, longitude: pickup.longitude });
+const trip = (id, fromKm, toKm, extra = {}) => ({
+  id,
+  status: 'in_transit',
+  assignedDriver: 'juan',
+  serviceType: 'regular',
+  pickup: { geopoint: at(fromKm) },
+  dropoff: { geopoint: at(toKm) },
+  ...extra,
+});
+
+test('a driver with nobody aboard is always free', () => {
+  assert.equal(canShare([], trip('new', 0, 3), upRoad(0)), true);
+});
+
+test('a passenger going the same way rides along', () => {
+  // Driver is at 1 km heading to 4 km; the new trip runs 1.2 km to 3.5 km.
+  const current = trip('aboard', 0, 4);
+  const candidate = trip('next', 1.2, 3.5);
+  assert.ok(detourKm(upRoad(1), current, candidate) < 1);
+  assert.equal(canShare([current], candidate, upRoad(1)), true);
+});
+
+test('a passenger going the other way does not', () => {
+  const current = trip('aboard', 0, 4);
+  const candidate = trip('next', -2, -3);
+  assert.equal(canShare([current], candidate, upRoad(1)), false);
+});
+
+test('a special trip is the whole tricycle, in both directions', () => {
+  const regular = trip('aboard', 0, 4);
+  const special = trip('next', 1.2, 3.5, { serviceType: 'special' });
+  // Nobody joins a special trip, and a special trip joins nobody.
+  assert.equal(canShare([regular], special, upRoad(1)), false);
+  assert.equal(
+    canShare([trip('aboard', 0, 4, { serviceType: 'special' })], trip('next', 1.2, 3.5), upRoad(1)),
+    false,
+  );
+});
+
+test('the tricycle fills up', () => {
+  const aboard = [trip('a', 0, 4), trip('b', 0.5, 4), trip('c', 0.6, 4)];
+  assert.equal(canShare(aboard, trip('d', 1.2, 3.5), upRoad(1)), false, 'three is the default cap');
+  assert.equal(
+    canShare(aboard.slice(0, 2), trip('d', 1.2, 3.5), upRoad(1)),
+    true,
+    'two still has room',
+  );
+});
+
+test('every passenger aboard has to still be on the way, not the average', () => {
+  // One going north, one going south: a candidate that suits one takes the
+  // other a long way round.
+  const north = trip('north', 0, 4);
+  const south = trip('south', 0, -4);
+  assert.equal(canShare([north, south], trip('next', 1.2, 3.5), upRoad(1)), false);
+});
+
+test('a ride with no coordinates is never shared', () => {
+  // Rides from the old web build carry labels and no points. A detour that
+  // cannot be measured must not be assumed small.
+  const legacy = { id: 'old', status: 'accepted', assignedDriver: 'juan', dropoff: {} };
+  assert.equal(detourKm(upRoad(1), legacy, trip('next', 1.2, 3.5)), null);
+  assert.equal(canShare([legacy], trip('next', 1.2, 3.5), upRoad(1)), false);
+  assert.equal(canShare([trip('aboard', 0, 4)], { id: 'n', pickup: {}, dropoff: {} }, upRoad(1)), false);
+});
+
+test('and neither is one whose driver has not said where they are', () => {
+  assert.equal(canShare([trip('aboard', 0, 4)], trip('next', 1.2, 3.5), undefined), false);
+});
+
+test('sharing can be switched off for a chapter', () => {
+  const off = { ...SHARING_FALLBACK, enabled: false };
+  assert.equal(canShare([trip('aboard', 0, 4)], trip('next', 1.2, 3.5), upRoad(1), off), false);
+  assert.equal(canShare([], trip('next', 1.2, 3.5), upRoad(1), off), true, 'an empty trike is still free');
+});
+
+test('dispatch offers a sharing driver the ride that suits them', () => {
+  const rides = [trip('aboard', 0, 4)];
+  const sameWay = unavailableDrivers(rides, NOW_OFFERS, {
+    candidate: trip('next', 1.2, 3.5),
+    at: new Map([['juan', upRoad(1)]]),
+  });
+  assert.deepEqual([...sameWay], [], 'free for a trip going their way');
+
+  const otherWay = unavailableDrivers(rides, NOW_OFFERS, {
+    candidate: trip('next', -2, -3),
+    at: new Map([['juan', upRoad(1)]]),
+  });
+  assert.deepEqual([...otherWay], ['juan'], 'busy for one that is not');
+});
+
+test('and keeps them busy when no candidate is named', () => {
+  // The sweep asking in general, before it knows which ride it is placing.
+  const busy = unavailableDrivers([trip('aboard', 0, 4)], NOW_OFFERS);
+  assert.deepEqual([...busy], ['juan']);
 });
 
 // ── Telling the commuter nobody has accepted ────────────────

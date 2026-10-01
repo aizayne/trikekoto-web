@@ -491,6 +491,18 @@ class LFil extends L {
   String get driverNewOffer => 'Bagong ride offer';
 
   @override
+  String get driverSharedOffer => 'Kasabay na pasahero';
+
+  @override
+  String get driverSharedOfferBody =>
+      'Dadaan ito sa daan ninyo ngayon. Kayo ang bahala kung kaya pa.';
+
+  @override
+  String driverSharedRides(String count) {
+    return '$count pasahero ang nasa inyo ngayon';
+  }
+
+  @override
   String driverRoute(String from, String to) {
     return '$from  →  $to';
   }
@@ -1309,6 +1321,36 @@ class LFil extends L {
   @override
   String get bookOutsideAreaBody =>
       'Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.';
+
+  @override
+  String get cfgSharingTitle => 'Kasabay na pasahero';
+
+  @override
+  String get cfgSharingIntro =>
+      'Sa regular na biyahe, puwedeng sunduin ng driver ang ibang pasaherong pareho ang daan. Hindi ito nangyayari sa special — binayaran na roon ang buong tricycle.';
+
+  @override
+  String get cfgSharingSwitch => 'Puwede ang kasabay';
+
+  @override
+  String get cfgSharingOn =>
+      'Inaalok ang driver na may pasahero kung pareho ang daan.';
+
+  @override
+  String get cfgSharingOff => 'Isang pasahero lang bawat biyahe.';
+
+  @override
+  String get cfgSharingMaxLabel => 'Pinakamaraming pasahero';
+
+  @override
+  String get cfgSharingMaxHelp => 'Kasama ang unang pasahero. 3 ang default.';
+
+  @override
+  String get cfgSharingDetourLabel => 'Dagdag na layo (km)';
+
+  @override
+  String get cfgSharingDetourHelp =>
+      'Gaano kalayo puwedeng lumihis para sa susunod na pasahero. 1.5 km ang default.';
 
   @override
   String get cfgAreaTitle => 'Saklaw ng serbisyo';

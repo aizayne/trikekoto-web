@@ -33,6 +33,10 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
   final _areaLabel = TextEditingController();
   GeoPoint? _areaCenter;
 
+  /// Shared rides. A switch rather than a number, because "off" is a policy
+  /// a chapter may hold and not a value to tune.
+  bool _sharing = true;
+
   bool _busy = false;
   bool _loaded = false;
 
@@ -48,7 +52,7 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
   /// Seeds the form once, from whatever the document holds — or from the
   /// compiled defaults when it does not exist yet, which is the normal state
   /// on a fresh project.
-  void _seed(DispatchConfig dispatch, ServiceArea area) {
+  void _seed(DispatchConfig dispatch, ServiceArea area, SharingConfig share) {
     if (_loaded) return;
     _loaded = true;
     final values = configDocumentFrom(dispatch);
@@ -59,6 +63,12 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
         TextEditingController(text: '${area.radiusKm}');
     _areaLabel.text = area.label;
     _areaCenter = area.center;
+
+    _sharing = share.enabled;
+    _fields['maxSharedPassengers'] =
+        TextEditingController(text: '${share.maxPassengers}');
+    _fields['maxDetourKm'] =
+        TextEditingController(text: '${share.maxDetourKm}');
   }
 
   /// Picks the centre of the area on the same map commuters set a pickup on.
@@ -90,6 +100,7 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
         if (entry.key == 'serviceAreaRadiusKm') continue;
         payload[entry.key] = num.parse(entry.value.text.trim());
       }
+      payload['sharedRidesEnabled'] = _sharing;
 
       final centre = _areaCenter ?? ServiceArea.fallback.center;
       final label = _areaLabel.text.trim();
@@ -118,7 +129,11 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _seed(ref.watch(dispatchConfigProvider), ref.watch(serviceAreaProvider));
+    _seed(
+      ref.watch(dispatchConfigProvider),
+      ref.watch(serviceAreaProvider),
+      ref.watch(sharingConfigProvider),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l.cfgTitle)),
@@ -163,6 +178,43 @@ class _ConfigEditorScreenState extends ConsumerState<ConfigEditorScreen> {
                 max: DispatchDefaults.maxDriversToTry.toDouble(),
                 integer: true,
               ),
+
+              const Gap(AppSpacing.xxl),
+              Text(context.l.cfgSharingTitle, style: context.text.titleMedium),
+              const Gap(AppSpacing.md),
+              _Explainer(context.l.cfgSharingIntro),
+              const Gap(AppSpacing.md),
+              Card(
+                child: SwitchListTile(
+                  value: _sharing,
+                  onChanged: _busy
+                      ? null
+                      : (on) => setState(() => _sharing = on),
+                  title: Text(context.l.cfgSharingSwitch),
+                  subtitle: Text(_sharing
+                      ? context.l.cfgSharingOn
+                      : context.l.cfgSharingOff),
+                ),
+              ),
+              if (_sharing) ...[
+                const Gap(AppSpacing.md),
+                _numberField(
+                  'maxSharedPassengers',
+                  context.l.cfgSharingMaxLabel,
+                  context.l.cfgSharingMaxHelp,
+                  min: 1,
+                  max: 5,
+                  integer: true,
+                ),
+                const Gap(AppSpacing.md),
+                _numberField(
+                  'maxDetourKm',
+                  context.l.cfgSharingDetourLabel,
+                  context.l.cfgSharingDetourHelp,
+                  min: 0,
+                  max: 20,
+                ),
+              ],
 
               const Gap(AppSpacing.xxl),
               Text(context.l.cfgAreaTitle, style: context.text.titleMedium),

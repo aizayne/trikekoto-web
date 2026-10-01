@@ -50,6 +50,54 @@ class DispatchConfig {
       };
 }
 
+/// Whether and how a chapter shares its tricycles.
+///
+/// Mirrors `SharingConfig` in functions/src/dispatch.ts, which is where the
+/// decision is actually made — this is what the admin screen edits and what
+/// the driver app explains.
+class SharingConfig {
+  const SharingConfig({
+    this.enabled = true,
+    this.maxPassengers = 3,
+    this.maxDetourKm = 1.5,
+  });
+
+  final bool enabled;
+
+  /// Passengers one tricycle may carry at once, the first one included.
+  final int maxPassengers;
+
+  /// How far out of its way a trike may go for the next passenger.
+  final double maxDetourKm;
+
+  factory SharingConfig.fromMap(Map<String, dynamic>? data) {
+    final d = data ?? const <String, dynamic>{};
+    const fallback = SharingConfig();
+    return SharingConfig(
+      // Absent reads as on: sharing is how a regular trip has always worked
+      // at a terminal, and a chapter that has never opened this screen
+      // should get it.
+      enabled: d['sharedRidesEnabled'] as bool? ?? fallback.enabled,
+      maxPassengers:
+          ((d['maxSharedPassengers'] as num?)?.toInt() ?? fallback.maxPassengers)
+              .clamp(1, 5),
+      maxDetourKm:
+          ((d['maxDetourKm'] as num?)?.toDouble() ?? fallback.maxDetourKm)
+              .clamp(0, 20),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'sharedRidesEnabled': enabled,
+        'maxSharedPassengers': maxPassengers,
+        'maxDetourKm': maxDetourKm,
+      };
+}
+
+final sharingConfigProvider = Provider<SharingConfig>((ref) {
+  return SharingConfig.fromMap(ref.watch(appConfigProvider).value);
+});
+
 /// The area a chapter actually serves, as a centre and a radius.
 ///
 /// **It warns; it does not refuse.** A resettlement's tricycles do leave the

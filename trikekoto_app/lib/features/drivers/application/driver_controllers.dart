@@ -39,7 +39,27 @@ final myOffersProvider = StreamProvider<List<Ride>>((ref) {
       .map((s) => s.docs.map((d) => d.data()).toList());
 });
 
+/// Every ride this driver is carrying, oldest first.
+///
+/// A regular trip may be shared with another passenger going the same way,
+/// so a driver can hold more than one at once. The server decides who may
+/// share — see `canShare` in functions/src/dispatch.ts — and this is simply
+/// what they ended up with.
+final myActiveRidesProvider = StreamProvider<List<Ride>>((ref) {
+  final email = ref.watch(driverEmailProvider);
+  if (email.isEmpty) return Stream.value(const <Ride>[]);
+  return ref
+      .watch(refsProvider)
+      .activeRidesFor(email)
+      .snapshots()
+      .map((s) => s.docs.map((d) => d.data()).toList().reversed.toList());
+});
+
 /// The ride this driver is currently running, if any.
+///
+/// The oldest of [myActiveRidesProvider] — the passenger who has been aboard
+/// longest. Presence asks this to stamp `currentRideId`, and it is the ride
+/// a screen means when it can only show one.
 final myActiveRideProvider = StreamProvider<Ride?>((ref) {
   final email = ref.watch(driverEmailProvider);
   if (email.isEmpty) return Stream.value(null);

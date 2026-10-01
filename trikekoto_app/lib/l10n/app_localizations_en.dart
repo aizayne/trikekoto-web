@@ -488,6 +488,18 @@ class LEn extends L {
   String get driverNewOffer => 'New ride offer';
 
   @override
+  String get driverSharedOffer => 'Another passenger, same way';
+
+  @override
+  String get driverSharedOfferBody =>
+      'This one is on your current route. You decide whether it still fits.';
+
+  @override
+  String driverSharedRides(String count) {
+    return '$count passengers with you now';
+  }
+
+  @override
   String driverRoute(String from, String to) {
     return '$from  →  $to';
   }
@@ -1299,6 +1311,36 @@ class LEn extends L {
   @override
   String get bookOutsideAreaBody =>
       'You can still book, but there may be no driver nearby, so the wait may be longer.';
+
+  @override
+  String get cfgSharingTitle => 'Shared rides';
+
+  @override
+  String get cfgSharingIntro =>
+      'On a regular trip, a driver may pick up another passenger going the same way. It never happens on a special trip — that one has paid for the whole tricycle.';
+
+  @override
+  String get cfgSharingSwitch => 'Allow sharing';
+
+  @override
+  String get cfgSharingOn =>
+      'A driver carrying someone is offered a ride going the same way.';
+
+  @override
+  String get cfgSharingOff => 'One passenger per trip.';
+
+  @override
+  String get cfgSharingMaxLabel => 'Most passengers at once';
+
+  @override
+  String get cfgSharingMaxHelp => 'Counting the first one. The default is 3.';
+
+  @override
+  String get cfgSharingDetourLabel => 'Extra distance (km)';
+
+  @override
+  String get cfgSharingDetourHelp =>
+      'How far the trike may go out of its way for the next passenger. The default is 1.5 km.';
 
   @override
   String get cfgAreaTitle => 'Service area';

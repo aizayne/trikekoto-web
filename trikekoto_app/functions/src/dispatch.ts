@@ -44,11 +44,103 @@ export type RideOfferState = {
   id: string;
   status?: string;
   assignedDriver?: string | null;
+  /** `regular` or `special`. Absent on rides booked before trip types. */
+  serviceType?: string;
+  pickup?: { geopoint?: LatLng | null };
+  dropoff?: { geopoint?: LatLng | null };
   dispatch?: {
     offeredTo?: string | null;
     offerExpiresAt?: { toDate(): Date } | null;
   };
 };
+
+/** How a chapter wants its tricycles shared. */
+export type SharingConfig = {
+  enabled: boolean;
+  /** Passengers one tricycle may carry at once, the first one included. */
+  maxPassengers: number;
+  /** How far out of its way a trike may go for the next passenger. */
+  maxDetourKm: number;
+};
+
+export const SHARING_FALLBACK: SharingConfig = {
+  enabled: true,
+  maxPassengers: 3,
+  maxDetourKm: 1.5,
+};
+
+/** A ride a driver is already carrying. */
+function isUnderway(r: RideOfferState): boolean {
+  return r.status === 'accepted' || r.status === 'in_transit';
+}
+
+function isSpecial(r: RideOfferState | undefined): boolean {
+  return r?.serviceType === 'special';
+}
+
+/**
+ * How much further a driver travels to take [candidate] on the way.
+ *
+ * Measured against the trip they are already on: go to the new pickup, carry
+ * that passenger to their drop-off, then continue to the one already aboard —
+ * minus what the original trip would have cost from here. A passenger going
+ * the same way adds almost nothing; one going the opposite way adds twice the
+ * distance, which is the number this exists to catch.
+ *
+ * Null when any end is missing coordinates. Rides from the old web build have
+ * labels and no points, and a detour that cannot be measured must not be
+ * assumed small.
+ */
+export function detourKm(
+  from: LatLng,
+  current: RideOfferState,
+  candidate: RideOfferState,
+): number | null {
+  const theirDrop = current.dropoff?.geopoint;
+  const pick = candidate.pickup?.geopoint;
+  const drop = candidate.dropoff?.geopoint;
+  if (!theirDrop || !pick || !drop) return null;
+
+  const direct = haversineKm(from, theirDrop);
+  const shared =
+    haversineKm(from, pick) + haversineKm(pick, drop) + haversineKm(drop, theirDrop);
+  return shared - direct;
+}
+
+/**
+ * Whether a driver already carrying [current] may be offered [candidate].
+ *
+ * Four refusals, in the order a driver would give them:
+ *
+ * - **A special trip is the whole tricycle.** The passenger paid five fares
+ *   for exactly that, so a special ride neither shares nor joins.
+ * - **The tricycle fills up.** Three passengers by default; a TODA tricycle
+ *   seats more, but a driver juggling four drop-offs from a phone is how
+ *   somebody gets taken past their street.
+ * - **The new trip has to be on the way.** Beyond the detour budget it is not
+ *   sharing, it is a second trip the first passenger pays for in time.
+ * - **Unmeasurable is unshareable.** A ride with no coordinates cannot be
+ *   checked, so it is not offered as a share.
+ */
+export function canShare(
+  current: readonly RideOfferState[],
+  candidate: RideOfferState,
+  at: LatLng | undefined,
+  config: SharingConfig = SHARING_FALLBACK,
+): boolean {
+  if (!config.enabled || current.length === 0) return current.length === 0;
+  if (isSpecial(candidate) || current.some(isSpecial)) return false;
+  if (current.length >= config.maxPassengers) return false;
+  if (!at) return false;
+
+  // Against every passenger already aboard: the one who would be taken
+  // furthest out of their way decides it, not the average.
+  for (const ride of current) {
+    const extra = detourKm(at, ride, candidate);
+    if (extra === null || extra > config.maxDetourKm) return false;
+  }
+  return true;
+}
 
 /** Great-circle distance in kilometres — the same measure the client sorts by. */
 export function haversineKm(a: LatLng, b: LatLng): number {
@@ -182,20 +274,40 @@ export function pickByRoad(
 export function unavailableDrivers(
   rides: readonly RideOfferState[],
   now: Date,
-  exceptRideId?: string,
+  opts: {
+    exceptRideId?: string;
+    /** The ride being dispatched, when sharing is to be considered. */
+    candidate?: RideOfferState;
+    /** Where each driver last reported being, for the detour check. */
+    at?: ReadonlyMap<string, LatLng>;
+    sharing?: SharingConfig;
+  } = {},
 ): Set<string> {
   const busy = new Set<string>();
+  const carrying = new Map<string, RideOfferState[]>();
+
   for (const r of rides) {
-    // Carrying a passenger. The ride this dispatch is for cannot be one of
-    // these — it is still searching — so there is nothing to except.
-    if (r.status === 'accepted' || r.status === 'in_transit') {
-      if (r.assignedDriver) busy.add(r.assignedDriver);
+    if (isUnderway(r)) {
+      if (!r.assignedDriver) continue;
+      const list = carrying.get(r.assignedDriver) ?? [];
+      list.push(r);
+      carrying.set(r.assignedDriver, list);
       continue;
     }
-    if (r.id === exceptRideId || r.status !== 'searching') continue;
+    if (r.id === opts.exceptRideId || r.status !== 'searching') continue;
     const to = r.dispatch?.offeredTo;
     const expires = r.dispatch?.offerExpiresAt?.toDate();
     if (to && expires && expires > now) busy.add(to);
+  }
+
+  // A driver with a passenger is unavailable unless this particular ride can
+  // ride along. Without a candidate — the sweep asking in general — they are
+  // simply unavailable, which is the old behaviour and the safe one.
+  for (const [driver, rides] of carrying) {
+    const shareable =
+      opts.candidate !== undefined &&
+      canShare(rides, opts.candidate, opts.at?.get(driver), opts.sharing);
+    if (!shareable) busy.add(driver);
   }
   return busy;
 }

@@ -35,6 +35,9 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import {
+  LatLng,
+  SharingConfig,
+  SHARING_FALLBACK,
   msUntilLapsed,
   needsNoDriverNotice,
   pickByRoad,
@@ -75,7 +78,14 @@ const REGION = 'asia-southeast1';
  */
 const SEARCH_TIMEOUT_MINUTES = 5;
 
-const FALLBACK = {
+const FALLBACK: {
+  searchRadiusKm: number;
+  offerTimeoutSeconds: number;
+  maxDriversToTry: number;
+  routingBaseUrl: string;
+  sharing: SharingConfig;
+} = {
+  sharing: SHARING_FALLBACK,
   searchRadiusKm: 5,
   offerTimeoutSeconds: 15,
   maxDriversToTry: 10,
@@ -104,7 +114,11 @@ type Ride = {
   commuterName?: string;
   commuterFcmToken?: string | null;
   pickup?: { label?: string; geopoint?: GeoPoint };
-  dropoff?: { label?: string };
+  // The drop-off's point was never read until shared rides: whether the next
+  // passenger is on the way is a question about where this one is going.
+  dropoff?: { label?: string; geopoint?: GeoPoint };
+  /** `regular` or `special`. A special trip is the whole tricycle. */
+  serviceType?: string;
   dispatch?: RideDispatch;
   assignedDriver?: string | null;
   driverSnapshot?: { firstName?: string; plateNumber?: string } | null;
@@ -133,6 +147,20 @@ async function readConfig() {
         d.routingBaseUrl.trim().startsWith('https://')
           ? d.routingBaseUrl.trim()
           : FALLBACK.routingBaseUrl,
+      sharing: {
+        enabled: d.sharedRidesEnabled !== false,
+        maxPassengers: Math.max(
+          1,
+          Math.min(
+            Number(d.maxSharedPassengers ?? SHARING_FALLBACK.maxPassengers),
+            5,
+          ),
+        ),
+        maxDetourKm: Math.max(
+          0,
+          Math.min(Number(d.maxDetourKm ?? SHARING_FALLBACK.maxDetourKm), 20),
+        ),
+      } as SharingConfig,
     };
   } catch (e) {
     logger.warn('config/app unreadable, using defaults', e);
@@ -574,6 +602,23 @@ async function commitIfUnchanged(
   });
 }
 
+/**
+ * Where each online driver last said they were.
+ *
+ * Shared rides are decided from here: whether the next passenger is on the
+ * way depends on where the tricycle is now, not where it started.
+ */
+function positionsOf(
+  drivers: readonly FirebaseFirestore.QueryDocumentSnapshot[],
+): Map<string, LatLng> {
+  const at = new Map<string, LatLng>();
+  for (const d of drivers) {
+    const point = d.data()?.position?.geopoint;
+    if (point) at.set(d.id, point as LatLng);
+  }
+  return at;
+}
+
 /** Searching rides, to know which drivers already hold a live offer. */
 function searchingRides() {
   return db.collection('rides').where('status', '==', 'searching').limit(100).get();
@@ -600,7 +645,12 @@ async function dispatchNow(
       (d) => ({ id: d.id, ...(d.data() as Ride) }),
     ),
     now,
-    ref.id,
+    {
+      exceptRideId: ref.id,
+      candidate: { id: ref.id, ...ride },
+      at: positionsOf(online.docs),
+      sharing: config.sharing,
+    },
   );
   return attemptDispatch(ref, ride, online.docs, config, now, busy);
 }
@@ -801,17 +851,35 @@ export const sweepStaleRides = onSchedule(
     // Drivers carrying a passenger or holding a live offer, kept up to date
     // as this run offers more, so two rides in one sweep never go to the same
     // driver.
-    const busy = unavailableDrivers(
-      [...stale.docs, ...underway.docs].map(
-        (d) => ({ id: d.id, ...(d.data() as Ride) }),
-      ),
-      now,
+    const rides = [...stale.docs, ...underway.docs].map(
+      (d) => ({ id: d.id, ...(d.data() as Ride) }),
     );
+    const at = positionsOf(online.docs);
+
+    // Rebuilt per ride, because whether a driver is free now depends on which
+    // ride is asking: a driver carrying a passenger is available to a trip
+    // going their way and not to one going the other. This set carries the
+    // single thing that must survive across them — nobody takes two offers
+    // from one sweep.
+    const offeredThisRun = new Set<string>();
 
     for (const doc of stale.docs) {
-      await attemptDispatch(
-        doc.ref, doc.data() as Ride, online.docs, config, now, busy,
-      );
+      const ride = doc.data() as Ride;
+      const busy = unavailableDrivers(rides, now, {
+        exceptRideId: doc.id,
+        candidate: { id: doc.id, ...ride },
+        at,
+        sharing: config.sharing,
+      });
+      for (const email of offeredThisRun) busy.add(email);
+
+      // attemptDispatch adds whoever it offered to the set it was given, so
+      // what it added is who this ride just took.
+      const before = new Set(busy);
+      await attemptDispatch(doc.ref, ride, online.docs, config, now, busy);
+      for (const email of busy) {
+        if (!before.has(email)) offeredThisRun.add(email);
+      }
     }
   },
 );

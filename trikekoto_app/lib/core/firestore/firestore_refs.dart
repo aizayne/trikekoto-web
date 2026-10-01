@@ -134,6 +134,22 @@ class FirestoreRefs {
       .orderBy('createdAt', descending: true)
       .limit(1);
 
+  /// Every ride a driver is carrying at once, oldest first.
+  ///
+  /// More than one since shared rides: a regular trip may pick up another
+  /// passenger going the same way. Oldest first because that is the order
+  /// they were accepted in, and roughly the order they are dropped off in.
+  /// Same index as [activeRideFor]; the list is reversed in Dart rather than
+  /// asking Firestore for an ascending sort it has no index for.
+  Query<Ride> activeRidesFor(String driverEmail) => rides
+      .where('assignedDriver', isEqualTo: normalizeEmail(driverEmail))
+      .where('status', whereIn: [
+        RideStatus.accepted.wire,
+        RideStatus.inTransit.wire,
+      ])
+      .orderBy('createdAt', descending: true)
+      .limit(5);
+
   /// A driver's finished rides — completed or called off after accepting —
   /// newest first. Backed by the same `assignedDriver + status + createdAt`
   /// index as [activeRideFor]; the read rule admits each document via

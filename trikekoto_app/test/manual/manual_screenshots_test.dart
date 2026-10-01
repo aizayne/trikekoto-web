@@ -445,6 +445,7 @@ void main() {
       myIdVerifiedProvider.overrideWith((ref) => Stream.value(true)),
       myOffersProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       presenceProvider.overrideWith(_OnlinePresence.new),
       myNotificationsProvider
           .overrideWith((ref) => Stream.value([_approvalNotice(read: true)])),
@@ -633,6 +634,7 @@ void main() {
       myIdVerifiedProvider.overrideWith((ref) => Stream.value(true)),
       myOffersProvider.overrideWith((ref) => Stream.value([offer])),
       myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
       presenceProvider.overrideWith(_OnlinePresence.new),
       driverPositionProvider.overrideWith(_DriverAt.new),
       myNotificationsProvider

@@ -279,6 +279,16 @@
   "driverWaitingBody": "Ioofer sa iyo ang pinakamalapit na booking pagdating nito. Panatilihing bukas ang screen na ito.",
   "driverOfflineBody": "Mag-online sa itaas para makatanggap ng ride offer.",
   "driverNewOffer": "Bagong ride offer",
+  "driverSharedOffer": "Kasabay na pasahero",
+  "driverSharedOfferBody": "Dadaan ito sa daan ninyo ngayon. Kayo ang bahala kung kaya pa.",
+  "driverSharedRides": "{count} pasahero ang nasa inyo ngayon",
+  "@driverSharedRides": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "driverRoute": "{from}  →  {to}",
   "@driverRoute": {
     "placeholders": {
@@ -786,6 +796,15 @@
     }
   },
   "bookOutsideAreaBody": "Puwede pa rin kayong mag-book, pero baka walang driver na malapit doon kaya mas matagal ang paghihintay.",
+  "cfgSharingTitle": "Kasabay na pasahero",
+  "cfgSharingIntro": "Sa regular na biyahe, puwedeng sunduin ng driver ang ibang pasaherong pareho ang daan. Hindi ito nangyayari sa special — binayaran na roon ang buong tricycle.",
+  "cfgSharingSwitch": "Puwede ang kasabay",
+  "cfgSharingOn": "Inaalok ang driver na may pasahero kung pareho ang daan.",
+  "cfgSharingOff": "Isang pasahero lang bawat biyahe.",
+  "cfgSharingMaxLabel": "Pinakamaraming pasahero",
+  "cfgSharingMaxHelp": "Kasama ang unang pasahero. 3 ang default.",
+  "cfgSharingDetourLabel": "Dagdag na layo (km)",
+  "cfgSharingDetourHelp": "Gaano kalayo puwedeng lumihis para sa susunod na pasahero. 1.5 km ang default.",
   "cfgAreaTitle": "Saklaw ng serbisyo",
   "cfgAreaIntro": "Babala lang ito, hindi hadlang. Kapag nasa labas ng saklaw ang sundo o babaan, sasabihin ito sa pasahero pero puwede pa rin siyang mag-book. Gawing 0 ang lapad para patayin ang babala.",
   "cfgAreaLabel": "Pangalan ng lugar",

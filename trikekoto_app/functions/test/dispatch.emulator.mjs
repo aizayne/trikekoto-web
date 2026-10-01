@@ -124,22 +124,52 @@ check('an unanswered offer moves on when it lapses', r.to === 'd@toda.ph', `${r.
 // lapse path, not from sweepStaleRides.
 console.log(`INFO lapse to next offer took ${r.seconds}s in the emulator`);
 
-// 5. Availability is read from the rides, not from the driver's phone.
-//    'a' is put on a ride without touching their presence, which still says
-//    idle; 'd' is marked on_ride in presence while having no ride at all
-//    (b and c are genuinely busy holding live offers by this point).
-//    The next booking must skip 'a' and still reach 'd'.
+// 5. Availability is read from the rides, not from the driver's phone — and
+//    a regular ride may be shared. 'a' is put on a ride without touching
+//    their presence, which still says idle; 'd' is marked on_ride in presence
+//    while having no ride at all.
 await db.doc('rides/underway').set({
   ...ride('u5'),
   status: 'accepted',
   assignedDriver: 'a@toda.ph',
 });
-await db.doc('active_drivers/d@toda.ph').update({ availability: 'on_ride' });
+// Clear the rides still holding b, c and d, so what follows is about
+// sharing rather than about who happens to be mid-offer.
+for (const id of ['r1', 'r2', 'r3']) {
+  await db.doc(`rides/${id}`).update({ status: 'cancelled', cancelledBy: 'commuter' });
+}
+// And let every remaining phone lie about being on a ride: the flag they
+// write must count for nothing either way.
+for (const e of ['b', 'c', 'd']) {
+  await db.doc(`active_drivers/${e}@toda.ph`).update({ availability: 'on_ride' });
+}
+await sleep(1500);
 
+// Same route as the passenger already aboard: this is the share.
 await db.doc('rides/r6').set(ride('u6'));
 r = await waitForOffer('r6', null, 60000);
-check('a driver already carrying a passenger is skipped', r.to !== 'a@toda.ph', r.to);
-check('a driver whose phone still says on_ride is still offered', r.to === 'd@toda.ph', r.to);
+check('a carrying driver is offered a ride going their way', r.to === 'a@toda.ph', r.to);
+
+// The other way: picking up at 1 km south and going to 4 km south takes the
+// passenger aboard a long way round, so the share is refused.
+await db.doc('rides/r7').set({
+  ...ride('u7'),
+  pickup: { label: 'South', geopoint: at(-1) },
+  dropoff: { label: 'Further south', geopoint: at(-4) },
+});
+r = await waitForOffer('r7', null, 60000);
+check('and skipped for one going the other way', r.to !== 'a@toda.ph', r.to);
+// Which of them wins depends on how fast the emulator clears the cancelled
+// rides; the point is that a phone claiming to be on a ride is still offered
+// one, because availability is read from the rides.
+check('a driver whose phone still says on_ride is still offered',
+  ['b@toda.ph', 'c@toda.ph', 'd@toda.ph'].includes(r.to), r.to);
+
+// A special trip buys the whole tricycle, so it never joins an occupied one.
+await db.doc('rides/r8').set({ ...ride('u8'), serviceType: 'special' });
+r = await waitForOffer('r8', null, 60000);
+check('a special trip is never offered to an occupied tricycle',
+  r.to !== 'a@toda.ph', r.to);
 
 console.log(failures === 0 ? 'ALL PASS' : `${failures} FAILED`);
 process.exit(failures === 0 ? 0 : 1);
