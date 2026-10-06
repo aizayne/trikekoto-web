@@ -48,7 +48,9 @@ wrong and you need the answer, not a tour of the architecture.
 
 - Re-run the security review (`SECURITY_REVIEW.md`) and the full test suite.
 - Re-run `scripts/cost_model.py` with the real moving-fraction observed.
-- Confirm the release keystore backup still exists and still opens.
+- Confirm the release keystore backup still exists, still opens, and still
+  shows the fingerprint recorded under *Backing up the release keystore*. Not
+  "the file is there" — decrypt it and check.
 
 ---
 
@@ -250,7 +252,81 @@ Worth scheduling weekly once the pilot starts. Test a restore at least once —
 an untested backup is a guess.
 
 **What cannot be recovered by any backup:** the release keystore. Lose it and
-you can never update an installed app. Keep an offline copy.
+you can never update an installed app — every driver uninstalls, reinstalls,
+and signs in again, and there is no support ticket that undoes it. Android
+accepts an update only from the same signing key.
+
+### Backing up the release keystore
+
+**Know which file it is.** There is more than one `trikekoto-release.jks` on
+the original development machine, and only one of them signs releases: the one
+at `trikekoto_app/trikekoto-release.jks`. The other, under
+`~/trikekoto/android/keystore/`, is left over from the pre-Flutter project and
+does not even open with the current password. Backing that one up backs up
+nothing.
+
+The signing key in use is identified by this fingerprint, which matches the
+signer on every released APK:
+
+```
+C1:7A:12:5E:72:C2:43:4C:28:FA:7D:03:1F:46:54:E9:53:2C:BF:5E:BF:CE:A7:DF:85:31:78:54:3D:17:EA:9F
+```
+
+Check any APK against it with:
+
+```bash
+apksigner verify --print-certs build/web/download/trikekoto.apk
+```
+
+**Three things have to survive together.** Any one of them missing makes the
+other two worthless:
+
+1. the keystore file, `trikekoto_app/trikekoto-release.jks`;
+2. the store password, key password and alias, which live in
+   `trikekoto_app/android/key.properties` — gitignored, and deliberately never
+   committed;
+3. the fingerprint above, so a restored copy can be *proven* to be the right
+   one rather than assumed.
+
+**Make one encrypted bundle**, from `trikekoto_app/`:
+
+```bash
+tar -cf - trikekoto-release.jks android/key.properties \
+  | gpg -c --cipher-algo AES256 -o ~/trikekoto-keystore-backup.gpg
+```
+
+It asks for a passphrase twice. That passphrase is now exactly as important as
+the keystore, so write it down somewhere that is not the same place as the
+file.
+
+**Keep copies in at least two places that cannot be lost together.** A fire, a
+theft or a dead disk should never be able to take both:
+
+- a password manager entry holding the `.gpg` as an attachment, together with
+  the passphrase and the fingerprint;
+- a USB stick kept somewhere physically separate from the laptop;
+- optionally cloud storage, but **only** the encrypted `.gpg`, never the raw
+  `.jks`.
+
+Never in the repository, never in email or chat, never alongside the
+passphrase.
+
+**Verify the backup, because an unverified backup is a guess.** Restore it
+somewhere temporary and compare the fingerprint:
+
+```bash
+cd "$(mktemp -d)" && gpg -d ~/trikekoto-keystore-backup.gpg | tar -xf - \
+  && keytool -list -v -keystore trikekoto-release.jks -alias trikekoto | grep SHA256:
+```
+
+It must print the fingerprint above. Delete the temporary directory
+afterwards.
+
+**Succession.** If TrikeKoTo outlives the thesis, somebody other than the
+original author has to be able to reach this key, or the app dies with the
+laptop. The usual arrangement is a sealed envelope held by the department
+containing the passphrase, with the encrypted bundle stored separately.
+Decide this before the pilot, not after.
 
 ---
 
