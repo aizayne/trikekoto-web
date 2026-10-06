@@ -874,7 +874,7 @@ abstract class L {
   /// No description provided for @driverOnlineSubtitle.
   ///
   /// In fil, this message translates to:
-  /// **'Nakikita ng malapit na commuter ang location mo'**
+  /// **'Tumatanggap ka na ng ride offer. Ang tinanggap mong pasahero lang ang nakakakita ng lokasyon mo.'**
   String get driverOnlineSubtitle;
 
   /// No description provided for @driverOfflineSubtitle.

@@ -450,7 +450,7 @@ class LFil extends L {
 
   @override
   String get driverOnlineSubtitle =>
-      'Nakikita ng malapit na commuter ang location mo';
+      'Tumatanggap ka na ng ride offer. Ang tinanggap mong pasahero lang ang nakakakita ng lokasyon mo.';
 
   @override
   String get driverOfflineSubtitle =>

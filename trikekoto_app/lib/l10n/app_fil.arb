@@ -260,7 +260,7 @@
   },
   "driverOnline": "Online",
   "driverOffline": "Offline",
-  "driverOnlineSubtitle": "Nakikita ng malapit na commuter ang location mo",
+  "driverOnlineSubtitle": "Tumatanggap ka na ng ride offer. Ang tinanggap mong pasahero lang ang nakakakita ng lokasyon mo.",
   "driverOfflineSubtitle": "Mag-online para makatanggap ng ride offer",
   "driverCurrentRide": "Kasalukuyang biyahe",
   "driverCallCommuter": "Tawagan si {name}",

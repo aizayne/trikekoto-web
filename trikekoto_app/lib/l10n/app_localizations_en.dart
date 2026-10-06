@@ -448,7 +448,7 @@ class LEn extends L {
 
   @override
   String get driverOnlineSubtitle =>
-      'Your location is visible to nearby commuters';
+      'You can receive ride offers. Only the passenger you accept sees your location.';
 
   @override
   String get driverOfflineSubtitle => 'Go online to receive ride offers';

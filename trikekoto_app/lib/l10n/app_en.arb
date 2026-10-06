@@ -129,7 +129,7 @@
   "driverRating": "★ {average} ({count})",
   "driverOnline": "Online",
   "driverOffline": "Offline",
-  "driverOnlineSubtitle": "Your location is visible to nearby commuters",
+  "driverOnlineSubtitle": "You can receive ride offers. Only the passenger you accept sees your location.",
   "driverOfflineSubtitle": "Go online to receive ride offers",
   "driverCurrentRide": "Current ride",
   "driverCallCommuter": "Call {name}",

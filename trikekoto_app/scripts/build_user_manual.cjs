@@ -20,7 +20,7 @@ const {
   TableOfContents, TableRow, TextRun, WidthType, ImageRun,
 } = require('docx');
 
-const VERSION = '1.1.0 (11)';
+const VERSION = '1.1.1 (12)';
 const DATE = 'October 2026';
 
 // ── Content ─────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ const content = [
     `Wait while the switch shows ${L('Kumokonekta…', 'Connecting…')}. Do not tap it again.`,
   ] },
   { p: `When the switch shows **Online**, the system can offer you rides booked nearby, and the screen says ${L('Naghihintay ng biyahe', 'Waiting for a ride')}.` },
-  { note: 'Commuters do not see online drivers on a map. Only the passenger whose ride you accept sees where you are, and only until that trip ends. (The line under the switch says nearby commuters can see your location; that is out of date and will be corrected in a later version.)' },
+  { note: 'Commuters do not see online drivers on a map. Only the passenger whose ride you accept sees where you are, and only until that trip ends — which is what the line under the switch now says.' },
   { p: 'Keep TrikeKoTo open while you are online — you can lock the screen. The app checks in every two minutes, even when you are standing still, so the system knows you are still there.' },
   { p: 'A weak signal no longer costs you rides outright. If your check-ins stop arriving, you are offered rides **after** the drivers whose check-ins are arriving — so you still get one when nobody else is free, which at a terminal with a bad signal is often. Only after about **30 minutes** of silence does the system treat your phone as switched off and stop offering at all. Open the app to come back.' },
   { p: 'If going online fails, a red message explains why (see Section 8). If a line starting with **Detalye para sa suporta** (Details for support) appears under the switch, take a screenshot and send it to your TODA officer.' },

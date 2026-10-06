@@ -64,7 +64,7 @@ import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 const _enabled = bool.fromEnvironment('MANUAL_SCREENSHOTS');
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT');
-const _version = '1.1.0 (11)';
+const _version = '1.1.1 (12)';
 const _outDir = 'docs/manual';
 const _phone = Size(390, 844);
 
