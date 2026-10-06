@@ -60,6 +60,21 @@ meant to work rather than as a demo with an apology attached.
 >   only the passenger whose booking a driver accepted sees it, and only until
 >   the trip ends — and nobody but that driver sees a passenger's pickup.
 
+> **Revised again 7 October 2026, for app version 1.1.0 (11).** The release
+> that answered the defence changed three things a session will meet.
+>
+> - **A regular trip can now be shared.** A driver carrying one passenger may
+>   be offered another going the same way. That is a new driver task (8), and
+>   the first thing in this kit that asks a participant to handle two things
+>   at once.
+> - **A service area can be configured**, and a booking outside it shows a
+>   warning. Set it to the venue or leave the radius at 0 before a session —
+>   an area still pointed at Balaybay while you sit somewhere else warns on
+>   every booking, and a warning everybody learns to ignore is worse than none.
+> - **The ID photo can be deleted the moment it is approved.** The app asks
+>   after every approval; say yes. It removes a government ID from the session
+>   within seconds of the only use it had.
+
 ## Before you recruit
 
 ### How many people
@@ -98,9 +113,9 @@ Run sessions with a helper, or with enough phones to play the other side
 yourself.
 
 - **Latest app on every phone you bring**, installed over mobile data. The
-  landing screen must read `TrikeKoTo 1.0.9 (10)` or newer. Anything older
-  lacks the trip type, the distance line, the notification area and the
-  removal buttons this kit relies on.
+  landing screen must read `TrikeKoTo 1.1.0 (11)` or newer. Anything older
+  lacks the trip type, the distance line, the notification area, the removal
+  buttons and shared rides, all of which this kit relies on.
 - **Admin phone** — the **Android app**, not the web panel — signed in as an
   administrator with the email already confirmed, open on **ID review**.
   **Aprubahan** stays disabled until you tap **Tingnan ang ID** — open every
@@ -112,6 +127,13 @@ yourself.
   ready to book a pickup near the venue. Both helper accounts are verified once
   and reused all day.
 - **Dispatch → Tumatanggap ng booking** switched on.
+- **Saklaw ng serbisyo** decided for the venue: either set the centre on the
+  map where you are sitting with a radius that covers your test pickups, or
+  set the radius to **0** so no warning appears at all. An area left pointing
+  at somewhere else warns on every booking of the day.
+- **Kasabay na pasahero** left **on** (the default) if you are running driver
+  task 8, and the helper commuter phone ready to book a second ride on roughly
+  the same route.
 - **One dummy ID card per participant** — a blank card printed **BARANGAY ID
   — SAMPLE**, a made-up name, and a number such as `UAT-0001`. The app accepts
   a Barangay ID number of 4 to 20 letters and digits and drops the dash, so
@@ -179,9 +201,11 @@ genuine. A blank loyalty card photographs exactly as well.
 **The dummy card is no longer optional, and neither is an admin.** Since
 2026-09-13 nobody reaches the booking screen or the driver dashboard until an
 ID is approved. Bring a second phone signed in as admin — the Android app —
-and approve each dummy submission live, during the session. Removing the
-participant's account at the end removes their verification along with
-everything else.
+and approve each dummy submission live, during the session. **Say yes when it
+asks to delete the ID photo**: the card has done its only job by then, and
+deleting it there means no identity document — not even a dummy one — sits in
+the system for the rest of the day. Removing the participant's account at the
+end removes their verification along with everything else.
 
 **Delete their data the same day — and know that the two roles differ.**
 
@@ -248,7 +272,7 @@ abandoned, or five minutes elapsed.
 | 2 | "Gusto ninyong mag-book. Simulan ninyo po." | **They reach the ID screen.** Sign-in, an SMS code, a name — and now a government ID — before anything a passenger came for. Time it, and note every place they hesitate |
 | 3 | *(hand them the dummy card)* "Hihingin po ng app ang ID ninyo bago gamitin. Subukan ninyo pong ipadala." | Submission pending. **Watch what they do at the consent tick**, and whether the notice saying *why* an ID is needed reassures them or alarms them. Note whether they pick **Barangay ID** from the card, and what happens if they pick another type |
 | 4 | *(approve it from the admin phone, without saying so)* "May nagbago po ba?" | They find **Magpatuloy** and reach the booking screen unprompted |
-| 5 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it. **Watch the trip type**: do they read *Regular* and *Special* or take the default — and afterwards, can they say what Special means? |
+| 5 | "Mag-book po kayo ng tricycle papuntang [malapit na palengke]." | Ride reaches `searching`. Note whether they *notice* the pickup filled itself in, and whether they trust it. **Watch the trip type**: do they read *Regular* and *Special* or take the default — and afterwards, can they say what Special means? If a service-area warning appears, note whether they read it, ignore it, or stop booking because of it |
 | 6 | *(accept on the helper driver phone)* "Gusto ninyong malaman kung nasaan na ang driver." | They find the live tracking without prompting. Note whether they read the distance beside the driver's name (*0.4 km ang layo sa iyo*) or only look at the map |
 | 7 | "Nagbago ang isip ninyo. Ayaw ninyo nang sumakay." | Ride cancelled |
 | 8 | *(have them book again; on the helper driver phone accept, start and complete it)* "Tapos na ang biyahe ninyo. May gusto pa po kayong gawin?" | They find the rating unprompted, or do not — both are findings |
@@ -293,15 +317,25 @@ anyone was coming, it is not doing that job.
 | 5 | "Ipakita ninyo pong available na kayo." | The switch reads **Online** (it shows **Kumokonekta…** first). If red text appears under it, photograph the screen |
 | 6 | *(book a nearby pickup on the helper commuter phone)* "May pasahero po. Kunin ninyo." | Offer accepted. Before they tap **Tanggapin**, note whether they read *Sundo: … km ang layo* and the trip type — and ask afterwards whether either would ever make them decline |
 | 7 | "Nasa inyo na po ang pasahero." | Trip started |
-| 8 | "Nakarating na po kayo." | Ride completed |
-| 9 | *(with their phone locked and in a pocket, book again on the helper commuter phone)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
-| 10 | "Saan po ninyo makikita ang mga naihatid ninyong pasahero?" | They open **Kasaysayan ng biyahe** and find the ride from task 8. It shows the passenger's name and not their number — ask whether that is what they expected |
+| 8 | *(while that trip is under way, book a second ride on the helper commuter phone, pickup and drop-off along the same road)* "May bago pong dumating. Ano po iyon?" | **Kasabay na pasahero** appears. Done when they accept or decline — both are findings. Then ask the question that matters: *ilan pong pasahero ang nasa inyo ngayon?* A driver who cannot say is carrying somebody they have forgotten |
+| 9 | "Nakarating na po kayo sa una." | The *first* ride completed — note whether they pick the right card. Two cards, two sets of buttons, and the wrong one ends somebody else's trip |
+| 10 | *(with their phone locked and in a pocket, book again on the helper commuter phone)* "May dumating pong booking. Napansin ninyo po ba?" | **They notice the push without being told to look.** This was impossible in August and is now the difference between a driver who must stare at their phone and one who can work |
+| 11 | "Saan po ninyo makikita ang mga naihatid ninyong pasahero?" | They open **Kasaysayan ng biyahe** and find the rides from tasks 8 and 9. It shows the passenger's name and not their number — ask whether that is what they expected |
 
 Task 4 tests the live approval update, which no participant will notice if you
 tell them to look. It now tests the notice as well: an approval arrives hours
 or days after registering in real use, and the bell is how a driver finds out.
 If nobody opens it here, with the facilitator in the room, nobody will open it
 at home.
+
+**Task 8 is the new one, and it is the hardest thing this app asks of a
+driver.** Everything else is one passenger at a time. Here a second offer
+arrives while they are driving, the screen grows a second card, and the two
+have separate buttons. Watch three things: whether they notice the offer at
+all; whether they read it as a *second passenger* rather than as a mistake;
+and whether, at task 9, they finish the right ride. A driver who taps
+**Tapusin** on the wrong card has ended a trip for somebody still in the
+tricycle, and that is a blocker, not a copy problem.
 
 **Task 6 asks a question the app just answered.** The pickup distance is on the
 offer because it is the number a driver decides on. If drivers accept without
@@ -338,7 +372,7 @@ Task │ Mag-isa │ May tulong │ Hindi natapos │ Oras │ Saan natigil / si
   8  │         │            │               │      │
   9  │         │            │               │      │
  10  │         │            │               │      │
- 11  │         │            │               │      │   (commuters only)
+ 11  │         │            │               │      │
 
 Mga eksaktong sinabi (quote them, do not paraphrase):
 
@@ -431,6 +465,15 @@ should be fixed before the pilot, regardless of the scores around it.
 - **The consent tick.** If every participant ticks it without reading, record
   that plainly. A consent that is technically captured and practically unread
   is a finding about the design, not about the participants.
+
+### Two bars added in October
+
+- **The shared offer.** If a driver cannot say how many passengers are with
+  them after accepting a second, or finishes the wrong ride at task 9, stop
+  and record it as a blocker. Sharing is the one feature here that can strand
+  a passenger who is sitting in the tricycle.
+- **The service-area warning.** If a commuter stops booking because of it,
+  the wording is too strong for something that does not refuse anything.
 
 ### One bar added in September
 
