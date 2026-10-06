@@ -12,6 +12,36 @@ tricycles.
 
 ---
 
+## 0 · First contact — Messenger or SMS
+
+Almost nobody's first contact with a chapter officer is a letter. This is the
+message that gets a meeting; section 1 is what you say **at** the meeting.
+
+Short on purpose. A long first message from a stranger reads as a pitch, and
+the only thing it has to do is get a yes to a conversation.
+
+> Magandang po. Si Jelo po ito, estudyante sa PRMSU–San Marcelino.
+>
+> May ginawa po akong app para sa pagbo-book ng tricycle bilang thesis ko, at
+> gusto ko po sanang ipakita sa inyo — kayo po muna, bago ang kahit sinong
+> driver.
+>
+> Puwede po ba kayong makausap ng mga **15 minuto** sa terminal, kahit anong
+> araw na libre kayo? Wala pong bayad at walang obligasyon — gusto ko lang
+> pong ipakita at tanungin kung puwedeng subukan ng ilang driver ninyo.
+>
+> Salamat po!
+
+If there is no reply in three days, send once more — officers are busy and a
+message is easy to miss — and then stop. A third message is pressure, and the
+person you are pressuring is the one whose cooperation the whole pilot needs.
+
+> Magandang po, follow-up ko lang po sa message ko noong [araw]. Kung hindi po
+> kayo available ngayon, puwede po akong maghintay — sabihin ninyo lang po
+> kung kailan.
+
+---
+
 ## 1 · The chapter officer — ask first
 
 Send or say this **before** approaching any individual driver. A student who
@@ -40,6 +70,23 @@ the one person whose cooperation the pilot depends on.
 demonstrate; a printed consent form; and a straight answer to *"ano ang
 mapapala namin dito?"* — which is a fair question and deserves better than
 "it's for my thesis".
+
+Here is one, and it is the honest version. Say it in your own words:
+
+> Sa ngayon po, wala pong bayad at walang kita — pagsubok pa lang po ito.
+> Ang mapapala po ninyo ngayon: makikita ninyo kung paano gumagana, at ang
+> sasabihin ng mga driver ninyo ang magbabago sa app bago ito gamitin ng
+> kahit sino. Kung sa tingin ninyo po ay hindi ito nakakatulong sa chapter,
+> iyon po ay sagot din — at iyon ang itatala ko.
+>
+> Kung sakali pong gusto ninyong subukan nang totohanan pagkatapos, kayo po
+> ang magdedesisyon, hindi ako. Libre po ang app para sa chapter; ang gastos
+> po ay nasa akin.
+
+**What not to say, however much you want to:** that it will bring them more
+passengers, that the LGU or the TODA federation is interested, or that it will
+be adopted. None of those are yours to promise, and a chapter that agreed on
+that basis has been misled rather than recruited.
 
 ---
 
@@ -103,6 +150,38 @@ record, still carrying the driver's name, plate and email.
 
 **"Gagamitin ba ito ng TODA namin?"** — You do not know. Say so. The pilot
 plan is step 89 and it is the chapter's decision, not yours.
+
+---
+
+## 4 · After the chapter agrees — settling the day
+
+Send this once, to the officer, when you have a date. It makes the logistics
+somebody else's expectation rather than your hope.
+
+> Salamat po ulit. Narito po ang mga detalye:
+>
+> - **Petsa at oras:** [araw], mga [oras] — mga 45 minuto po bawat driver,
+>   isa-isa lang po.
+> - **Saan:** sa terminal po mismo, kung puwede.
+> - **Ilan:** lima pong driver. Kung may mas gusto kayong isama o hindi
+>   isama, kayo po ang bahala.
+> - **Dala ko po:** ang app, pekeng ID card para sa pagsubok, at ang
+>   pahintulot na papipirmahan.
+> - **Dala nila:** ang sarili nilang telepono, at data kung meron — ako po
+>   ang bahala kung wala.
+>
+> Kung may magbago po sa schedule ninyo, sabihin ninyo lang po — madali po
+> akong makibagay.
+
+And afterwards, the same day, to each participant and to the officer:
+
+> Salamat po talaga sa oras ninyo. Nabura ko na po ang test account na
+> ginamit natin. Kung may naisip pa po kayong dapat ayusin sa app, sabihin
+> ninyo lang po — iyon po ang pinakamahalagang bahagi nito.
+
+**Say the deletion out loud, and mean it.** The consent promised it; a
+participant who hears it confirmed is the one who tells the next driver this
+was worth doing.
 
 ---
 
