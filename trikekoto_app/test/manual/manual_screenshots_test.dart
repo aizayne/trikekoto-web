@@ -16,6 +16,7 @@ import 'package:go_router/go_router.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:trikekoto_app/core/auth/session_controller.dart';
+import 'package:trikekoto_app/core/config/app_config.dart';
 import 'package:trikekoto_app/core/firestore/collection_paths.dart';
 import 'package:trikekoto_app/core/routing/geocoding_service.dart';
 import 'package:trikekoto_app/core/ui/app_theme.dart';
@@ -63,7 +64,7 @@ import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 const _enabled = bool.fromEnvironment('MANUAL_SCREENSHOTS');
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT');
-const _version = '1.0.9 (10)';
+const _version = '1.1.0 (11)';
 const _outDir = 'docs/manual';
 const _phone = Size(390, 844);
 
@@ -682,6 +683,70 @@ void main() {
     await tester.tap(find.text('Alisin'));
     await tester.pumpAndSettle();
     await _save(tester, 'fig-12-remove-driver');
+  });
+
+  testWidgets('13 · two passengers at once', skip: !_enabled, (tester) async {
+    Ride carrying(String id, String name, String status) => Ride.fromMap({
+          'commuterUid': 'u-$id',
+          'commuterName': name,
+          'commuterPhone': '09181234567',
+          'status': status,
+          'serviceType': 'regular',
+          'assignedDriver': 'juan@toda.ph',
+          'pickup': {'label': 'Plaza, San Marcelino', 'geopoint': _plaza},
+          'dropoff': {'label': 'Palengke', 'geopoint': _market},
+          'driverLocation': _trike,
+        }, id);
+
+    OsmTiles.debugTileProvider = _MemoryTiles();
+    addTearDown(() => OsmTiles.debugTileProvider = null);
+    await _size(tester, const Size(390, 1700));
+    await tester.pumpWidget(_app(const DriverDashboardScreen(), [
+      myDriverProfileProvider.overrideWith((ref) => Stream.value(
+          _driver('juan@toda.ph', 'Juan', 'Dela Cruz', DriverStatus.approved))),
+      myIdVerifiedProvider.overrideWith((ref) => Stream.value(true)),
+      myOffersProvider.overrideWith((ref) => Stream.value(const <Ride>[])),
+      myActiveRideProvider
+          .overrideWith((ref) => Stream.value(carrying('s1', 'Maria', 'in_transit'))),
+      myActiveRidesProvider.overrideWith((ref) => Stream.value([
+            carrying('s1', 'Maria', 'in_transit'),
+            carrying('s2', 'Ana', 'accepted'),
+          ])),
+      presenceProvider.overrideWith(_OnlinePresence.new),
+      myNotificationsProvider
+          .overrideWith((ref) => Stream.value([_approvalNotice(read: true)])),
+    ]));
+    await tester.pump();
+    await _settleImages(tester, seconds: 5);
+    await _save(tester, 'fig-13-shared-rides');
+  });
+
+  testWidgets('14 · a trip leaving the service area', skip: !_enabled,
+      (tester) async {
+    GeolocatorPlatform.instance = _FakeLocation();
+    await _size(tester, const Size(390, 1260));
+    await tester.pumpWidget(_app(const CommuterBookingScreen(), [
+      commuter.myActiveRideProvider.overrideWith((ref) => Stream.value(null)),
+      myRiderProfileProvider.overrideWith((ref) => Stream.value(null)),
+      geocodingServiceProvider.overrideWithValue(_FakeGeocoding()),
+      // An area centred a few kilometres north, so the pickup the phone
+      // filled in sits outside it — the warning a commuter actually meets.
+      appConfigProvider.overrideWith((ref) => Stream.value({
+            'serviceArea': {
+              'label': 'Balaybay Resettlement',
+              'lat': _plaza.latitude + 0.05,
+              'lng': _plaza.longitude,
+              'radiusKm': 2.0,
+            },
+          })),
+    ]));
+    await tester.pumpAndSettle();
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'Maria');
+    await tester.enterText(fields.at(1), '0918 123 4567');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _save(tester, 'fig-14-outside-area');
   });
 }
 

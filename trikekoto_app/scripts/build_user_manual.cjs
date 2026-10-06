@@ -20,8 +20,8 @@ const {
   TableOfContents, TableRow, TextRun, WidthType, ImageRun,
 } = require('docx');
 
-const VERSION = '1.0.9 (10)';
-const DATE = 'September 2026';
+const VERSION = '1.1.0 (11)';
+const DATE = 'October 2026';
 
 // ── Content ─────────────────────────────────────────────────────────────
 // Block types: h1 h2 h3 p steps bullets table note figure pagebreak
@@ -161,6 +161,10 @@ const content = [
     ],
   } },
   { note: 'The app does not show or charge a fare. Pay the posted TODA fare to the driver in cash.' },
+  { h3: 'If a place is outside the chapter\u2019s area' },
+  { p: `Your TODA may set the area it normally serves. If your pickup or drop-off falls outside it, a notice appears above ${L('Maghanap ng driver', 'Find a driver')} naming which one.` },
+  figure('A trip that leaves the chapter\u2019s area', 'fig-14-outside-area.png'),
+  { p: '**You can still book.** It is a warning, not a barrier — tricycles do leave the area, for the highway or the hospital. It tells you the one thing you could not otherwise know: there may be no driver near that end of the trip, so the wait may be longer.' },
   { h2: '4.3 Setting a place on the map' },
   { p: 'There are three ways to place the pin:' },
   { bullets: [
@@ -189,6 +193,14 @@ const content = [
     `To call the driver, tap the phone button, ${L('Tawagan si …', 'Call …')}.`,
     `When the trip starts, the screen changes to ${L('Papunta na sa babaan mo', 'On the way to your drop-off')}.`,
   ] },
+  { h3: 'Sharing a regular trip' },
+  { p: `On a ${L('Regular \u2014 1 pasahero', 'Regular \u2014 1 passenger')} trip the driver may pick up another passenger going the same way, as tricycles do at a terminal. When that happens:` },
+  { bullets: [
+    '**Your fare does not change.** You pay for one passenger either way.',
+    'The trip may include a short stop to collect or drop the other passenger. The app only lets the driver be offered rides that stay close to your route.',
+    `If you would rather travel alone, choose ${L('Special \u2014 buong tricycle', 'Special \u2014 whole tricycle')} when booking. A special trip is never shared.`,
+  ] },
+
   { h2: '4.6 Cancelling a ride' },
   { p: `Tap ${L('Kanselahin ang ride', 'Cancel ride')}. You can cancel while searching and after a driver accepts, but **not after the trip has started**.` },
   { h2: '4.7 Rating your driver' },
@@ -264,7 +276,8 @@ const content = [
   ] },
   { p: `When the switch shows **Online**, the system can offer you rides booked nearby, and the screen says ${L('Naghihintay ng biyahe', 'Waiting for a ride')}.` },
   { note: 'Commuters do not see online drivers on a map. Only the passenger whose ride you accept sees where you are, and only until that trip ends. (The line under the switch says nearby commuters can see your location; that is out of date and will be corrected in a later version.)' },
-  { p: 'Keep TrikeKoTo open while you are online — you can lock the screen. The app checks in every two minutes, even when you are standing still. If it has not checked in for about **five minutes** — the app was closed, the phone was switched off, or there was no signal — you stop receiving offers until it checks in again. Open the app to come back.' },
+  { p: 'Keep TrikeKoTo open while you are online — you can lock the screen. The app checks in every two minutes, even when you are standing still, so the system knows you are still there.' },
+  { p: 'A weak signal no longer costs you rides outright. If your check-ins stop arriving, you are offered rides **after** the drivers whose check-ins are arriving — so you still get one when nobody else is free, which at a terminal with a bad signal is often. Only after about **30 minutes** of silence does the system treat your phone as switched off and stop offering at all. Open the app to come back.' },
   { p: 'If going online fails, a red message explains why (see Section 8). If a line starting with **Detalye para sa suporta** (Details for support) appears under the switch, take a screenshot and send it to your TODA officer.' },
   { h2: '5.4 Accepting a ride' },
   { p: `When a commuter nearby books, the offer comes to you at once: your phone shows a notification and the screen shows ${L('Bagong ride offer', 'New ride offer')} with the trip type, the pickup and drop-off, the passenger’s name, and how far the pickup is from you — for example ${L('Sundo: 0.4 km ang layo', 'Pickup: 0.4 km away')}.` },
@@ -276,7 +289,19 @@ const content = [
   { p: `Each offer is labelled ${L('Regular — 1 pasahero', 'Regular — 1 passenger')} or ${L('Special — bayad para sa 5 pasahero', 'Special trip — fare for 5 passengers')}. On a special trip the commuter pays the fare for five passengers and has the tricycle alone, so do not take other passengers.` },
   { p: 'Each offer lasts about 15 seconds. If you do not answer in time, the ride goes to another driver. If two drivers accept at the same moment, only one gets the ride, and the app tells the other.' },
   { p: 'You are never offered a new ride while you are carrying a passenger, or while another offer is waiting for your answer. The pickup distance is a straight line from where your phone last reported being.' },
-  { h2: '5.5 During the ride' },
+  { h2: '5.5 Carrying more than one passenger' },
+  { p: `On a regular trip you may be offered another passenger while you already have one. The offer says ${L('Kasabay na pasahero', 'Another passenger, same way')} and only arrives when the new trip stays close to the route you are already on.` },
+  figure('Two passengers at once', 'fig-13-shared-rides.png'),
+  { bullets: [
+    '**Each ride is its own card**, with its own map and its own buttons. Start and finish each one as that passenger gets on and off.',
+    `A line above the cards says how many passengers are with you: ${L('2 pasahero ang nasa inyo ngayon', '2 passengers with you now')}.`,
+    'Each passenger pays their own fare, as on any regular trip.',
+    `A ${L('Special \u2014 buong tricycle', 'Special \u2014 whole tricycle')} trip is never shared, in either direction: you are not offered one while carrying somebody, and a special passenger is never joined by another.`,
+    'You decide. If the road, the load or the passenger makes it a bad idea, tap **Tanggihan** and the ride goes to another driver.',
+  ] },
+  { p: 'Your TODA sets how many passengers at once (three by default) and how far out of your way the next one may take you (1.5 km by default). See Section 6.6.' },
+
+  { h2: '5.6 During the ride' },
   { p: `The ${L('Kasalukuyang biyahe', 'Current ride')} card shows a map to ${L('Sunduin sa …', 'Pick up at …')} and then ${L('Ibaba sa …', 'Drop off at …')}.` },
   { bullets: [
     `${L('Buksan sa maps', 'Open in maps')} opens directions in your maps app.`,
@@ -288,11 +313,11 @@ const content = [
     'Collect the posted TODA fare in cash.',
   ] },
   { p: `To call off a ride, tap ${L('Kanselahin', 'Cancel')}.` },
-  { h2: '5.6 Going offline' },
+  { h2: '5.7 Going offline' },
   { p: 'Slide the switch back to **Offline**. You stop receiving offers and the app stops using your location. Go offline when you finish your shift — staying online uses battery and data.' },
-  { h2: '5.7 Your ride history' },
+  { h2: '5.8 Your ride history' },
   { p: `Tap the clock icon at the top of the driver screen to open ${L('Kasaysayan ng biyahe', 'Ride history')}. It lists your completed and cancelled rides, newest first, with the route, the trip type, the passenger’s name and their rating. Passengers’ phone numbers are not shown once a ride is over.` },
-  { h2: '5.8 Notifications' },
+  { h2: '5.9 Notifications' },
   { p: `Tap the bell at the top of the driver screen to open ${L('Mga abiso', 'Notifications')}. Messages from the system about your account are kept here — today, the notice that the TODA has approved your registration.` },
   figure('The notification area', 'fig-11-notifications.png'),
   { bullets: [
@@ -355,6 +380,11 @@ const content = [
     `If not, tap ${L('Hindi tanggap', 'Not accepted')}, type the reason (for example, a blurry photo), and tap ${L('Ipadala', 'Send')}. The person sees your reason.`,
   ] },
   { note: `${L('Aprubahan', 'Approve')} stays disabled until you have opened the photo — an ID has to be seen before it can be approved. ID photos are never saved on your phone. **Review IDs in the Android app.** Opening an ID in the web version creates a link to the photo that anyone who has it could open.` },
+  { h3: 'Deleting an ID' },
+  { p: `After you approve one, the app asks whether to delete the photo now. ${L('Alisin', 'Delete the ID')} removes the photo and the ID details; the verification stays, so that person never has to send an ID again. ${L('Huwag muna', 'Keep for now')} leaves it, and retention deletes it 90 days after it was sent.` },
+  { p: `You can also delete a submission without deciding on it — ${L('Burahin ang ID', 'Delete the ID')} at the bottom of the card — for the ones that turn out to be a receipt or a second copy of a card you have already approved.` },
+  { note: 'Deleting the photo as soon as you have finished looking is the safer habit: an ID is sensitive personal information, and the only reason to hold it was to check it once.' },
+
   { h2: '6.5 Handling feedback' },
   { p: `Reports from drivers and commuters are listed under ${L('Kailangan ng atensyon', 'Needs attention')}. After acting on one, tap ${L('Markahang naresolba', 'Mark resolved')}. If the problem returns, tap ${L('Buksan ulit', 'Reopen')} under ${L('Naresolba', 'Resolved')}.` },
   { h2: '6.6 Dispatch settings' },
@@ -369,6 +399,21 @@ const content = [
     ],
   } },
   { p: `Tap ${L('I-save ang settings', 'Save settings')} after editing.` },
+  { h3: 'Shared rides' },
+  { p: 'On a regular trip a driver may be offered a second passenger going the same way; on a special trip never.' },
+  { table: {
+    head: ['Setting', 'Default', 'What it does'],
+    widths: [2700, 1200, 5460],
+    rows: [
+      [`${L('Puwede ang kasabay', 'Allow sharing')}`, 'On', 'Off means one passenger per trip, for the whole chapter.'],
+      [`${L('Pinakamaraming pasahero', 'Most passengers at once')}`, '3', 'Counting the first. A tricycle seats more, but a driver juggling four drop-offs from a phone is how somebody gets taken past their street.'],
+      [`${L('Dagdag na layo (km)', 'Extra distance (km)')}`, '1.5', 'How far the trike may go out of its way for the next passenger. Checked against **every** passenger already aboard, not the average.'],
+    ],
+  } },
+  { h3: 'Service area' },
+  { p: `Set the centre by tapping ${L('Itakda ang gitna sa mapa', 'Set the centre on the map')}, give the area a name and a radius. A commuter whose pickup or drop-off falls outside it is told so — and can still book (Section 4.2).` },
+  { note: 'Leave the radius at 0 until you have set the centre. 0 means no warning at all, which is better than a warning that fires on every legitimate booking.' },
+
   { h3: 'Stopping bookings' },
   { p: `To halt the service, turn off ${L('Tumatanggap ng booking', 'Accepting bookings')} and confirm with ${L('Ihinto ang booking', 'Stop bookings')}. Commuters cannot book until you turn it back on. **Rides already in progress finish normally.**` },
   { h2: '6.7 Ride history' },
@@ -445,6 +490,7 @@ const content = [
     rows: [
       [`${L('Wala pang tumatanggap', 'No driver has accepted yet')}`, `The search has run for 3 minutes. Tap ${L('Maghintay pa', 'Keep waiting')} to keep searching, or cancel.`],
       [`${L('Walang nakitang driver. Subukan ulit mamaya.', 'No driver found. Try again in a few minutes.')}`, 'No driver was available nearby. Try again in a few minutes.'],
+      [`${L('Nasa labas ng \u2026 ang Sundo', 'The pickup is outside \u2026')}`, 'The place is outside the area your TODA normally serves. You can still book; the wait may be longer.'],
       [`${L('Walang nakitang … malapit dito', 'Nothing called … found near here')}`, 'Drag the map to the area first, or place the pin by hand.'],
       [`${L('Tinatantiya — hindi maabot ang route service', 'Approximate — could not reach the route service')}`, 'The distance is an estimate. You can still book.'],
       [`${L('Hindi mabuksan ang dialler…', 'Could not open the dialler…')}`, 'Dial the number shown in the message by hand.'],
@@ -462,7 +508,8 @@ const content = [
       [`${L('Hindi pinayagan ng server na mag-online…', 'The server refused to put you online…')}`, 'Check that your ID and registration are approved. If they are, send a screenshot to your TODA officer.'],
       [`${L('Hindi naisave sa server ang location mo…', 'Your location could not be saved…')}`, 'Check your internet connection, then try again.'],
       ['No offers arrive while Online', 'Open TrikeKoTo: if it was closed or out of signal for about five minutes, it has to check in again before offers resume. Check that notifications are allowed for TrikeKoTo, and that a commuter is within the search radius.'],
-      ['The bell shows a number', `You have an unread notice. Tap the bell to read it (Section 5.8).`],
+      ['The bell shows a number', `You have an unread notice. Tap the bell to read it (Section 5.9).`],
+      ['An offer arrived while you already had a passenger', 'That is a shared ride: the new trip is on your current route (Section 5.5). Accept it or decline it — declining costs you nothing.'],
     ],
   } },
   { h2: '8.5 Administrators' },
@@ -511,7 +558,7 @@ function toMarkdown(blocks) {
 
 // ── Word ────────────────────────────────────────────────────────────────
 
-const FONT = 'Calibri';
+const FONT = 'Times New Roman';
 
 function runs(text, extra = {}) {
   // **bold** segments become bold runs.
