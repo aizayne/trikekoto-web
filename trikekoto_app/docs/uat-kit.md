@@ -28,7 +28,12 @@ meant to work rather than as a demo with an apology attached.
 > removed from the Firebase console, so drivers now register with
 > facilitator-issued test details. It also never said that every booking needs
 > a second person on the other role's phone. The printable pack is rebuilt to
-> match, in `docs/uat-field-pack.html`.
+> match, in `docs/uat-field-pack.html`. A printable copy is checked in as
+> `docs/TrikeKoTo-UAT-Field-Pack.pdf`; regenerate it after any change with:
+>
+> ```
+> chrome --headless=new --no-pdf-header-footer >   --print-to-pdf=docs/TrikeKoTo-UAT-Field-Pack.pdf docs/uat-field-pack.html
+> ```
 
 > **Revised again 23 September 2026, for app version 1.0.9 (10).** Four
 > releases since the last revision changed what a participant meets and how a
