@@ -3,6 +3,10 @@
 //   docs/user-manual.md              — the repository copy (source of truth)
 //   docs/TrikeKoTo-User-Manual.docx  — for the thesis appendix and printing
 //
+// scripts/manual_to_pdf.ps1 renders that .docx to
+// docs/TrikeKoTo-User-Manual.pdf, for an appendix that has to be read rather
+// than edited. Run it after this.
+//
 // Run from trikekoto_app/ with the globally installed docx package:
 //   NODE_PATH="$(npm root -g)" node scripts/build_user_manual.cjs
 //
