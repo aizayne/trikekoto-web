@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
@@ -109,8 +110,7 @@ final dispatchControllerProvider = Provider<DispatchController>((ref) {
 /// The commuter's current ride, if any. `limit(1)` on their own rides ordered
 /// newest-first — the read rule admits it because `commuterUid` is theirs.
 final myActiveRideProvider = StreamProvider<Ride?>((ref) {
-  final auth = ref.watch(firebaseAuthProvider);
-  final uid = auth.currentUser?.uid;
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
   if (uid == null) return Stream.value(null);
 
   return ref

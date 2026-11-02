@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/providers.dart';
 import '../data/rider.dart';
 
@@ -59,7 +60,7 @@ final commuterPositionProvider = StreamProvider.autoDispose<LatLng?>((ref) async
 /// therefore means "no account", not "something broke", so it degrades to null
 /// rather than surfacing an error on a screen that works fine without it.
 final myRiderProfileProvider = StreamProvider<Rider?>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
   if (uid == null) return Stream.value(null);
 
   return ref

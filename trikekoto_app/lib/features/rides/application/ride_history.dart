@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../drivers/application/driver_controllers.dart'
@@ -51,7 +52,7 @@ final rideHistoryProvider = StreamProvider.autoDispose
 
   final Query<Ride>? query = switch (audience) {
     HistoryAudience.commuter => () {
-        final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+        final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
         return uid == null ? null : refs.ridesForCommuter(uid);
       }(),
     HistoryAudience.driver => () {

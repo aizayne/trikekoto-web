@@ -167,7 +167,7 @@ final idVerificationServiceProvider = Provider<IdVerificationService>((ref) {
 
 /// The signed-in person's own submission, whichever role they hold.
 final myIdSubmissionProvider = StreamProvider<IdSubmission?>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
   if (uid == null) return Stream.value(null);
   return ref
       .watch(idVerificationServiceProvider)

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/providers.dart';
 import '../data/app_notification.dart';
 
@@ -17,7 +18,7 @@ import '../data/app_notification.dart';
 /// router moving.
 final myNotificationsProvider =
     StreamProvider.autoDispose<List<AppNotification>>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
   if (uid == null) return Stream.value(const <AppNotification>[]);
 
   return ref
@@ -43,7 +44,7 @@ final unreadNoticeCountProvider = Provider.autoDispose<int>((ref) {
 typedef MarkNoticeRead = Future<void> Function(AppNotification notice);
 
 final markNoticeReadProvider = Provider<MarkNoticeRead>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid = ref.watch(sessionProvider.select((s) => s.user?.uid));
   final refs = ref.watch(refsProvider);
 
   return (notice) async {

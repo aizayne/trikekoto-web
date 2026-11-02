@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/diagnostics/crash_reporter.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/firestore/collection_paths.dart';
@@ -16,8 +17,8 @@ import '../data/active_driver.dart';
 /// The signed-in driver's normalised email, which is their document ID
 /// everywhere in this schema.
 final driverEmailProvider = Provider<String>((ref) {
-  final user = ref.watch(firebaseAuthProvider).currentUser;
-  return normalizeEmail(user?.email);
+  return ref.watch(
+      sessionProvider.select((s) => normalizeEmail(s.user?.email)));
 });
 
 /// Streams the driver's own profile so approval changes made by an admin land
