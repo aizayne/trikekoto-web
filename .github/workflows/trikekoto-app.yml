@@ -160,6 +160,43 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: flutter pub get
 
+      # gradle.properties points java.io.tmpdir at C:\Temp, for a fault on the
+      # maintainer's Windows machine. That directory does not exist here.
+      - name: Remove the Windows temp directory setting
+        working-directory: ${{ env.APP_DIR }}/android
+        run: sed -i -E 's/ -Djava\.io\.tmpdir=[^ ]+//' gradle.properties
+
+      # google-services.json is gitignored, and the Google services plugin
+      # fails the build without it. Written from firebase_options.dart so this
+      # file holds no copy of the values, and adds nothing not already public.
+      - name: Write the Firebase Android config
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const source = fs.readFileSync('lib/firebase_options.dart', 'utf8');
+            const start = source.indexOf('static const FirebaseOptions android');
+            const android = source.slice(start, source.indexOf(');', start));
+            const value = (key) => android.match(new RegExp(key + \": '([^']+)'\"))[1];
+            fs.writeFileSync('android/app/google-services.json', JSON.stringify({
+              project_info: {
+                project_number: value('messagingSenderId'),
+                project_id: value('projectId'),
+                storage_bucket: value('storageBucket'),
+              },
+              client: [{
+                client_info: {
+                  mobilesdk_app_id: value('appId'),
+                  android_client_info: { package_name: 'ph.trikekoto.trikekoto_app' },
+                },
+                oauth_client: [],
+                api_key: [{ current_key: value('apiKey') }],
+                services: { appinvite_service: { other_platform_oauth_client: [] } },
+              }],
+              configuration_version: '1',
+            }));
+          "
+
       # Build number comes from the run number so it is monotonic and never
       # repeats — Android refuses an update whose versionCode did not rise,
       # and hand-edited numbers eventually collide.
