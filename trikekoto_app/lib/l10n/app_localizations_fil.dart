@@ -789,10 +789,11 @@ class LFil extends L {
   String get regYourTricycle => 'Tricycle mo';
 
   @override
-  String get regPlate => 'Plate number';
+  String get regPlate => 'Body number';
 
   @override
-  String get regPlateHelper => 'Ipapakita sa commuter para makita ka nila.';
+  String get regPlateHelper =>
+      'Ang numero sa tricycle mo. Ipapakita sa commuter para makita ka nila.';
 
   @override
   String get regTodaChapter => 'TODA chapter';

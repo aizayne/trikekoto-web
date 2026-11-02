@@ -1468,13 +1468,13 @@ abstract class L {
   /// No description provided for @regPlate.
   ///
   /// In fil, this message translates to:
-  /// **'Plate number'**
+  /// **'Body number'**
   String get regPlate;
 
   /// No description provided for @regPlateHelper.
   ///
   /// In fil, this message translates to:
-  /// **'Ipapakita sa commuter para makita ka nila.'**
+  /// **'Ang numero sa tricycle mo. Ipapakita sa commuter para makita ka nila.'**
   String get regPlateHelper;
 
   /// No description provided for @regTodaChapter.

@@ -261,7 +261,7 @@ Each ride shows the date, the route, how it ended — **Natapos** (Completed), *
 |---|---|
 | **Pangalan** (First name) / **Apelyido** (Last name) | Your name, as printed on your license. |
 | **Mobile number** | The number commuters will call when you accept their ride. |
-| **Plate number** | Your tricycle’s plate. Commuters use it to find you. |
+| **Body number** | The number on your tricycle. Commuters use it to find you. |
 | **TODA chapter** | The chapter you belong to. |
 | **Email** and **Password** | What you will use to sign in. The password needs at least 6 characters. |
 

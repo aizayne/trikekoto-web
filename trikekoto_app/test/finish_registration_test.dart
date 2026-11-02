@@ -32,11 +32,13 @@ void main() {
     expect(find.widgetWithText(TextFormField, 'Password'), findsNothing);
     expect(find.widgetWithText(TextFormField, 'Email'), findsNothing);
     await tester.scrollUntilVisible(
-      find.widgetWithText(TextFormField, 'Plate number'),
+      find.widgetWithText(TextFormField, 'Body number'),
       100,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.widgetWithText(TextFormField, 'Plate number'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Body number'), findsOneWidget);
+    expect(find.text('Plate number'), findsNothing);
+    expect(find.text('TODA chapter'), findsNothing);
   });
 
   testWidgets('a new registration still asks for a sign-in', (tester) async {

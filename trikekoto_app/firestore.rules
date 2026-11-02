@@ -164,7 +164,8 @@ service cloud.firestore {
           && d.firstName is string   && d.firstName.size() >= 1   && d.firstName.size() <= 60
           && d.lastName is string    && d.lastName.size() >= 1    && d.lastName.size() <= 60
           && d.phone is string       && d.phone.size() >= 7       && d.phone.size() <= 20
-          && d.plateNumber is string && d.plateNumber.size() >= 3 && d.plateNumber.size() <= 16
+          // Holds the TODA body number, which can be a single digit.
+          && d.plateNumber is string && d.plateNumber.size() >= 1 && d.plateNumber.size() <= 16
           && d.todaChapter is string && d.todaChapter.size() <= 80
           && holdsPhoneClaim(d.phone)
           && d.ratingSum == 0

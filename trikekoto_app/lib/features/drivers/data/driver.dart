@@ -31,7 +31,11 @@ class Driver {
   final String firstName;
   final String lastName;
   final String phone;
+  /// The tricycle's TODA body number, despite the name. Registration asked for
+  /// the plate until 2026-11, and drivers from before then still hold one. The
+  /// name stayed because the rules and every past ride's snapshot read it.
   final String plateNumber;
+  /// Empty for drivers registered since the form stopped asking for it.
   final String todaChapter;
   final String? todaBodyNumber;
   final String status;
@@ -116,7 +120,7 @@ class Driver {
     required String lastName,
     required String phone,
     required String plateNumber,
-    required String todaChapter,
+    String todaChapter = '',
     String? todaBodyNumber,
   }) =>
       {

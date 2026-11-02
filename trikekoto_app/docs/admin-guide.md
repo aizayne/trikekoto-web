@@ -51,11 +51,12 @@ This is the job the app exists to support. A driver cannot accept a single
 ride until you approve them.
 
 **Pending verification** at the top of your dashboard shows everyone waiting,
-with a count badge. For each you see their name, plate number, mobile number,
-email and TODA chapter.
+with a count badge. For each you see their name, body number, mobile number
+and email. Drivers registered earlier may also show a TODA chapter, and a plate
+in place of the body number.
 
 **Before approving, confirm against your chapter records** that the person,
-the plate, and the chapter actually match. The app cannot check this — it only
+and the body number actually match. The app cannot check this — it only
 records what the driver typed. Approving someone unverified puts an
 unaccountable driver in front of passengers.
 

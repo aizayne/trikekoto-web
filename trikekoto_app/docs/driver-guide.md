@@ -18,8 +18,7 @@
 |---|---|
 | First / Last name | Pangalan mo, gaya ng nasa lisensya |
 | Mobile number | Ang tatawagan ng pasahero. Siguraduhing tama. |
-| Plate number | Plaka ng tricycle mo |
-| TODA chapter | Ang chapter na kinabibilangan mo |
+| Body number | Numero sa tricycle mo |
 | Email + Password | Ito ang gagamitin mo sa pag-login |
 
 5. Pindutin ang **Create account**.

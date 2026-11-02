@@ -32,7 +32,6 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
   final _lastName = TextEditingController();
   final _phone = TextEditingController();
   final _plate = TextEditingController();
-  final _toda = TextEditingController();
   bool _busy = false;
   bool _obscure = true;
 
@@ -45,7 +44,6 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       _lastName,
       _phone,
       _plate,
-      _toda,
     ]) {
       c.dispose();
     }
@@ -99,7 +97,6 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
           lastName: _lastName.text,
           phone: phone,
           plateNumber: _plate.text,
-          todaChapter: _toda.text,
         ),
       );
       PhoneClaims.addTo(
@@ -198,17 +195,9 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                     _field(
                       _plate,
                       context.l.regPlate,
-                      min: 3,
                       icon: Icons.confirmation_number_outlined,
                       capitalization: TextCapitalization.characters,
                       helper: context.l.regPlateHelper,
-                    ),
-                    const Gap(AppSpacing.md),
-                    _field(
-                      _toda,
-                      context.l.regTodaChapter,
-                      icon: Icons.groups_outlined,
-                      capitalization: TextCapitalization.words,
                     ),
 
                     if (!widget.finishing) ...[

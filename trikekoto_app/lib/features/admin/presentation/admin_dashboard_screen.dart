@@ -374,8 +374,10 @@ class _DriverTile extends ConsumerWidget {
                         style: context.text.bodySmall,
                       ),
                       Text(
-                        context.l.adminEmailChapter(
-                            driver.email, driver.todaChapter),
+                        driver.todaChapter.isEmpty
+                            ? driver.email
+                            : context.l.adminEmailChapter(
+                                driver.email, driver.todaChapter),
                         style: context.text.bodySmall,
                       ),
                     ],

@@ -734,6 +734,32 @@ describe('drivers — registration and verification', () => {
     await assertSucceeds(register(driver(), DRIVER_EMAIL));
   });
 
+  it('accepts a one-digit body number and no chapter', async () => {
+    const db = driver();
+    const batch = writeBatch(db);
+    const profile = { ...registration(DRIVER_EMAIL), plateNumber: '7', todaChapter: '' };
+    batch.set(doc(db, 'drivers', DRIVER_EMAIL), profile);
+    batch.set(doc(db, 'phone_claims', profile.phone), {
+      uid: profile.uid,
+      role: 'driver',
+      createdAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('refuses a registration with no body number', async () => {
+    const db = driver();
+    const batch = writeBatch(db);
+    const profile = { ...registration(DRIVER_EMAIL), plateNumber: '' };
+    batch.set(doc(db, 'drivers', DRIVER_EMAIL), profile);
+    batch.set(doc(db, 'phone_claims', profile.phone), {
+      uid: profile.uid,
+      role: 'driver',
+      createdAt: serverTimestamp(),
+    });
+    await assertFails(batch.commit());
+  });
+
   it('refuses a registration with no phone claim', async () => {
     await assertFails(
       setDoc(doc(driver(), 'drivers', DRIVER_EMAIL), registration(DRIVER_EMAIL)),

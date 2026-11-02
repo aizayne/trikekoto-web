@@ -48,8 +48,8 @@ document at accept time.
 | `uid` | string | Firebase Auth uid, pinned at registration |
 | `firstName`, `lastName` | string | 1–60 chars |
 | `phone` | string | E.164; must be held by this account in `phone_claims`; typed, not verified by SMS |
-| `plateNumber` | string | 3–16 chars, stored uppercase |
-| `todaChapter` | string | TODA chapter / association name, ≤80 |
+| `plateNumber` | string | the TODA body number, 1–16 chars, stored uppercase. Drivers registered before 2026-11 hold a plate here. The name stays because the rules and past rides read it |
+| `todaChapter` | string | ≤80; empty for drivers registered since the form stopped asking |
 | `todaBodyNumber` | string? | tricycle body number |
 | `status` | string | `pending` \| `approved` \| `suspended` \| `rejected` |
 | `verification` | map? | `{licenseNo, licenseExpiry, franchiseNo, reviewedBy, reviewedAt, rejectionReason}` |

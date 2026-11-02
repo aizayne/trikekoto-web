@@ -783,10 +783,11 @@ class LEn extends L {
   String get regYourTricycle => 'Your tricycle';
 
   @override
-  String get regPlate => 'Plate number';
+  String get regPlate => 'Body number';
 
   @override
-  String get regPlateHelper => 'Shown to the commuter so they find you.';
+  String get regPlateHelper =>
+      'The number on your tricycle. Shown to the commuter so they find you.';
 
   @override
   String get regTodaChapter => 'TODA chapter';
