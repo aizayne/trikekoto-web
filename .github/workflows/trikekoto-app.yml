@@ -96,6 +96,12 @@ jobs:
         working-directory: ${{ env.APP_DIR }}/test_rules
         run: npm ci
 
+      # migration.test.mjs imports scripts/migrate_from_web.mjs, which resolves
+      # firebase-admin from scripts/, not from test_rules/.
+      - name: Install script dependencies
+        working-directory: ${{ env.APP_DIR }}/scripts
+        run: npm ci
+
       - name: Cache the emulator jar
         uses: actions/cache@v4
         with:
