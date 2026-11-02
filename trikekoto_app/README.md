@@ -281,30 +281,33 @@ foreground while they book.
 
 ### Deploying it
 
-**Not wired up on purpose.** There is no `hosting` block in this
-`firebase.json`, because the parent project's `firebase.json` already has one
-serving the legacy React app from `dist/`. Adding a second here would mean a
-plain `firebase deploy` from this directory silently replaces the live site —
-a footgun aimed at whoever next deploys rules.
+This `firebase.json` has a `hosting` block serving `build/web`, so **a plain
+`firebase deploy` from this directory replaces the live site**. Deploy rules or
+functions with `--only`.
 
-When you actually want the Flutter app on Hosting, decide first whether it
-**replaces** the React app or runs beside it on a second Hosting site, then add
-the block deliberately:
+Hosting serves the web app and the APK download together, so publish them
+together. After adding a plugin, run `flutter clean` first, which also deletes
+the APK, so build both afterwards. Run these from Git Bash:
 
-```json
-"hosting": {
-  "public": "build/web",
-  "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-  "rewrites": [{ "source": "**", "destination": "/index.html" }]
-}
+```bash
+flutter build apk --release --build-name=<version> --build-number=<code>
+flutter build web --release --build-name=<version> --build-number=<code>
+bash scripts/stage_apk.sh
+firebase deploy --only hosting
 ```
 
-The rewrite matters: GoRouter uses real paths, so without it a refresh on
+The order matters, because `flutter build web` rewrites `build/web` and would
+remove an APK staged before it. The download is at
+`https://trikekoto.web.app/download/trikekoto.apk`, and
+[`docs/trikekoto-apk-qr.png`](docs/trikekoto-apk-qr.png) is a QR code for that
+link. The link does not change between releases, so neither does the QR code.
+
+The rewrite to `index.html` matters: GoRouter uses real paths, so without it a refresh on
 `/driver` returns a 404 from Hosting rather than reaching the app.
 
-Then add your Hosting domain under **Authentication → Settings → Authorized
-domains**, or sign-in fails with `auth/unauthorized-domain` on the live site
-while working perfectly on localhost.
+A new Hosting domain must also be added under **Authentication → Settings →
+Authorized domains**, or sign-in fails with `auth/unauthorized-domain` on the
+live site while working perfectly on localhost.
 
 ---
 
