@@ -234,6 +234,10 @@ pins in the map picker, and search matches them on the phone as the person types
 OpenStreetMap search still runs only on submit, because Nominatim's usage policy
 forbids autocomplete on its public service.
 
+`scripts/import_osm_landmarks.mjs` imports named places from OpenStreetMap with the
+Admin SDK. Those also carry `source: 'osm'`, which is how `--remove` tells them from
+landmarks added by hand.
+
 ---
 
 ## `device_logins/{uid}`
