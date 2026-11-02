@@ -116,10 +116,8 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     });
 
     if (results.isEmpty && _landmarkMatches.isEmpty) {
-      // Not "no such place" — the search is deliberately bounded to about
-      // 55 km around the map centre, so a real place further out comes back
-      // empty. Saying it was not found would be a lie the commuter cannot
-      // check, and would read as the app not knowing their own province.
+      // Not "no such place" — a real place can be missing from the map data,
+      // or the search can have failed, and the two look the same from here.
       showSnack(context,
           context.l.pickerNotFound(query));
     }

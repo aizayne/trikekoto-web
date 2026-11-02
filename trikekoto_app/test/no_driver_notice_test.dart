@@ -14,7 +14,7 @@ import 'package:trikekoto_app/l10n/app_localizations.dart';
 
 /// Telling a waiting commuter that nobody has accepted.
 ///
-/// The progress bar and the "asked 3 of 10" line say what the system is
+/// The progress bar and the "asked 3 of up to 10" line say what the system is
 /// doing, not what the passenger wants to know. These pin the two moments
 /// where the app says it plainly: at three minutes, and when the search ends.
 

@@ -411,8 +411,12 @@ class LFil extends L {
   String get statusInTransit => 'Papunta na sa babaan mo';
 
   @override
+  String get statusNoneAsked =>
+      'Wala pang natanong na driver. Naghahanap pa sa malapit.';
+
+  @override
   String statusAsked(String depth, String total) {
-    return 'Natanong na ang $depth sa $total malapit na driver';
+    return 'Natanong na ang $depth sa hanggang $total driver';
   }
 
   @override

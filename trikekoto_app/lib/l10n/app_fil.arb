@@ -212,7 +212,8 @@
   "statusSearching": "Naghahanap ng driver…",
   "statusAccepted": "Papunta na ang driver",
   "statusInTransit": "Papunta na sa babaan mo",
-  "statusAsked": "Natanong na ang {depth} sa {total} malapit na driver",
+  "statusNoneAsked": "Wala pang natanong na driver. Naghahanap pa sa malapit.",
+  "statusAsked": "Natanong na ang {depth} sa hanggang {total} driver",
   "@statusAsked": {
     "placeholders": {
       "depth": {

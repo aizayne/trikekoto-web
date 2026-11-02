@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
 import '../data/ride_analytics.dart';
@@ -25,6 +28,10 @@ final analyticsClockProvider = Provider<DateTime Function()>((_) => DateTime.now
 const _readCap = 2000;
 
 final rideAnalyticsProvider = FutureProvider<RideAnalytics>((ref) async {
+  // Nothing to read while signed out. The sign-in that follows runs this again.
+  if (ref.watch(sessionProvider.select((s) => s.user?.uid)) == null) {
+    return Completer<RideAnalytics>().future;
+  }
   final window = ref.watch(analyticsWindowProvider);
   final now = ref.watch(analyticsClockProvider)();
   final since = window.since(now);

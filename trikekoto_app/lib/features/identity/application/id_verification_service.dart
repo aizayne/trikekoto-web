@@ -181,6 +181,9 @@ final myIdSubmissionProvider = StreamProvider<IdSubmission?>((ref) {
 /// The admin review queue.
 final pendingIdSubmissionsProvider =
     StreamProvider<List<IdSubmission>>((ref) {
+  if (ref.watch(sessionProvider.select((s) => s.user?.uid)) == null) {
+    return const Stream.empty();
+  }
   return ref.watch(idVerificationServiceProvider).watchPending();
 });
 

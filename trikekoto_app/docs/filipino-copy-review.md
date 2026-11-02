@@ -241,8 +241,10 @@ driver hits at a terminal.
       - *en:* Driver is on the way
 - [ ] **`[new]`** Papunta na sa babaan mo
       - *en:* On the way to your drop-off
-- [ ] **`[new]`** Natanong na ang {depth} sa {total} malapit na driver
-      - *en:* Asked {depth} of {total} nearby drivers
+- [ ] **`[new]`** Wala pang natanong na driver. Naghahanap pa sa malapit.
+      - *en:* No driver has been asked yet. Still looking nearby.
+- [ ] **`[new]`** Natanong na ang {depth} sa hanggang {total} driver
+      - *en:* Asked {depth} of up to {total} drivers
 - [ ] **`[new]`** Tawagan si {name}
       - *en:* Call {name}
 - [ ] **`[new]`** Kanselahin ang ride

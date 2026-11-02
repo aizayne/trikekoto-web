@@ -171,7 +171,7 @@ Then type a name for the place in **Pangalanan ang lugar** (Name this place) —
 
 ### 4.4 Waiting for a driver
 
-The screen shows **Naghahanap ng driver…** (Looking for a driver…). The system offers your ride to the nearest available driver first. If that driver does not answer within 15 seconds, it asks the next nearest, and so on. The line **Natanong na ang 3 sa 10 malapit na driver** (Asked 3 of 10 nearby drivers) shows how many have been asked.
+The screen shows **Naghahanap ng driver…** (Looking for a driver…). The system offers your ride to the nearest available driver first. If that driver does not answer within 15 seconds, it asks the next nearest, and so on. The line **Natanong na ang 3 sa hanggang 10 driver** (Asked 3 of up to 10 drivers) shows how many have been asked. Until a driver is in range it reads **Wala pang natanong na driver. Naghahanap pa sa malapit.** (No driver has been asked yet. Still looking nearby.)
 
 - The search continues even if you close the app.
 - After **3 minutes** with no driver, the app says so: **Wala pang tumatanggap** (No driver has accepted yet). Tap **Maghintay pa** (Keep waiting) to let the search go on, or **Kanselahin ang ride** (Cancel ride) to look for another ride. If the app is closed, a notification says the same thing. You are told only once per booking.

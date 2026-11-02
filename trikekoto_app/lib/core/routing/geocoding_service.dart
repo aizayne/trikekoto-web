@@ -81,20 +81,18 @@ class GeocodingService {
 
     await _respectRateLimit();
 
-    // A 0.5-degree box around the map centre, roughly 55 km. Bounded, so a
-    // search for "Plaza" returns the one down the road rather than one in
-    // another province.
+    // A 0.5-degree box around the map centre, roughly 55 km. A preference and
+    // not a fence: a search for "Plaza" still puts the one down the road first,
+    // and a place in another province is still found.
     final params = <String, String>{
       'q': trimmed,
       'format': 'jsonv2',
       'limit': '6',
       'addressdetails': '0',
       'countrycodes': 'ph',
-      if (near != null) ...{
+      if (near != null)
         'viewbox': '${near.longitude - 0.5},${near.latitude + 0.5},'
             '${near.longitude + 0.5},${near.latitude - 0.5}',
-        'bounded': '1',
-      },
     };
 
     try {

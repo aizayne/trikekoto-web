@@ -18,7 +18,13 @@ import '../../../core/ui/locale_controller.dart';
 /// All drivers, so the panel can show the verification queue and the roster in
 /// one stream. `list` on `drivers` is admin-only, so this query simply fails
 /// for anyone else.
+///
+/// Starts over with each sign-in. Signing out makes this query fail, and without
+/// that the failure would still be on screen when the admin signed back in.
 final allDriversProvider = StreamProvider<List<Driver>>((ref) {
+  if (ref.watch(sessionProvider.select((s) => s.user?.uid)) == null) {
+    return const Stream.empty();
+  }
   return ref
       .watch(refsProvider)
       .drivers
@@ -201,6 +207,9 @@ final pendingIdCountProvider = Provider<int?>((ref) {
 });
 
 final openFeedbackCountProvider = StreamProvider<int>((ref) {
+  if (ref.watch(sessionProvider.select((s) => s.user?.uid)) == null) {
+    return const Stream.empty();
+  }
   return ref
       .watch(refsProvider)
       .openFeedback

@@ -28,6 +28,7 @@ import '../../feedback/presentation/feedback_sheet.dart';
 import '../application/commuter_location.dart';
 import '../application/dispatch_controller.dart';
 import '../../../core/ui/locale_controller.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// How long a commuter waits before the app says nobody has accepted.
 ///
@@ -36,6 +37,15 @@ import '../../../core/ui/locale_controller.dart';
 /// time to decide to walk. `NO_DRIVER_NOTICE_MINUTES` in functions/src
 /// mirrors it for the push that reaches a closed app.
 const noDriverAfter = Duration(minutes: 3);
+
+/// The line under the search bar.
+///
+/// The total is the most drivers a search will ever try, not how many are
+/// nearby. "Asked 0 of 10 nearby drivers" read as ten drivers ignoring the
+/// booking, when usually nobody was in range to ask.
+String searchProgressText(L l, int depth) => depth == 0
+    ? l.statusNoneAsked
+    : l.statusAsked('$depth', '${DispatchDefaults.maxDriversToTry}');
 
 class CommuterBookingScreen extends ConsumerStatefulWidget {
   const CommuterBookingScreen({super.key});
@@ -1190,8 +1200,7 @@ class _ActiveRideCard extends StatelessWidget {
               ),
               const Gap(AppSpacing.sm),
               Text(
-                context.l.statusAsked('${ride.dispatch.depth}',
-                    '${DispatchDefaults.maxDriversToTry}'),
+                searchProgressText(context.l, ride.dispatch.depth),
                 style: theme.textTheme.bodySmall,
               ),
             ],

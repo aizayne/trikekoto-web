@@ -116,7 +116,7 @@ void main() {
 
       final q = captured.queryParameters;
       expect(q['countrycodes'], 'ph');
-      expect(q['bounded'], '1');
+      expect(q.containsKey('bounded'), isFalse);
       expect(q['viewbox'], isNotNull);
       // Without bounding, "Plaza" returns matches from other provinces ahead
       // of the one down the road.

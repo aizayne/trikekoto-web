@@ -408,8 +408,12 @@ class LEn extends L {
   String get statusInTransit => 'On the way to your drop-off';
 
   @override
+  String get statusNoneAsked =>
+      'No driver has been asked yet. Still looking nearby.';
+
+  @override
   String statusAsked(String depth, String total) {
-    return 'Asked $depth of $total nearby drivers';
+    return 'Asked $depth of up to $total drivers';
   }
 
   @override

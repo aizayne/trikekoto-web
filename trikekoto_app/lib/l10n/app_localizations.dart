@@ -805,10 +805,16 @@ abstract class L {
   /// **'Papunta na sa babaan mo'**
   String get statusInTransit;
 
+  /// No description provided for @statusNoneAsked.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang natanong na driver. Naghahanap pa sa malapit.'**
+  String get statusNoneAsked;
+
   /// No description provided for @statusAsked.
   ///
   /// In fil, this message translates to:
-  /// **'Natanong na ang {depth} sa {total} malapit na driver'**
+  /// **'Natanong na ang {depth} sa hanggang {total} driver'**
   String statusAsked(String depth, String total);
 
   /// No description provided for @callDriver.

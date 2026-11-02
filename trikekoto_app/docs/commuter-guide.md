@@ -57,7 +57,9 @@ Pindutin ang **Find a driver**.
 Hahanapin ng app ang **pinakamalapit** na driver muna. Kung hindi siya
 tumugon sa loob ng 15 segundo, lilipat ito sa susunod na pinakamalapit.
 
-Makikita mo: **"Asked 3 of 10 nearby drivers"** — ilan na ang natanong.
+Makikita mo: **"Asked 3 of up to 10 drivers"** — ilan na ang natanong. Kung
+**"No driver has been asked yet"** ang nakasulat, wala pang driver na malapit
+sa sundo mo.
 
 > Kung maubos ang sampu at walang tumanggap, titigil ang paghahanap. Subukan
 > ulit maya-maya.

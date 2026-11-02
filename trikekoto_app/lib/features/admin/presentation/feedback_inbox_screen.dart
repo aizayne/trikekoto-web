@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
@@ -15,6 +16,9 @@ import '../../../l10n/app_localizations.dart';
 /// visible — a recurring complaint is only recognisable against what came
 /// before it.
 final allFeedbackProvider = StreamProvider<List<FeedbackReport>>((ref) {
+  if (ref.watch(sessionProvider.select((s) => s.user?.uid)) == null) {
+    return const Stream.empty();
+  }
   return ref
       .watch(refsProvider)
       .feedback
