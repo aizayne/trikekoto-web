@@ -125,6 +125,8 @@
   "rateSend": "Send rating",
   "driverTitle": "Driver",
   "driverNoProfile": "No driver profile found.",
+  "driverFinishBody": "Your registration did not finish. Add your details and tricycle to complete it. Your sign-in and any approved ID stay as they are.",
+  "driverFinishButton": "Finish registering",
   "driverIdVerification": "ID verification",
   "driverIdSubtitle": "Send your licence or ID to the chapter",
   "driverVerified": "Verified TODA driver",

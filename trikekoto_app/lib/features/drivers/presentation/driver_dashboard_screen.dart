@@ -77,7 +77,32 @@ class DriverDashboardScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text(describeError(e))),
         data: (driver) {
           if (driver == null) {
-            return Center(child: Text(context.l.driverNoProfile));
+            // Registration stopped after the sign-in was created. Without a
+            // way forward this screen is a dead end, because the email address
+            // cannot be registered a second time.
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(context.l.driverNoProfile,
+                        textAlign: TextAlign.center,
+                        style: context.text.titleMedium),
+                    const Gap(AppSpacing.sm),
+                    Text(context.l.driverFinishBody,
+                        textAlign: TextAlign.center,
+                        style: context.text.bodyMedium),
+                    const Gap(AppSpacing.xl),
+                    FilledButton(
+                      onPressed: () =>
+                          context.go('/driver/finish-registration'),
+                      child: Text(context.l.driverFinishButton),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.xl),

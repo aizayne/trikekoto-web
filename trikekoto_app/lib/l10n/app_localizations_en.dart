@@ -434,6 +434,13 @@ class LEn extends L {
   String get driverNoProfile => 'No driver profile found.';
 
   @override
+  String get driverFinishBody =>
+      'Your registration did not finish. Add your details and tricycle to complete it. Your sign-in and any approved ID stay as they are.';
+
+  @override
+  String get driverFinishButton => 'Finish registering';
+
+  @override
   String get driverIdVerification => 'ID verification';
 
   @override

@@ -243,6 +243,8 @@
   "rateSend": "Ipadala ang rating",
   "driverTitle": "Driver",
   "driverNoProfile": "Walang nakitang driver profile.",
+  "driverFinishBody": "Hindi natapos ang registration mo. Ilagay ang detalye mo at ng tricycle para makumpleto ito. Mananatili ang sign-in mo at anumang naaprubahang ID.",
+  "driverFinishButton": "Tapusin ang registration",
   "driverIdVerification": "ID verification",
   "driverIdSubtitle": "Ipadala ang lisensya o ID para sa chapter",
   "driverVerified": "Verified TODA driver",

@@ -436,6 +436,13 @@ class LFil extends L {
   String get driverNoProfile => 'Walang nakitang driver profile.';
 
   @override
+  String get driverFinishBody =>
+      'Hindi natapos ang registration mo. Ilagay ang detalye mo at ng tricycle para makumpleto ito. Mananatili ang sign-in mo at anumang naaprubahang ID.';
+
+  @override
+  String get driverFinishButton => 'Tapusin ang registration';
+
+  @override
   String get driverIdVerification => 'ID verification';
 
   @override

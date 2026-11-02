@@ -179,6 +179,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'notifications',
             builder: (_, _) => const NotificationsScreen(),
           ),
+          GoRoute(
+            path: 'finish-registration',
+            builder: (_, _) => const DriverRegisterScreen(finishing: true),
+          ),
         ],
       ),
       GoRoute(

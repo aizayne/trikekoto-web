@@ -847,6 +847,18 @@ abstract class L {
   /// **'Walang nakitang driver profile.'**
   String get driverNoProfile;
 
+  /// No description provided for @driverFinishBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi natapos ang registration mo. Ilagay ang detalye mo at ng tricycle para makumpleto ito. Mananatili ang sign-in mo at anumang naaprubahang ID.'**
+  String get driverFinishBody;
+
+  /// No description provided for @driverFinishButton.
+  ///
+  /// In fil, this message translates to:
+  /// **'Tapusin ang registration'**
+  String get driverFinishButton;
+
   /// No description provided for @driverIdVerification.
   ///
   /// In fil, this message translates to:

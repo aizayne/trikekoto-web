@@ -234,6 +234,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No driver profile found.'), findsOneWidget);
+      expect(find.text('Finish registering'), findsOneWidget);
     });
   });
 

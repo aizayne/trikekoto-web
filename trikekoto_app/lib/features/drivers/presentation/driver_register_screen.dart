@@ -13,7 +13,11 @@ import '../data/driver.dart';
 import '../../../core/ui/locale_controller.dart';
 
 class DriverRegisterScreen extends ConsumerStatefulWidget {
-  const DriverRegisterScreen({super.key});
+  const DriverRegisterScreen({super.key, this.finishing = false});
+
+  /// For someone signed in with no profile, whose registration stopped partway.
+  /// Asks only for what is missing, and keeps the sign-in and any approved ID.
+  final bool finishing;
 
   @override
   ConsumerState<DriverRegisterScreen> createState() =>
@@ -59,13 +63,22 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
     final taken = context.l.phoneNumberTaken;
     final errorColour = context.scheme.error;
     UserCredential? created;
+    final router = GoRouter.of(context);
 
     try {
       final session = ref.read(sessionProvider.notifier);
-      created = await session.registerDriverAccount(
-        _email.text,
-        _password.text,
-      );
+      // Finishing a registration uses the sign-in that already exists.
+      final User user;
+      if (widget.finishing) {
+        user = ref.read(firebaseAuthProvider).currentUser!;
+      } else {
+        created = await session.registerDriverAccount(
+          _email.text,
+          _password.text,
+        );
+        user = created.user!;
+      }
+      final email = user.email ?? _email.text;
 
       // The profile write must follow account creation: the rule requires
       // `uid == request.auth.uid`, so there is nothing valid to write until
@@ -75,12 +88,12 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       // without it, and refuse the claim if another account holds this number.
       final db = ref.read(firestoreProvider);
       final phone = toE164Ph(_phone.text)!;
-      final uid = created.user!.uid;
+      final uid = user.uid;
       final batch = db.batch();
       batch.set(
-        db.collection(FsCollections.drivers).doc(normalizeEmail(_email.text)),
+        db.collection(FsCollections.drivers).doc(normalizeEmail(email)),
         Driver.registrationPayload(
-          email: _email.text,
+          email: email,
           uid: uid,
           firstName: _firstName.text,
           lastName: _lastName.text,
@@ -89,23 +102,35 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
           todaChapter: _toda.text,
         ),
       );
-      PhoneClaims.addTo(batch, db,
-          phone: phone, uid: uid, role: PhoneClaims.driver);
+      PhoneClaims.addTo(
+        batch,
+        db,
+        phone: phone,
+        uid: uid,
+        role: PhoneClaims.driver,
+      );
       await batch.commit();
 
       await session.refresh();
+      if (widget.finishing) router.go('/driver');
     } catch (e) {
       // A sign-in with no profile would hold this email address for nothing,
-      // and "already registered" would be the answer to trying again.
+      // and "already registered" would be the answer to trying again. Only a
+      // sign-in made just now: one that already existed may hold an approved
+      // ID, and `created` is null for it.
       try {
         await created?.user?.delete();
       } catch (_) {}
-      messenger.showSnackBar(SnackBar(
-        backgroundColor: errorColour,
-        content: Text(e.toString().contains('permission-denied')
-            ? taken
-            : describeError(e)),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: errorColour,
+          content: Text(
+            e.toString().contains('permission-denied')
+                ? taken
+                : describeError(e),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -118,7 +143,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
         title: Text(context.l.regTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/login'),
+          onPressed: () => context.go(widget.finishing ? '/driver' : '/login'),
         ),
       ),
       body: SafeArea(
@@ -143,12 +168,18 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
 
                     _SectionLabel(context.l.regYourDetails),
                     const Gap(AppSpacing.md),
-                    _field(_firstName, context.l.regFirstName,
-                        icon: Icons.person_outline,
-                        capitalization: TextCapitalization.words),
+                    _field(
+                      _firstName,
+                      context.l.regFirstName,
+                      icon: Icons.person_outline,
+                      capitalization: TextCapitalization.words,
+                    ),
                     const Gap(AppSpacing.md),
-                    _field(_lastName, context.l.regLastName,
-                        capitalization: TextCapitalization.words),
+                    _field(
+                      _lastName,
+                      context.l.regLastName,
+                      capitalization: TextCapitalization.words,
+                    ),
                     const Gap(AppSpacing.md),
                     _field(
                       _phone,
@@ -173,49 +204,56 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                       helper: context.l.regPlateHelper,
                     ),
                     const Gap(AppSpacing.md),
-                    _field(_toda, context.l.regTodaChapter,
-                        icon: Icons.groups_outlined,
-                        capitalization: TextCapitalization.words),
+                    _field(
+                      _toda,
+                      context.l.regTodaChapter,
+                      icon: Icons.groups_outlined,
+                      capitalization: TextCapitalization.words,
+                    ),
 
-                    const Gap(AppSpacing.xxl),
-                    _SectionLabel(context.l.regSignInSection),
-                    const Gap(AppSpacing.md),
-                    TextFormField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: InputDecoration(
-                        labelText: context.l.regEmail,
-                        prefixIcon: const Icon(Icons.mail_outline),
-                      ),
-                      validator: (v) => (v == null || !v.contains('@'))
-                          ? context.l.regEmailInvalid
-                          : null,
-                    ),
-                    const Gap(AppSpacing.md),
-                    TextFormField(
-                      controller: _password,
-                      obscureText: _obscure,
-                      autofillHints: const [AutofillHints.newPassword],
-                      decoration: InputDecoration(
-                        labelText: context.l.regPassword,
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        helperText: context.l.regPasswordHelper,
-                        suffixIcon: IconButton(
-                          tooltip:
-                              _obscure
-                                  ? context.l.regShowPassword
-                                  : context.l.regHidePassword,
-                          icon: Icon(_obscure
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
-                          onPressed: () => setState(() => _obscure = !_obscure),
+                    if (!widget.finishing) ...[
+                      const Gap(AppSpacing.xxl),
+                      _SectionLabel(context.l.regSignInSection),
+                      const Gap(AppSpacing.md),
+                      TextFormField(
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        decoration: InputDecoration(
+                          labelText: context.l.regEmail,
+                          prefixIcon: const Icon(Icons.mail_outline),
                         ),
+                        validator: (v) => (v == null || !v.contains('@'))
+                            ? context.l.regEmailInvalid
+                            : null,
                       ),
-                      validator: (v) => (v == null || v.length < 6)
-                          ? context.l.regPasswordTooShort
-                          : null,
-                    ),
+                      const Gap(AppSpacing.md),
+                      TextFormField(
+                        controller: _password,
+                        obscureText: _obscure,
+                        autofillHints: const [AutofillHints.newPassword],
+                        decoration: InputDecoration(
+                          labelText: context.l.regPassword,
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          helperText: context.l.regPasswordHelper,
+                          suffixIcon: IconButton(
+                            tooltip: _obscure
+                                ? context.l.regShowPassword
+                                : context.l.regHidePassword,
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                        validator: (v) => (v == null || v.length < 6)
+                            ? context.l.regPasswordTooShort
+                            : null,
+                      ),
+                    ],
                     const Gap(AppSpacing.xxl),
                     FilledButton(
                       onPressed: _busy ? null : _submit,
@@ -261,7 +299,8 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       ),
       // Errors name the field rather than saying "Required", so an error
       // summary read aloud still identifies what to fix.
-      validator: validator ??
+      validator:
+          validator ??
           (v) => (v == null || v.trim().length < min)
               ? context.l.regFieldRequired(label.toLowerCase())
               : null,
@@ -275,13 +314,13 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text.toUpperCase(),
-        style: context.text.bodySmall?.copyWith(
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.w600,
-          color: context.scheme.onSurfaceVariant,
-        ),
-      );
+    text.toUpperCase(),
+    style: context.text.bodySmall?.copyWith(
+      letterSpacing: 0.8,
+      fontWeight: FontWeight.w600,
+      color: context.scheme.onSurfaceVariant,
+    ),
+  );
 }
 
 class _Notice extends StatelessWidget {
@@ -305,8 +344,9 @@ class _Notice extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: context.text.bodySmall
-                  ?.copyWith(color: context.scheme.onSurface),
+              style: context.text.bodySmall?.copyWith(
+                color: context.scheme.onSurface,
+              ),
             ),
           ),
         ],
