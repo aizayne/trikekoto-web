@@ -7,6 +7,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
 import '../../../core/geo/geo_utils.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/confirm_sign_out.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
 import '../../feedback/presentation/feedback_sheet.dart';
@@ -66,6 +67,7 @@ class DriverDashboardScreen extends ConsumerWidget {
             tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              if (!await confirmSignOut(context)) return;
               await ref.read(presenceProvider.notifier).goOffline();
               await ref.read(sessionProvider.notifier).signOut();
             },

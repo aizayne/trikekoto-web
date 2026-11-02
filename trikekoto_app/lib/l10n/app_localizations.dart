@@ -205,6 +205,30 @@ abstract class L {
   /// **'Ibang number'**
   String get signInOtherNumber;
 
+  /// No description provided for @signInSecurityNote.
+  ///
+  /// In fil, this message translates to:
+  /// **'Maaaring may lumabas na mabilis na security check. Kusa itong magsasara.'**
+  String get signInSecurityNote;
+
+  /// No description provided for @signOutQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mag-sign out?'**
+  String get signOutQuestion;
+
+  /// No description provided for @signOutBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kailangan mong mag-sign in ulit para magamit ang app.'**
+  String get signOutBody;
+
+  /// No description provided for @signOutNo.
+  ///
+  /// In fil, this message translates to:
+  /// **'Manatiling naka-sign in'**
+  String get signOutNo;
+
   /// No description provided for @signInContinueAs.
   ///
   /// In fil, this message translates to:

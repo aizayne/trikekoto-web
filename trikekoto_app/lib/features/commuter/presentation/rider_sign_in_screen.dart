@@ -277,6 +277,14 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
               label: Text(
                   _busy ? context.l.signInSending : context.l.signInSendCode),
             ),
+            const Gap(AppSpacing.sm),
+            // Firebase's check opens a browser page on an app not installed from
+            // the Play Store. Said first, so it does not look like a scam.
+            Text(
+              context.l.signInSecurityNote,
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall,
+            ),
             // There is deliberately no "book without an account" escape here.
             // It existed while accounts were optional; once booking required a
             // verified phone it became a label promising something the rules

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/confirm_sign_out.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../../core/ui/locale_controller.dart';
 
@@ -104,7 +105,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           IconButton(
             tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+            onPressed: () async {
+              if (await confirmSignOut(context)) {
+                await ref.read(sessionProvider.notifier).signOut();
+              }
+            },
           ),
         ],
       ),

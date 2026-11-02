@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/confirm_sign_out.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../application/commuter_location.dart';
 import 'profile_photo_picker.dart';
@@ -170,7 +171,11 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
           IconButton(
             tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+            onPressed: () async {
+              if (await confirmSignOut(context)) {
+                await ref.read(sessionProvider.notifier).signOut();
+              }
+            },
           ),
         ],
       ),

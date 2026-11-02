@@ -1154,7 +1154,12 @@ export const rememberDevice = onCall({ region: REGION }, async (request) => {
  * bits, so it cannot be guessed. Every refusal looks the same, so this cannot
  * be used to find out which accounts exist.
  */
-export const signInWithDevice = onCall({ region: REGION }, async (request) => {
+export const signInWithDevice = onCall({
+  region: REGION,
+  // Creating a sign-in token needs the account to be able to sign with its own
+  // key. The Admin SDK account can; the default compute account was refused.
+  serviceAccount: 'firebase-adminsdk-fbsvc@trikekoto.iam.gserviceaccount.com',
+}, async (request) => {
   const refuse = () => new HttpsError('permission-denied', 'Sign in with a code.');
   const { uid, secret } = (request.data ?? {}) as { uid?: unknown; secret?: unknown };
   if (

@@ -70,6 +70,20 @@ class LFil extends L {
   String get signInOtherNumber => 'Ibang number';
 
   @override
+  String get signInSecurityNote =>
+      'Maaaring may lumabas na mabilis na security check. Kusa itong magsasara.';
+
+  @override
+  String get signOutQuestion => 'Mag-sign out?';
+
+  @override
+  String get signOutBody =>
+      'Kailangan mong mag-sign in ulit para magamit ang app.';
+
+  @override
+  String get signOutNo => 'Manatiling naka-sign in';
+
+  @override
   String signInContinueAs(String phone) {
     return 'Magpatuloy bilang $phone';
   }

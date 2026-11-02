@@ -20,6 +20,7 @@ import '../../../core/providers.dart';
 import '../../../core/routing/geocoding_service.dart';
 import '../../../core/routing/route_service.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/confirm_sign_out.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../../rides/data/ride.dart';
 import '../../rides/presentation/ride_service_badge.dart';
@@ -48,6 +49,10 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   bool _busy = false;
+
+  /// Filled once from the profile, so a rebuild cannot overwrite what the
+  /// commuter has typed for this booking.
+  bool _nameSeeded = false;
 
   /// Regular unless the commuter chooses otherwise. Special commits them to a
   /// full load's fare, so it is never the default.
@@ -368,6 +373,14 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   Widget build(BuildContext context) {
     final rideAsync = ref.watch(myActiveRideProvider);
 
+    // The name is already on the profile, and survives signing out there. The
+    // form starts empty on every new sign-in without this.
+    final profileName = ref.watch(myRiderProfileProvider).value?.name ?? '';
+    if (!_nameSeeded && profileName.isNotEmpty) {
+      _nameSeeded = true;
+      if (_name.text.isEmpty) _name.text = profileName;
+    }
+
     // Re-armed whenever the booking being watched changes. Cheap and
     // idempotent: it only sets or cancels a timer.
     final ride = rideAsync.value;
@@ -422,7 +435,11 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
           IconButton(
             tooltip: context.l.bookExit,
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+            onPressed: () async {
+              if (await confirmSignOut(context)) {
+                await ref.read(sessionProvider.notifier).signOut();
+              }
+            },
           ),
         ],
       ),
@@ -451,7 +468,12 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                               onRate: (stars, feedback) =>
                                   _rate(ride, stars, feedback),
                             )
-                          : _bookingForm(),
+                          // Straight away, while the booking is being
+                          // written. The ride's own card replaces this as soon
+                          // as the ride exists.
+                          : _busy
+                              ? const _FindingCard()
+                              : _bookingForm(),
                 ),
               ),
             );
@@ -1073,6 +1095,30 @@ class _ErrorState extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: Text(context.l.trackTryAgain),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown from the moment "Find a driver" is pressed.
+class _FindingCard extends StatelessWidget {
+  const _FindingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const Gap(AppSpacing.lg),
+            Text(context.l.bookFinding,
+                textAlign: TextAlign.center,
+                style: context.text.titleMedium),
           ],
         ),
       ),

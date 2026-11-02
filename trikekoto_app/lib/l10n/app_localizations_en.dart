@@ -69,6 +69,19 @@ class LEn extends L {
   String get signInOtherNumber => 'Use a different number';
 
   @override
+  String get signInSecurityNote =>
+      'A quick security check may open for a moment. It closes by itself.';
+
+  @override
+  String get signOutQuestion => 'Sign out?';
+
+  @override
+  String get signOutBody => 'You will need to sign in again to use the app.';
+
+  @override
+  String get signOutNo => 'Stay signed in';
+
+  @override
   String signInContinueAs(String phone) {
     return 'Continue as $phone';
   }

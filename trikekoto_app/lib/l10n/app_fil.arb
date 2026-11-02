@@ -35,6 +35,10 @@
   "signInEnterSixDigits": "Ilagay ang anim na numero mula sa message.",
   "signInConfirm": "Kumpirmahin",
   "signInOtherNumber": "Ibang number",
+  "signInSecurityNote": "Maaaring may lumabas na mabilis na security check. Kusa itong magsasara.",
+  "signOutQuestion": "Mag-sign out?",
+  "signOutBody": "Kailangan mong mag-sign in ulit para magamit ang app.",
+  "signOutNo": "Manatiling naka-sign in",
   "signInContinueAs": "Magpatuloy bilang {phone}",
   "@signInContinueAs": {
     "placeholders": {

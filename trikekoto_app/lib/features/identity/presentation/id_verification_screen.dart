@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../../core/ui/confirm_sign_out.dart';
 import '../application/id_verification_service.dart';
 import '../data/id_submission.dart';
 import '../../../core/ui/locale_controller.dart';
@@ -214,7 +215,11 @@ class _IdVerificationScreenState extends ConsumerState<IdVerificationScreen> {
           IconButton(
             tooltip: context.l.signOut,
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+            onPressed: () async {
+              if (await confirmSignOut(context)) {
+                await ref.read(sessionProvider.notifier).signOut();
+              }
+            },
           ),
         ],
       ),
