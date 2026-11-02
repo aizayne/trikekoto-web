@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../routing/geocoding_service.dart';
 import '../ui/app_theme.dart';
+import 'landmarks.dart';
 import 'osm_map.dart';
 import '../../core/ui/locale_controller.dart';
 
@@ -53,6 +54,30 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
   bool _searching = false;
   List<GeocodeResult> _results = const [];
 
+  /// Filled as the commuter types. Unlike [_results] this reads no network, so
+  /// it is free to run on every keystroke.
+  List<Landmark> _landmarkMatches = const [];
+
+  void _matchLandmarks(String query) {
+    setState(() {
+      _landmarkMatches =
+          matchLandmarks(ref.read(landmarksProvider).value ?? const [], query);
+      // OSM's answer was to the previous words.
+      _results = const [];
+    });
+  }
+
+  /// Picking a landmark names the place too, replacing anything typed: its name
+  /// is the reason it was chosen, and what the driver will recognise.
+  void _useLandmark(Landmark landmark) {
+    _label.text = landmark.name;
+    _useResult(GeocodeResult(
+      name: landmark.name,
+      context: '',
+      point: landmark.point,
+    ));
+  }
+
   @override
   void dispose() {
     _label.dispose();
@@ -84,7 +109,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
       _results = results;
     });
 
-    if (results.isEmpty) {
+    if (results.isEmpty && _landmarkMatches.isEmpty) {
       // Not "no such place" — the search is deliberately bounded to about
       // 55 km around the map centre, so a real place further out comes back
       // empty. Saying it was not found would be a lie the commuter cannot
@@ -101,6 +126,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     setState(() {
       _center = result.point;
       _results = const [];
+      _landmarkMatches = const [];
       if (_label.text.trim().isEmpty) _label.text = result.name;
     });
     FocusScope.of(context).unfocus();
@@ -147,6 +173,8 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final landmarks = ref.watch(landmarksProvider).value ?? const <Landmark>[];
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
@@ -155,6 +183,15 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             controller: _controller,
             center: widget.initialCenter,
             zoom: 17,
+            markers: [
+              for (final l in landmarks)
+                MapMarkers.landmark(
+                  context,
+                  point: l.point,
+                  name: l.name,
+                  onTap: () => _useLandmark(l),
+                ),
+            ],
             onPositionChanged: (camera) => _center = camera.center,
             // Tap to place the pin. The crosshair stays the mechanism — the
             // map animates so the tapped point lands under it — because a pin
@@ -202,6 +239,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     child: TextField(
                       controller: _search,
                       textInputAction: TextInputAction.search,
+                      onChanged: _matchLandmarks,
                       onSubmitted: (_) => _runSearch(),
                       decoration: InputDecoration(
                         hintText: context.l.pickerSearchHint,
@@ -227,7 +265,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       ),
                     ),
                   ),
-                  if (_results.isNotEmpty)
+                  if (_results.isNotEmpty || _landmarkMatches.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: AppSpacing.sm),
                       constraints: const BoxConstraints(maxHeight: 260),
@@ -241,10 +279,24 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
-                        itemCount: _results.length,
+                        itemCount: _landmarkMatches.length + _results.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (_, i) {
-                          final r = _results[i];
+                          // The chapter's own places first: they are nearby by
+                          // definition, and named the way people say them.
+                          if (i < _landmarkMatches.length) {
+                            final l = _landmarkMatches[i];
+                            return ListTile(
+                              leading: Icon(Icons.flag_circle,
+                                  color: context.scheme.secondary),
+                              title: Text(l.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                              subtitle: Text(context.l.lmResultLabel),
+                              onTap: () => _useLandmark(l),
+                            );
+                          }
+                          final r = _results[i - _landmarkMatches.length];
                           return ListTile(
                             leading: const Icon(Icons.place_outlined),
                             title: Text(r.name,

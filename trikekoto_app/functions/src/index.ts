@@ -35,6 +35,11 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import {
+  deviceSecretMatches,
+  hashDeviceSecret,
+  newDeviceSecret,
+} from './device_login';
+import {
   LatLng,
   SharingConfig,
   SHARING_FALLBACK,
@@ -1114,6 +1119,63 @@ export const purgeExpiredIds = onSchedule(
 
 
 // ════════════════════════════════════════════════════════════
+// 40 · Remembered phones — sign back in without another SMS.
+// ════════════════════════════════════════════════════════════
+/**
+ * Remembers the phone a commuter just signed in on.
+ *
+ * Holding one document per account is what "unless they change phones" means:
+ * signing in on a new phone replaces the hash, so the old phone's secret stops
+ * working. Only the hash is stored, so a read of this collection could not be
+ * used to sign in.
+ */
+export const rememberDevice = onCall({ region: REGION }, async (request) => {
+  const uid = request.auth?.uid;
+  const phone = request.auth?.token.phone_number;
+  if (!uid || !phone) {
+    throw new HttpsError('unauthenticated', 'Sign in with a phone number first.');
+  }
+
+  const secret = newDeviceSecret();
+  await db.collection('device_logins').doc(uid).set({
+    secretHash: hashDeviceSecret(secret),
+    phone,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  return { secret };
+});
+
+/**
+ * Exchanges a remembered phone's secret for a sign-in.
+ *
+ * Takes no signed-in caller, because the person is signed out. It does not
+ * enforce App Check: this is how a sideloaded APK avoids an SMS, and a
+ * sideloaded APK's attestation has been seen failing. The secret is 256 random
+ * bits, so it cannot be guessed. Every refusal looks the same, so this cannot
+ * be used to find out which accounts exist.
+ */
+export const signInWithDevice = onCall({ region: REGION }, async (request) => {
+  const refuse = () => new HttpsError('permission-denied', 'Sign in with a code.');
+  const { uid, secret } = (request.data ?? {}) as { uid?: unknown; secret?: unknown };
+  if (
+    typeof uid !== 'string' || !uid || uid.length > 128 || uid.includes('/') ||
+    typeof secret !== 'string'
+  ) {
+    throw refuse();
+  }
+
+  const login = (await db.collection('device_logins').doc(uid).get()).data();
+  if (!login || !deviceSecretMatches(secret, login.secretHash)) throw refuse();
+
+  // The number may have left this account since the phone was remembered.
+  const user = await getAuth().getUser(uid).catch(() => null);
+  if (!user || user.disabled || user.phoneNumber !== login.phone) throw refuse();
+
+  return { token: await getAuth().createCustomToken(uid) };
+});
+
+
+// ════════════════════════════════════════════════════════════
 // 37d · Driver removal — erase the person, keep the record.
 // ════════════════════════════════════════════════════════════
 /**
@@ -1259,6 +1321,11 @@ async function eraseAccountArtifacts(
     }
   }
   await db.collection('id_verified').doc(uid).delete();
+  await db.collection('device_logins').doc(uid).delete();
+
+  // Frees the number for whoever holds it next.
+  const claims = await db.collection('phone_claims').where('uid', '==', uid).get();
+  for (const claim of claims.docs) await claim.ref.delete();
 
   const notices = await db
     .collection('notifications')

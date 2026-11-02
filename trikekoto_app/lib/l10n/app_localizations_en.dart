@@ -69,6 +69,19 @@ class LEn extends L {
   String get signInOtherNumber => 'Use a different number';
 
   @override
+  String signInContinueAs(String phone) {
+    return 'Continue as $phone';
+  }
+
+  @override
+  String get signInRememberFailed =>
+      'Could not confirm this phone. Use a code instead.';
+
+  @override
+  String get phoneNumberTaken =>
+      'That mobile number is already used by another account. Each number can only have one account. If it is yours, tell your TODA officer.';
+
+  @override
   String get authInvalidPhone => 'That does not look like a mobile number.';
 
   @override
@@ -111,6 +124,10 @@ class LEn extends L {
 
   @override
   String get authCouldNotVerify => 'Could not verify that number.';
+
+  @override
+  String get authSmsRefused =>
+      'Could not send the code right now. Wait a few minutes and try again. If it keeps happening, tell your TODA officer. [39]';
 
   @override
   String authCouldNotSend(String detail) {
@@ -403,6 +420,12 @@ class LEn extends L {
 
   @override
   String get rateThanks => 'Thanks for the rating!';
+
+  @override
+  String get rateFeedbackLabel => 'Feedback about this ride (optional)';
+
+  @override
+  String get rateSend => 'Send rating';
 
   @override
   String get driverTitle => 'Driver';
@@ -800,6 +823,16 @@ class LEn extends L {
   String get loginRegisterAsDriver => 'Register as a TODA driver';
 
   @override
+  String get loginForgotPassword => 'Forgot password?';
+
+  @override
+  String get loginResetNeedsEmail => 'Enter your email above first.';
+
+  @override
+  String get loginResetSent =>
+      'If that email has an account, we sent a link to change the password. Check your spam folder too.';
+
+  @override
   String get adminTitle => 'Admin';
 
   @override
@@ -810,6 +843,36 @@ class LEn extends L {
 
   @override
   String get adminIdReview => 'ID review';
+
+  @override
+  String get adminLandmarks => 'Landmarks';
+
+  @override
+  String get lmAdd => 'Add a landmark';
+
+  @override
+  String lmAdded(String name) {
+    return 'Added $name.';
+  }
+
+  @override
+  String lmRemoveQuestion(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get lmRemoveBody =>
+      'It disappears from the map and search for everyone. Past rides keep their pickup and drop-off names.';
+
+  @override
+  String get lmEmptyTitle => 'No landmarks yet';
+
+  @override
+  String get lmEmptyBody =>
+      'Add the places people give directions by, like the terminal or the barangay hall. Commuters can then find them on the map.';
+
+  @override
+  String get lmResultLabel => 'Landmark';
 
   @override
   String get adminPendingVerification => 'Pending verification';
@@ -1070,6 +1133,22 @@ class LEn extends L {
 
   @override
   String get fbReopened => 'Reopened.';
+
+  @override
+  String get fbDelete => 'Delete';
+
+  @override
+  String get fbDeleteQuestion => 'Delete this report?';
+
+  @override
+  String get fbDeleteBody =>
+      'It will be removed for good and cannot be brought back.';
+
+  @override
+  String get fbDeleteNo => 'Keep it';
+
+  @override
+  String get fbDeleted => 'Report deleted.';
 
   @override
   String fbFromRole(String role) {

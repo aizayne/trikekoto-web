@@ -35,6 +35,16 @@
   "signInEnterSixDigits": "Ilagay ang anim na numero mula sa message.",
   "signInConfirm": "Kumpirmahin",
   "signInOtherNumber": "Ibang number",
+  "signInContinueAs": "Magpatuloy bilang {phone}",
+  "@signInContinueAs": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "signInRememberFailed": "Hindi ma-confirm ang phone na ito. Gumamit na lang ng code.",
+  "phoneNumberTaken": "May ibang account na gumagamit ng number na iyon. Isang account lang kada number. Kung sa iyo ito, sabihin sa TODA officer.",
   "authInvalidPhone": "Mukhang hindi ito mobile number.",
   "authWrongCode": "Mali ang code. Tingnan ulit ang message.",
   "authCodeExpired": "Nag-expire na ang code. Humingi ng bago.",
@@ -58,6 +68,7 @@
     }
   },
   "authCouldNotVerify": "Hindi ma-verify ang number na iyon.",
+  "authSmsRefused": "Hindi maipadala ang code ngayon. Maghintay ng ilang minuto at subukan ulit. Kung ganito pa rin, sabihin sa TODA officer. [39]",
   "authCouldNotSend": "Hindi naipadala ang code. ({detail})",
   "@authCouldNotSend": {
     "placeholders": {
@@ -228,6 +239,8 @@
   "rateTitle": "Kumusta ang biyahe mo?",
   "ratePayCash": "Bayaran ang nakasaad na TODA fare nang cash.",
   "rateThanks": "Salamat sa rating!",
+  "rateFeedbackLabel": "Feedback tungkol sa biyahe (opsyonal)",
+  "rateSend": "Ipadala ang rating",
   "driverTitle": "Driver",
   "driverNoProfile": "Walang nakitang driver profile.",
   "driverIdVerification": "ID verification",
@@ -425,10 +438,35 @@
   "loginEmailInvalid": "Ilagay ang email na ginamit mo sa pagpaparehistro",
   "loginPasswordTooShort": "Hindi bababa sa 6 na karakter",
   "loginRegisterAsDriver": "Magparehistro bilang TODA driver",
+  "loginForgotPassword": "Nakalimutan ang password?",
+  "loginResetNeedsEmail": "Ilagay muna ang email mo sa itaas.",
+  "loginResetSent": "Kung may account ang email na iyon, nagpadala kami ng link para palitan ang password. Tingnan din ang spam folder.",
   "adminTitle": "Admin",
   "adminFeedback": "Feedback",
   "adminDispatch": "Dispatch",
   "adminIdReview": "ID review",
+  "adminLandmarks": "Mga landmark",
+  "lmAdd": "Magdagdag ng landmark",
+  "lmAdded": "Naidagdag ang {name}.",
+  "@lmAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lmRemoveQuestion": "Alisin ang {name}?",
+  "@lmRemoveQuestion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lmRemoveBody": "Mawawala ito sa mapa at sa paghahanap para sa lahat. Mananatili ang pangalan ng pickup at drop-off sa mga dating biyahe.",
+  "lmEmptyTitle": "Wala pang landmark",
+  "lmEmptyBody": "Idagdag ang mga lugar na ginagamit sa pagtuturo ng daan, gaya ng terminal o barangay hall. Mahahanap na ito ng mga commuter sa mapa.",
+  "lmResultLabel": "Landmark",
   "adminPendingVerification": "Naghihintay ng verification",
   "adminNothingWaitingTitle": "Walang naghihintay ng review",
   "adminNothingWaitingBody": "Lilitaw dito ang mga bagong driver registration.",
@@ -587,6 +625,11 @@
   "fbCatOther": "Iba pa",
   "fbMarkedResolved": "Namarkahang naresolba.",
   "fbReopened": "Binuksan ulit.",
+  "fbDelete": "Burahin",
+  "fbDeleteQuestion": "Burahin ang report na ito?",
+  "fbDeleteBody": "Permanente itong mawawala at hindi na maibabalik.",
+  "fbDeleteNo": "Huwag",
+  "fbDeleted": "Nabura ang report.",
   "fbFromRole": "mula sa {role}",
   "@fbFromRole": {
     "placeholders": {

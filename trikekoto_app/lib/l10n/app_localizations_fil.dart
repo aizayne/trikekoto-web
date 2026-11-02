@@ -70,6 +70,19 @@ class LFil extends L {
   String get signInOtherNumber => 'Ibang number';
 
   @override
+  String signInContinueAs(String phone) {
+    return 'Magpatuloy bilang $phone';
+  }
+
+  @override
+  String get signInRememberFailed =>
+      'Hindi ma-confirm ang phone na ito. Gumamit na lang ng code.';
+
+  @override
+  String get phoneNumberTaken =>
+      'May ibang account na gumagamit ng number na iyon. Isang account lang kada number. Kung sa iyo ito, sabihin sa TODA officer.';
+
+  @override
   String get authInvalidPhone => 'Mukhang hindi ito mobile number.';
 
   @override
@@ -112,6 +125,10 @@ class LFil extends L {
 
   @override
   String get authCouldNotVerify => 'Hindi ma-verify ang number na iyon.';
+
+  @override
+  String get authSmsRefused =>
+      'Hindi maipadala ang code ngayon. Maghintay ng ilang minuto at subukan ulit. Kung ganito pa rin, sabihin sa TODA officer. [39]';
 
   @override
   String authCouldNotSend(String detail) {
@@ -405,6 +422,12 @@ class LFil extends L {
 
   @override
   String get rateThanks => 'Salamat sa rating!';
+
+  @override
+  String get rateFeedbackLabel => 'Feedback tungkol sa biyahe (opsyonal)';
+
+  @override
+  String get rateSend => 'Ipadala ang rating';
 
   @override
   String get driverTitle => 'Driver';
@@ -806,6 +829,16 @@ class LFil extends L {
   String get loginRegisterAsDriver => 'Magparehistro bilang TODA driver';
 
   @override
+  String get loginForgotPassword => 'Nakalimutan ang password?';
+
+  @override
+  String get loginResetNeedsEmail => 'Ilagay muna ang email mo sa itaas.';
+
+  @override
+  String get loginResetSent =>
+      'Kung may account ang email na iyon, nagpadala kami ng link para palitan ang password. Tingnan din ang spam folder.';
+
+  @override
   String get adminTitle => 'Admin';
 
   @override
@@ -816,6 +849,36 @@ class LFil extends L {
 
   @override
   String get adminIdReview => 'ID review';
+
+  @override
+  String get adminLandmarks => 'Mga landmark';
+
+  @override
+  String get lmAdd => 'Magdagdag ng landmark';
+
+  @override
+  String lmAdded(String name) {
+    return 'Naidagdag ang $name.';
+  }
+
+  @override
+  String lmRemoveQuestion(String name) {
+    return 'Alisin ang $name?';
+  }
+
+  @override
+  String get lmRemoveBody =>
+      'Mawawala ito sa mapa at sa paghahanap para sa lahat. Mananatili ang pangalan ng pickup at drop-off sa mga dating biyahe.';
+
+  @override
+  String get lmEmptyTitle => 'Wala pang landmark';
+
+  @override
+  String get lmEmptyBody =>
+      'Idagdag ang mga lugar na ginagamit sa pagtuturo ng daan, gaya ng terminal o barangay hall. Mahahanap na ito ng mga commuter sa mapa.';
+
+  @override
+  String get lmResultLabel => 'Landmark';
 
   @override
   String get adminPendingVerification => 'Naghihintay ng verification';
@@ -1080,6 +1143,22 @@ class LFil extends L {
 
   @override
   String get fbReopened => 'Binuksan ulit.';
+
+  @override
+  String get fbDelete => 'Burahin';
+
+  @override
+  String get fbDeleteQuestion => 'Burahin ang report na ito?';
+
+  @override
+  String get fbDeleteBody =>
+      'Permanente itong mawawala at hindi na maibabalik.';
+
+  @override
+  String get fbDeleteNo => 'Huwag';
+
+  @override
+  String get fbDeleted => 'Nabura ang report.';
 
   @override
   String fbFromRole(String role) {

@@ -3,10 +3,11 @@
 # ============================================================
 # Runs on every push and pull request touching the Flutter app.
 #
-# Three jobs, deliberately separate so a failure names itself:
+# Four jobs, deliberately separate so a failure names itself:
 #
-#   analyze   static analysis and 95 Dart tests
-#   rules     91 Firestore emulator tests (rules, lifecycle, attacks)
+#   analyze   static analysis and the Dart tests
+#   rules     Firestore emulator tests (rules, lifecycle, attacks)
+#   functions Cloud Functions typecheck (their tests do not run here)
 #   build     release APK, uploaded as an artifact
 #
 # `rules` is worth calling out: those tests are the only thing standing
@@ -125,9 +126,8 @@ jobs:
         working-directory: ${{ env.APP_DIR }}/functions
         run: npm ci
 
-      # The functions cannot deploy until the Blaze plan is enabled, so
-      # typechecking is the only guard they have. Without this they would rot
-      # silently against schema changes.
+      # Catches a function that no longer compiles against a schema change.
+      # This is the only functions check CI runs.
       - name: Typecheck
         working-directory: ${{ env.APP_DIR }}/functions
         run: npm run typecheck

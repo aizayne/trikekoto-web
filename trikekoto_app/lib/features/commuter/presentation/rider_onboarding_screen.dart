@@ -44,7 +44,15 @@ class _RiderOnboardingScreenState
           .completeRiderOnboarding(name: _name.text, photoBytes: _photo);
       // The session resolves with the profile present and the router moves on.
     } catch (e) {
-      if (mounted) showSnack(context, describeError(e), error: true);
+      if (!mounted) return;
+      // The likely refusal at this step: a driver account holds this number.
+      showSnack(
+        context,
+        e.toString().contains('permission-denied')
+            ? context.l.phoneNumberTaken
+            : describeError(e),
+        error: true,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

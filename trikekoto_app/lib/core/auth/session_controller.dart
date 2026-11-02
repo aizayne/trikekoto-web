@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, Uint8List, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../diagnostics/crash_reporter.dart';
@@ -7,7 +11,9 @@ import '../../features/commuter/application/profile_photo_service.dart';
 import '../../features/commuter/data/rider.dart';
 import '../../features/identity/application/id_verification_service.dart';
 import '../firestore/collection_paths.dart';
+import '../firestore/phone_claims.dart';
 import '../providers.dart';
+import 'remembered_device.dart';
 
 enum AppRole { none, commuter, driver, admin }
 
@@ -135,6 +141,9 @@ class SessionController extends Notifier<SessionState> {
       // Role only, as above. A rider chose to identify themselves to the
       // service; that is not a reason to attach their number to crash reports.
       await CrashReporter.setRole('commuter');
+      // Here rather than after the code, so a commuter already signed in when
+      // this feature arrives is covered too.
+      unawaited(_rememberThisPhone(user));
       return;
     }
 
@@ -179,6 +188,56 @@ class SessionController extends Notifier<SessionState> {
     }
   }
 
+  /// Lets this phone sign back in to [user] without a code, from now on.
+  ///
+  /// Best effort. If this fails, the only cost is a code at the next sign-in,
+  /// so it must never disturb the sign-in that is happening now.
+  Future<void> _rememberThisPhone(User user) async {
+    if (kIsWeb) return;
+    try {
+      final store = ref.read(rememberedDeviceStoreProvider);
+      if ((await store.read())?.uid == user.uid) return;
+
+      final result = await ref
+          .read(functionsProvider)
+          .httpsCallable('rememberDevice')
+          .call<Map<String, dynamic>>();
+      await store.save(RememberedDevice(
+        uid: user.uid,
+        phone: user.phoneNumber ?? '',
+        secret: result.data['secret'] as String,
+      ));
+      ref.invalidate(rememberedDeviceProvider);
+    } catch (e, stack) {
+      await CrashReporter.recordNonFatal(e, stack, context: 'remember device');
+    }
+  }
+
+  /// Signs in on a remembered phone, without sending a code.
+  ///
+  /// A refusal means this phone is no longer the account's phone, so the
+  /// secret is forgotten. Any other failure, such as no signal, keeps it.
+  Future<void> continueOnRememberedPhone(RememberedDevice device) async {
+    try {
+      final result = await ref
+          .read(functionsProvider)
+          .httpsCallable('signInWithDevice')
+          .call<Map<String, dynamic>>({
+        'uid': device.uid,
+        'secret': device.secret,
+      });
+      await ref
+          .read(firebaseAuthProvider)
+          .signInWithCustomToken(result.data['token'] as String);
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'permission-denied') {
+        await ref.read(rememberedDeviceStoreProvider).clear();
+        ref.invalidate(rememberedDeviceProvider);
+      }
+      rethrow;
+    }
+  }
+
   Future<void> signInWithEmail(String email, String password) async {
     final auth = ref.read(firebaseAuthProvider);
     if (auth.currentUser?.isAnonymous ?? false) {
@@ -188,6 +247,20 @@ class SessionController extends Notifier<SessionState> {
       email: normalizeEmail(email),
       password: password,
     );
+  }
+
+  /// Emails a link for choosing a new password.
+  ///
+  /// An unknown address is not reported. The screen says the same thing either
+  /// way, so it cannot be used to find out who has an account.
+  Future<void> sendPasswordReset(String email) async {
+    try {
+      await ref
+          .read(firebaseAuthProvider)
+          .sendPasswordResetEmail(email: normalizeEmail(email));
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'user-not-found') rethrow;
+    }
   }
 
   Future<UserCredential> registerDriverAccount(
@@ -246,6 +319,13 @@ class SessionController extends Notifier<SessionState> {
       // is always typed, so the caller moves straight to the code pane.
       codeSent(_webConfirmation!.verificationId);
       return;
+    }
+
+    // The APK is sideloaded, and Play Integrity does not recognise an app that
+    // did not come from the Play Store. Going straight to the reCAPTCHA check
+    // avoids sending that failed attestation with the request.
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await auth.setSettings(forceRecaptchaFlow: true);
     }
 
     await auth.verifyPhoneNumber(
@@ -337,10 +417,19 @@ class SessionController extends Notifier<SessionState> {
     // profile first means a failed upload leaves an account that works
     // without a picture — rather than a photo in the bucket belonging to
     // an account that was never created and that nobody will clean up.
-    await refs.rider(user.uid).set(RiderWrites.create(
-          name: name,
-          phone: user.phoneNumber ?? '',
-        ));
+    //
+    // In one batch with the phone claim: the rules refuse the profile without
+    // it, and refuse the claim if another account holds this number.
+    final db = ref.read(firestoreProvider);
+    final phone = user.phoneNumber ?? '';
+    final batch = db.batch();
+    batch.set(
+      db.collection(FsCollections.riders).doc(user.uid),
+      RiderWrites.create(name: name, phone: phone),
+    );
+    PhoneClaims.addTo(batch, db,
+        phone: phone, uid: user.uid, role: PhoneClaims.rider);
+    await batch.commit();
 
     if (photoBytes != null) {
       try {
@@ -440,6 +529,9 @@ class SessionController extends Notifier<SessionState> {
     // The rider document is the trigger for onRiderDeleted, which anonymises
     // the ride history. It therefore has to succeed, and is not caught.
     await ref.read(refsProvider).rider(uid).delete();
+
+    await ref.read(rememberedDeviceStoreProvider).clear();
+    ref.invalidate(rememberedDeviceProvider);
 
     await user.delete();
   }

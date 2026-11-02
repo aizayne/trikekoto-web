@@ -23,6 +23,15 @@ final allFeedbackProvider = StreamProvider<List<FeedbackReport>>((ref) {
       .map((s) => s.docs.map((d) => d.data()).toList());
 });
 
+/// Removes a report for good. A provider so a test can stand in for Firestore.
+final deleteFeedbackProvider = Provider<Future<void> Function(String id)>((ref) {
+  return (id) => ref
+      .read(firestoreProvider)
+      .collection(FsCollections.feedback)
+      .doc(id)
+      .delete();
+});
+
 class FeedbackInboxScreen extends ConsumerWidget {
   const FeedbackInboxScreen({super.key});
 
@@ -119,6 +128,39 @@ class _ReportCard extends ConsumerWidget {
     }
   }
 
+  /// Asks first: there is no undo, and "Mark resolved" sits beside this button.
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: Text(context.l.fbDeleteQuestion),
+        content: Text(context.l.fbDeleteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(d, false),
+            child: Text(context.l.fbDeleteNo),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(d, true),
+            child: Text(context.l.fbDelete),
+          ),
+        ],
+      ),
+    );
+    if (sure != true || !context.mounted) return;
+
+    // Read before the await: the card leaves the tree as soon as the report
+    // is gone from the list, and its context with it.
+    final messenger = ScaffoldMessenger.of(context);
+    final deleted = context.l.fbDeleted;
+    try {
+      await ref.read(deleteFeedbackProvider)(report.id);
+      messenger.showSnackBar(SnackBar(content: Text(deleted)));
+    } catch (e) {
+      if (context.mounted) showSnack(context, describeError(e), error: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semantic = context.semantic;
@@ -181,8 +223,15 @@ class _ReportCard extends ConsumerWidget {
             const Divider(height: 1),
             const Gap(AppSpacing.sm),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                TextButton.icon(
+                  onPressed: () => _delete(context, ref),
+                  icon: Icon(Icons.delete_outline,
+                      size: AppSpacing.iconSm, color: context.scheme.error),
+                  label: Text(context.l.fbDelete,
+                      style: TextStyle(color: context.scheme.error)),
+                ),
                 if (report.resolved)
                   TextButton.icon(
                     onPressed: () => _setResolved(context, ref, false),

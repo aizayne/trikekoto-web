@@ -24,6 +24,7 @@ import {
   getDocs,
   collection,
   setDoc,
+  writeBatch,
   updateDoc,
   deleteDoc,
   serverTimestamp,
@@ -123,7 +124,19 @@ async function seedAdminDoc() {
 
 describe('creating a rider account', () => {
   it('a phone-verified rider can create their own document', async () => {
-    await assertSucceeds(
+    const db = rider();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'riders', RIDER_UID), newRider());
+    batch.set(doc(db, 'phone_claims', RIDER_PHONE), {
+      uid: RIDER_UID,
+      role: 'rider',
+      createdAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('cannot create a document without claiming the number', async () => {
+    await assertFails(
       setDoc(doc(rider(), 'riders', RIDER_UID), newRider()),
     );
   });

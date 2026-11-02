@@ -124,6 +124,12 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const Gap(AppSpacing.md),
+              _AdminLink(
+                icon: Icons.flag_circle_outlined,
+                label: context.l.adminLandmarks,
+                onTap: () => context.go('/admin/landmarks'),
+              ),
               const Gap(AppSpacing.xxl),
 
               // The verification queue is the admin's actual job, so it

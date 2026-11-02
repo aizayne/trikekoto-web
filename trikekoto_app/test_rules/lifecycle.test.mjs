@@ -81,7 +81,7 @@ const snapshotOf = (email) => ({
 const newRide = (overrides = {}) => ({
   commuterUid: COMMUTER_UID,
   commuterName: 'Maria',
-  commuterPhone: '09181234567',
+  commuterPhone: '+639171234567',
   pickup: { label: 'Plaza', geopoint: new GeoPoint(14.5995, 120.9842) },
   dropoff: { label: 'Palengke', geopoint: new GeoPoint(14.6042, 120.9887) },
   notes: null,

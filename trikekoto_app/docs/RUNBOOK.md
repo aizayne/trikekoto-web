@@ -79,23 +79,64 @@ Until billing is on, the commuter half of the service does not run.
 > failing, or billing being detached from the project. The symptom is
 > identical, so check the billing account before looking anywhere else.
 
-### "Nobody can book a ride"
+### "Could not send the code [39]" / "Error code:39"
 
-Commuters tap **Book a ride** and nothing happens.
+Firebase does not document this code. Reports tie it to a failed Play Integrity
+check on an app not installed from the Play Store, or to Firebase's abuse limits
+on sending SMS.
 
-**Most likely:** Anonymous sign-in got disabled in the Firebase console.
-Everything else about the app keeps working, which is what makes this
-confusing — drivers and admins can still sign in.
+The app now uses the reCAPTCHA check on Android instead of Play Integrity, so a
+browser tab may open briefly during sign-in. If error 39 still appears on a build
+with that change:
 
-**Check:** Authentication → Sign-in method → Anonymous shows *Enabled*.
+1. Wait 15 minutes, then try a different real number. If only one number fails,
+   Firebase is probably limiting that number.
+2. Check Authentication → Settings → SMS region policy still allows the Philippines,
+   and Authentication → Usage for the daily SMS count.
+3. Check whether App Check enforcement for Authentication is on. A sideloaded APK
+   may not pass Play Integrity, so enforcement could refuse the request.
 
-**Confirm from the command line:**
+### "Wrong email or password"
+
+Firebase gives the same answer for a wrong password and for an address with no
+account, on purpose. Check Authentication → Users for the address. It will be gone
+if an admin removed that driver. If it is there, use **Forgot password?** on the
+sign-in screen.
+
+### "That mobile number is already used by another account"
+
+Each number can hold one account, across drivers and commuters, so a driver cannot
+also sign up as a commuter with the same number. Driver numbers are not verified,
+so someone may have typed this person's number by mistake or on purpose. Check
+Firestore → `phone_claims` → the number in `+63…` form to see its `uid` and `role`.
+Removing that driver or commuter from the admin panel frees the number.
+
+### "Could not confirm this phone. Use a code instead."
+
+The remembered-phone sign-in failed, so the commuter is asked for a code instead.
+That is normal after moving the account to another phone. If it happens to everyone,
+check the logs:
 
 ```bash
-node -e "fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyB4dy7KIUMVC53bbCoCEBAytQDsUtiXASU',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})}).then(r=>r.json()).then(j=>console.log(j.error?j.error.message:'ENABLED'))"
+firebase functions:log --only signInWithDevice
 ```
 
-`ADMIN_ONLY_OPERATION` means it is off.
+An error mentioning `signBlob` or `iam.serviceAccounts` means the function's service
+account cannot create sign-in tokens. See [Enabling one account per number and
+remembered phones](#enabling-one-account-per-number-and-remembered-phones).
+
+### "Nobody can book a ride"
+
+Work through in order:
+
+1. **Bookings are switched off.** Check **Accepting bookings** under Admin →
+   Dispatch. While it is off, the rules refuse every new ride.
+2. **The commuter cannot get past the ID screen.** Booking requires an approved
+   government ID. Look for their submission under Admin → ID review.
+3. **Nobody can sign in with a phone number.** Check that Authentication →
+   Sign-in method → Phone shows *Enabled*, then see
+   ["I can't get a code"](#i-cant-get-a-code--billing-not-enabled). Drivers and
+   admins can still sign in during this, because they use email.
 
 ### "Everything is refused" / permission-denied everywhere
 
@@ -112,7 +153,7 @@ Then, before redeploying anything:
 cd trikekoto_app/test_rules && TEMP='C:\Temp' TMP='C:\Temp' npm test
 ```
 
-All 91 must pass. If you are redeploying the previous web ruleset instead,
+Every test must pass. If you are redeploying the previous web ruleset instead,
 `firestore.rules.web-backup` at the repo root is the pre-rebuild version.
 
 > **The rules are near Firestore's 1000-expression evaluation ceiling** on the
@@ -122,14 +163,16 @@ All 91 must pass. If you are redeploying the previous web ruleset instead,
 
 ### "Writes are failing" / data stops saving
 
-**Most likely:** the Firestore free-tier daily write quota is exhausted.
+**Most likely:** billing lapsed and the Firestore free-tier daily write quota is
+exhausted. Blaze is enabled on `trikekoto`, so check the billing account first: a
+card expiring or billing being detached puts the project back on the free limits.
 
 A pilot **does not fit in the free tier** — 20 drivers produce roughly 64,000
 writes/day against a 20,000 allowance, and 93.5% of that is driver GPS
 presence. It presents as writes being silently rejected, not as a bill.
 
-**Fix:** enable the Blaze plan. Actual cost at pilot scale is around ₱138/month.
-Set a budget alert at ₱500 when you do.
+**Fix:** restore billing. Actual cost at pilot scale is around ₱138/month, and the
+budget alert is set at ₱500.
 
 **Immediate relief without Blaze:** raise the distance filter. It is already
 50 m; going to 100 m halves writes again at the cost of coarser tracking.
@@ -138,40 +181,40 @@ Set a budget alert at ₱500 when you do.
 
 Work through in order:
 
-1. Is the driver **Approved**? A pending or suspended driver receives nothing.
+1. Is the driver **Approved**, with an approved ID? A pending or suspended driver
+   receives nothing, and without an ID they cannot go online.
 2. Is their toggle **Online**? The empty state tells them, but people miss it.
 3. Is any commuter **within the search radius**? Default is 5 km. Raise it
    temporarily in **Dispatch** to test.
-4. Is `requestDispatch` **healthy**? Matching moved off the commuter's device
-   at step 69, so a failing callable is now the single most likely cause of
-   "I booked and nothing happened". Check its logs:
+4. Are the **dispatch functions healthy**? Matching runs on the server, in
+   `dispatchOnBooking`, `advanceDispatch` and `requestDispatch`. Check their logs:
 
    ```
-   firebase functions:log --only requestDispatch
+   firebase functions:log --only dispatchOnBooking,advanceDispatch,requestDispatch
    ```
 
-   A ride still gets matched if the callable is down — `sweepStaleRides` runs
-   every minute and does the same work — so the symptom is **slow offers, not
-   no offers**. If both are failing, look at `config/app`: an unreachable
-   `routingBaseUrl` does not stop dispatch, but a `searchRadiusKm` someone set
-   to a tiny value does.
+   If those fail, `sweepStaleRides` still does the same work every minute, so the
+   symptom is **slow offers, not no offers**. If it is failing too, look at
+   `config/app`: an unreachable `routingBaseUrl` does not stop dispatch, but a
+   `searchRadiusKm` someone set to a tiny value does.
 5. Is the **commuter** on an old APK? Their app is the one that used to do
    the matching. Builds from before step 69 still try, and the rules now
    refuse them: the commuter can still book — the sweep catches the ride —
    but they see an error toast and the driver's offer arrives up to a minute
    late. Have them reinstall from the download link.
 
-### "Fares look wrong"
+### "The distance or route looks wrong"
 
-If the trip card says **"Approximate — could not reach the route service"**,
+The app does not quote fares, so this is about the route, not the price. If the
+trip card says **"Approximate — could not reach the route service"**,
 OSRM is unreachable or rate-limiting.
 
 The public demo server at `router.project-osrm.org` is **development-only** and
 throttles. Point `routingBaseUrl` in the `config/app` document at a self-hosted
 OSRM instance. No app release is needed — it is configuration.
 
-Fares silently fall back to a padded straight-line estimate meanwhile, so this
-is a degradation, not an outage.
+Distances fall back to a straight-line estimate meanwhile, so this is a
+degradation, not an outage.
 
 ### "The app closed"
 
@@ -330,11 +373,44 @@ Decide this before the pilot, not after.
 
 ---
 
+## Enabling one account per number and remembered phones
+
+Do these in order. The new rules refuse older APKs in two ways: a booking whose
+typed number differs from the verified one, and any driver or commuter sign-up.
+Plan the rules deploy with the new APK's rollout.
+
+1. **Reserve existing numbers.** Run the dry run, review any duplicates, then commit.
+   It needs `scripts/service-account.json`.
+
+   ```bash
+   cd scripts
+   node backfill_phone_claims.mjs
+   node backfill_phone_claims.mjs --commit
+   ```
+
+2. **Let the functions create sign-in tokens.** This assumes they run as the default
+   compute service account, so check that in the Cloud console first:
+
+   ```bash
+   gcloud iam service-accounts add-iam-policy-binding 877860610923-compute@developer.gserviceaccount.com --member=serviceAccount:877860610923-compute@developer.gserviceaccount.com --role=roles/iam.serviceAccountTokenCreator --project trikekoto
+   ```
+
+3. **Deploy.** Run `bash scripts/verify.sh` and `npm test` in `functions/` first.
+
+   ```bash
+   firebase deploy --only functions,firestore:rules
+   ```
+
+4. **Distribute the new APK.**
+
+---
+
 ## Maintenance plan
 
 **Every release**
 
-- CI green: analyze, 95 Dart tests, 125 emulator tests, functions typecheck
+- CI green: analyze, Dart tests, emulator tests, functions typecheck
+- `npm test` in `functions/`, because CI does not run the functions' tests
 - Bump the semantic version in `pubspec.yaml`; CI supplies the build number
 - Rebuild and redistribute the APK
 
@@ -350,9 +426,6 @@ Decide this before the pilot, not after.
 - Move `active_drivers` to Realtime Database. Firestore bills per write, RTDB
   per byte; a stream of tiny coordinates is the worst case for one and the
   natural case for the other. Removes ~94% of Firestore writes.
-- Move dispatch server-side (roadmap step 67), then tighten
-  `canDiscoverDrivers()` to `isAdmin()` — a one-function change the schema was
-  built to allow.
 - Switch geohash range queries on for the driver scan instead of a full read
   of online drivers.
 
@@ -360,8 +433,7 @@ Decide this before the pilot, not after.
 
 | Item | Why it is acceptable now |
 |---|---|
-| Ratings can be inflated by any signed-in user | Bounded to one vote of 1–5 per write; needs a Cloud Function to close |
-| Suspended drivers still publish presence | They cannot accept; re-checking costs a read per GPS ping |
+| Suspended drivers still publish presence | Dispatch skips them and they cannot accept; re-checking costs a read per GPS ping |
 | Rules near the expression ceiling | Every allowed path is tested; only denial paths hit the limit |
-| Debug-signed APK | Fine for sideloading; must change before wider distribution |
+| CI builds a debug-signed APK | Test builds only; hand out APKs signed with the release key |
 | Straight-line fallback distance | Flagged in the UI when it happens |

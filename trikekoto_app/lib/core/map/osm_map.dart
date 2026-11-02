@@ -201,6 +201,49 @@ class MapMarkers {
         child: const TrikeIcon(size: 21, color: Colors.white),
       );
 
+  /// A named place. Carries its name, because the name is why it is there, and
+  /// smaller than a pickup or drop-off pin so those still stand out.
+  static Marker landmark(
+    BuildContext context, {
+    required LatLng point,
+    required String name,
+    required VoidCallback onTap,
+  }) =>
+      Marker(
+        point: point,
+        width: 130,
+        height: 54,
+        child: Semantics(
+          button: true,
+          label: name,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.flag_circle,
+                    size: 28, color: context.scheme.secondary),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: context.scheme.surface.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.labelSmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
   /// The viewer's own position.
   ///
   /// Deliberately not a pin. Pins mark places someone chose — a pickup, a

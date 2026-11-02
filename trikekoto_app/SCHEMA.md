@@ -10,14 +10,23 @@ rule guards a field, it is noted.
 
 | Role | Auth method | Key |
 |---|---|---|
-| Commuter | Anonymous Auth | `uid` (stored as `rides.commuterUid`) |
+| Commuter | Phone number + SMS code | `uid` (stored as `rides.commuterUid`) |
 | Driver | Email + password | lowercased email, used as document ID |
 | Admin | Email + password, **verified** | lowercased email, used as document ID |
 
-Commuters sign in anonymously on first launch. It costs them nothing — no form,
-no password — but it gives every ride document an owner, which is the difference
-between "anyone can read every commuter's phone number" and "only the two
-parties and an admin can".
+Commuters began as anonymous accounts and now verify a phone number before they
+can book; `hasVerifiedPhone()` refuses a ride from anyone else. The uid gives
+every ride document an owner, which is the difference between "anyone can read
+every commuter's phone number" and "only the two parties and an admin can". A
+leftover anonymous session is sent to sign in, and linking its phone credential
+keeps the ride history attached to the same uid.
+
+**One account per mobile number.** Firebase gives a verified number one sign-in;
+[`phone_claims`](#phone_claimsnumber) extends that across drivers and commuters.
+
+**Commuters and drivers also need an approved government ID.** Booking, going
+online and accepting a ride all require an `id_verified/{uid}` marker. See
+[`id_submissions`](#id_submissionssubjectuid).
 
 > **Email normalisation is mandatory.** Firebase Auth preserves the casing the
 > user typed but treats addresses case-insensitively for uniqueness, so
@@ -38,7 +47,7 @@ document at accept time.
 | `email` | string | lowercased; must equal the document ID |
 | `uid` | string | Firebase Auth uid, pinned at registration |
 | `firstName`, `lastName` | string | 1–60 chars |
-| `phone` | string | 7–20 chars |
+| `phone` | string | E.164; must be held by this account in `phone_claims`; typed, not verified by SMS |
 | `plateNumber` | string | 3–16 chars, stored uppercase |
 | `todaChapter` | string | TODA chapter / association name, ≤80 |
 | `todaBodyNumber` | string? | tricycle body number |
@@ -50,10 +59,13 @@ document at accept time.
 | `createdAt`, `updatedAt` | timestamp | |
 
 **Rules.** Self-registration is only permitted with `status: 'pending'`, so a
-driver can never approve themselves. Self-update is restricted to contact fields
-— `status` is absent from the allowlist, so approval and suspension belong to
-admins alone. `ratingSum`/`ratingCount` accept an increment from any signed-in
-commuter, with the arithmetic verified server-side (exactly one vote, worth 1–5).
+driver can never approve themselves. A driver may correct their own details,
+except `phone`, only while `pending`; after approval an admin makes the change, so the approval cannot
+carry over to a tricycle nobody checked. A driver may update `fcmToken` at any
+status. `status` is never self-editable, so approval and suspension belong to
+admins alone. No client may write `ratingSum` or `ratingCount`: the `onRideRated`
+function derives each increment from a completed ride and guards against counting
+it twice with `rides.ratingCounted`.
 
 **Why the average isn't stored.** Rules cannot reliably compare floating-point
 values, so a stored `ratingAvg` could not be validated and would become a
@@ -63,32 +75,36 @@ trivially forgeable field. Derive it: `ratingCount == 0 ? null : ratingSum / rat
 
 ## `active_drivers/{driverEmail}`
 
-The dispatch index — the collection the greedy search queries. Rewritten every
-few seconds while a driver is online, so its rules do **no** `get()` lookups;
-approval is checked where it actually matters, at ride acceptance.
+The dispatch index — the collection the server-side search reads. Updated as the
+driver moves and at each check-in, so updates do **no** document lookups in the
+rules. Creating the row, which happens once per shift, checks `id_verified`.
+Approval is checked by dispatch before an offer and by the rules at acceptance.
 
 | Field | Type | Notes |
 |---|---|---|
 | `email` | string | lowercased; must equal the document ID |
 | `isOnline` | bool | false when the driver goes off shift |
-| `availability` | string | `idle` \| `on_ride` |
+| `availability` | string | `idle` \| `on_ride`. Display only: it can lag, so dispatch works out who is busy from the rides |
 | `position` | map | `{geohash: string, geopoint: GeoPoint}` |
+| `heartbeatSeconds` | int? | how often this app promised to check in (120); absent on older apps |
 | `accuracy`, `heading`, `speed` | number? | from Geolocator |
 | `currentRideId` | string? | set while `availability == 'on_ride'` |
 | `fcmToken` | string? | target for ride-offer pushes |
 | `updatedAt` | timestamp | must equal `request.time` — no backdating |
 
-This document deliberately carries **no name, phone, or plate**, because every
-signed-in commuter can read the collection in order to run the match locally.
-The `{geohash, geopoint}` shape is the `geoflutterfire_plus` convention, so
-radius queries work without restructuring later.
+Only admins can read this collection, for the dispatch monitor; each driver
+writes their own row. Commuters could read it when matching ran on their device,
+which let any account track the whole fleet, so matching moved to the server. The
+document still carries **no name, phone, or plate**. The `{geohash, geopoint}`
+shape is the `geoflutterfire_plus` convention, so radius queries work without
+restructuring later.
 
 > **Small-fleet shortcut.** For a single TODA chapter (tens of drivers, not
-> thousands), skip geohash range queries entirely: fetch
-> `isOnline == true && availability == 'idle'` and sort by Haversine distance on
-> the device. It is one query, exact rather than approximate, and cheaper than
-> the eight-cell neighbour scan a geohash radius search requires. The `geohash`
-> field is written from day one so you can switch when the fleet outgrows it.
+> thousands), dispatch skips geohash range queries: it fetches
+> `isOnline == true` and sorts by Haversine distance in the function. It is one
+> query, exact rather than approximate, and cheaper than the eight-cell neighbour
+> scan a geohash radius search requires. The `geohash` field is written from day
+> one so you can switch when the fleet outgrows it.
 
 ---
 
@@ -96,11 +112,14 @@ radius queries work without restructuring later.
 
 | Field | Type | Notes |
 |---|---|---|
-| `commuterUid` | string | owner; anonymous-auth uid |
+| `commuterUid` | string | owner; the commuter's Auth uid |
 | `commuterName` | string | 1–60 |
-| `commuterPhone` | string | 7–20 |
+| `commuterPhone` | string | must equal the verified number in the auth token |
+| `commuterPhotoUrl` | string? | ≤500; copied from the rider's profile |
+| `commuterFcmToken` | string? | target for ride status pushes |
 | `pickup` | map | `{label: string, geopoint: GeoPoint}` |
 | `dropoff` | map | `{label: string, geopoint: GeoPoint?}` |
+| `serviceType` | string? | `regular` \| `special`; absent on older rides and treated as `regular` |
 | `notes` | string? | ≤300 |
 | `status` | string | see lifecycle below |
 | `dispatch` | map | `{offeredTo: string?, offerSeq: int, offerExpiresAt: timestamp?, attemptedDrivers: string[], depth: int}` |
@@ -109,11 +128,15 @@ radius queries work without restructuring later.
 | `driverLocation` | GeoPoint? | live trike position |
 | `driverLocationAt` | timestamp? | |
 | `scheduledFor` | timestamp? | null = immediate |
-| `fareEstimate`, `distanceKm` | number? | |
 | `rating` | int? | 1–5, write-once |
+| `ratingCounted` | bool? | set by `onRideRated`, so a retried event cannot count a rating twice |
 | `feedback` | string? | ≤500 |
+| `noDriverNoticeSent` | bool? | set by dispatch, so the "no driver yet" push goes once |
 | `createdAt` / `acceptedAt` / `startedAt` / `completedAt` / `cancelledAt` / `ratedAt` | timestamp? | |
 | `cancelledBy` | string? | `commuter` \| `driver` \| `system` |
+
+The app records no fare. TODA tariffs are set by ordinance and posted at the
+terminal, and passengers pay the driver in cash.
 
 ### Lifecycle
 
@@ -125,13 +148,19 @@ searching ──accept──> accepted ──start──> in_transit ──compl
 
 ### Dispatch state
 
-While `status == 'searching'`, the commuter's device drives the greedy search by
-rewriting `dispatch`:
+While `status == 'searching'`, **Cloud Functions own `dispatch`**. No client rule
+can aim `offeredTo` at a driver. An offered driver may only clear the offer when
+declining, and a commuter may only reset it when cancelling.
 
-- `offeredTo` — the single driver currently being pinged. Only this driver may accept.
-- `attemptedDrivers` — everyone already pinged; the next sweep skips them. Capped at 10.
-- `depth` — how far down the sorted-by-distance list the search has walked. Monotonic, capped at 10.
-- `offerExpiresAt` — `now + 15s`; drives the countdown on the driver's screen.
+- `offeredTo` — the single driver currently being offered the ride. Only this driver may accept.
+- `offerSeq` — changes with every offer, so concurrent function runs can detect that another run moved the ride first.
+- `attemptedDrivers` — everyone already offered this ride; later attempts skip them.
+- `depth` — how many drivers have been tried. The ride expires at `config/app.maxDriversToTry` (default 10).
+- `offerExpiresAt` — `now + offerTimeoutSeconds` (default 15); drives the countdown on the driver's screen.
+
+A search also expires after five minutes, even if no driver was ever available.
+See [Cloud Functions](#cloud-functions) for what moves it along and
+`functions/src/dispatch.ts` for the ranking.
 
 **Why `driverLocation` is mirrored onto the ride.** The commuter tracks the trike
 by listening to their own ride document, not to `active_drivers`. That keeps live
@@ -153,6 +182,74 @@ Two mechanisms, and both are required:
 
 A transaction alone would be defeated by a modified APK. A rule alone would let
 honest clients thrash. Together they are airtight.
+
+---
+
+## `riders/{riderUid}`
+
+A commuter's profile, keyed by uid so a phone number never becomes a guessable
+document ID.
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | string | 1–60 |
+| `phone` | string | must equal the verified number in the auth token; cannot change afterwards |
+| `profilePhotoUrl` | string? | ≤500 |
+| `savedAddresses` | list | empty on create, ≤20 |
+| `ratingSum`, `ratingCount` | int | start at 0; not editable by the rider |
+| `createdAt`, `updatedAt` | timestamp | |
+
+**Rules.** A rider can read, create and edit only their own document. Nobody can
+`list` the collection, admins included, so the commuter roster cannot be
+enumerated. An admin may delete a rider named on a ride but still cannot read
+their document. See [Removing an account](#removing-an-account).
+
+---
+
+## `phone_claims/{number}`
+
+`{uid, role, createdAt}`, keyed by the number in E.164 form. This is what limits a
+number to one account, across drivers and commuters.
+
+The profile that names a number must be written in one batch with its claim. A
+second account's write lands on a document it does not own and is refused, and
+nobody else can read the claim to learn who holds it. A rider can only claim the
+number in their auth token. A driver can only claim the number on their own
+profile. Only an admin or the account-removal functions can delete a claim, which
+is what frees the number.
+
+**Known limit.** A driver's number is typed, not verified by SMS. Someone could
+register a driver account with another person's number, and that person would then
+be refused when signing up as a commuter. An admin removing that driver frees the
+number. Sending drivers a code too would close this.
+
+---
+
+## `landmarks/{landmarkId}`
+
+`{name, point, createdAt}`: a place the chapter has named on the map. `name` is
+1–80 characters and `point` is a GeoPoint. Anyone signed in can read them and only
+an admin can add or remove one, because everyone sees them. They appear as named
+pins in the map picker, and search matches them on the phone as the person types.
+OpenStreetMap search still runs only on submit, because Nominatim's usage policy
+forbids autocomplete on its public service.
+
+---
+
+## `device_logins/{uid}`
+
+`{secretHash, phone, updatedAt}`. Lets one remembered phone sign back in without a
+code. No client may read or write it, including an admin.
+
+`rememberDevice` creates a 256-bit secret after a commuter signs in, keeps its
+SHA-256 here, and returns the secret once to the phone's secure storage. A later
+sign-in on a different phone replaces this document, which stops the old phone
+working. `signInWithDevice` checks the secret and the account's current number,
+then returns a custom sign-in token.
+
+**The trade-off.** Signing out no longer stops someone holding that unlocked phone
+from getting back in. Reinstalling, clearing app data or moving to a new phone
+still needs a code, because app backup is switched off.
 
 ---
 
@@ -195,13 +292,16 @@ store listing with an update channel.
   "searchRadiusKm": 5,
   "offerTimeoutSeconds": 15,
   "maxDriversToTry": 10,
-  "baseFare": 15,
-  "farePerKm": 5,
+  "acceptingRides": true,
+  "routingBaseUrl": "https://router.project-osrm.org",
   "minAppVersion": "1.0.0"
 }
 ```
 
-Readable by any signed-in user, writable by admins.
+Readable by any signed-in user, writable by admins. `acceptingRides: false` makes
+the rules refuse new bookings while rides already in progress finish normally.
+`minAppVersion` is not enforced by anything. Shared-ride and service-area settings
+are [listed below](#configapp--shared-rides-and-the-service-area).
 
 ---
 
@@ -248,7 +348,8 @@ the driver a commuter is riding with. `list` is admin-only. Update is
 admin-only, may touch only the four decision fields, requires the pre-image to
 be `pending` so a decision cannot be revisited, and requires a reason on
 rejection. Delete is the subject or an admin, which is how withdrawal and
-retention both work.
+retention both work. Create is refused once `id_verified/{uid}` exists, because a
+second submission would collect a government ID for no purpose.
 
 **Account deletion.** A rider deleting their account triggers `onRiderDeleted`,
 which anonymises their ride history rather than removing it: `commuterUid`
@@ -272,14 +373,25 @@ harmless orphan; an image with no document is personal data no screen will
 show and nobody will think to look for. If the image delete fails the document
 stays, so tomorrow's run retries the pair rather than leaving it half-removed.
 
-The verification outcome goes too. Nothing gates on ID status, so keeping
-*"verified in September"* would retain a record of a check for a permission
-that does not exist. If gating is added later, a boolean on the subject's own
-document is what to keep — not the ID.
+The verification outcome survives in `id_verified/{uid}`; the ID does not. If the
+approval trigger ever failed, the retention job writes the marker before deleting
+an approved submission, so nobody is locked out of an app they were cleared to
+use.
 
-**Not wired to anything.** Booking and going online do not currently check ID
-status. Gating them is a one-line rules change and a policy decision, not a
-technical one.
+---
+
+## `id_verified/{subjectUid}`
+
+`{role, verifiedBy, verifiedAt}`: the fact that an ID was approved, with no ID
+type, number or image path. Booking, creating a presence row and accepting a ride
+all require this document, and the router sends unverified commuters and drivers
+to the ID screen.
+
+It is separate from `id_submissions` because that document is deleted after 90
+days, and gating on it would lock everyone out on day 91. **Only `onIdReviewed`
+and the retention job write it.** The rules refuse every client write, admins
+included, so a modified app cannot verify itself. The subject and admins can read
+it.
 
 ---
 
@@ -383,6 +495,34 @@ because that is genuinely new.
 
 ---
 
+## Cloud Functions
+
+All run in `asia-southeast1`, from `functions/src/`. The Admin SDK bypasses the
+security rules, so these are the only writers of `dispatch`, `id_verified`,
+`notifications` and the rating counters.
+
+| Function | Runs | What it does |
+|---|---|---|
+| `dispatchOnBooking` | ride created | Offers a new booking straight away |
+| `advanceDispatch` | ride updated | Moves to the next driver when an offer is declined or lapses |
+| `requestDispatch` | callable, App Check enforced | The commuter's app asks for its own ride to be advanced; replies with an outcome word only |
+| `sweepStaleRides` | every minute | Safety net: advances or expires searching rides that the others missed |
+| `onRideOffered` | ride updated | Pushes the offer to the driver |
+| `onRideStatusChanged` | ride updated | Pushes accepted, in transit and completed to the commuter |
+| `onRideRated` | ride updated | Adds a rating to the driver's counters, once |
+| `onDriverApproved` | driver updated | Writes the approval notice and pushes it |
+| `onIdReviewed` | ID submission updated | Writes `id_verified/{uid}` on approval |
+| `purgeExpiredIds` | daily, 03:15 Manila time | Deletes ID submissions and images after 90 days |
+| `rememberDevice` | callable, signed-in commuter | Remembers this phone for sign-in without a code |
+| `signInWithDevice` | callable, signed out, no App Check | Exchanges a remembered phone's secret for a sign-in token |
+| `onDriverRemoved` | driver deleted | Cleans up the account and any live ride or offer |
+| `onRiderDeleted` | rider deleted | Cleans up the account, cancels any live ride and anonymises past rides |
+
+Each event can be delivered more than once, so offers are written with a
+transaction that stands down if `offerSeq` has moved (`commitIfUnchanged`).
+
+---
+
 ## Indexes
 
 `firestore.indexes.json` carries no inline comments because the CLI validates
@@ -394,15 +534,16 @@ that file against a strict schema. What each one is for:
 | `rides` | `assignedDriver`, `status`, `createdAt ↓` | driver history, and restoring an in-progress ride after the app is killed |
 | `rides` | `dispatch.offeredTo`, `status`, `createdAt ↓` | the driver's offer inbox |
 | `rides` | `status`, `createdAt ↓` | admin analytics |
-| `active_drivers` | `isOnline`, `availability`, `position.geohash` | the greedy nearest-driver sweep |
+| `active_drivers` | `isOnline`, `availability`, `position.geohash` | the geohash range query kept for a larger fleet; current dispatch does not use it |
 | `drivers` | `status`, `createdAt ↑` | admin verification queue, oldest first |
 | `feedback` | `resolved`, `createdAt ↓` | admin feedback queue |
+| `id_submissions` | `status`, `submittedAt ↑` | admin ID review queue, oldest first |
 
 `notifications/{uid}/items` needs no entry: ordering one collection by one
 field is served by the single-field index Firestore builds by default.
 
 The `fieldOverrides` entries switch **off** indexing for `position.geopoint`,
-`position.updatedAt`, `driverLocation` and `driverLocationAt`. Those fields are
+`active_drivers.updatedAt`, `driverLocation` and `driverLocationAt`. Those fields are
 rewritten every few seconds by GPS pings; every indexed field costs an index
 write on each update, and no query ever filters or orders by them. Disabling
 them is the single largest write-cost saving in this schema.
@@ -441,7 +582,6 @@ Admin SDK, before pointing the Flutter app at the same project.
 
 | Limit | Why it exists | Upgrade path |
 |---|---|---|
-| A modified client could inflate a driver's rating without having taken a ride. The rules verify the *arithmetic* of the increment, but cannot tie it to a specific completed ride, because each document in a transaction is authorised independently. | Avoids requiring Cloud Functions (paid Blaze plan) for the core flow. | Move the increment into a Function triggered on `rides.rating` write, then restrict `ratingSum`/`ratingCount` to `if false`. |
-| Dispatch stops if the commuter backgrounds the app mid-search, since the 15-second widening runs on their device. | Keeps the system to Auth + Firestore + FCM, as specified. | A scheduled Function sweeping stale `searching` rides. The schema does not change — `dispatch` is already the full state machine. |
-| Ride-offer pushes cannot be sent from the app. FCM send requires a server credential; embedding one in a distributed APK would let anyone push to any driver. | Unavoidable — this is an FCM design constraint, not a schema choice. | A Function on `dispatch.offeredTo` change, sending to `active_drivers.fcmToken`. Until then, drivers get in-app offers via the snapshot listener while the app is foregrounded. |
-| A driver's approval is not re-checked on every GPS ping. | One `get()` per ping, per driver, every few seconds is a real and recurring cost. | Suspension is enforced at ride acceptance, which is the write that matters. For instant effect, put `approved` in a custom auth claim and check `request.auth.token.role`. |
+| A driver's approval is not re-checked on every GPS ping, so a suspended driver can stay in the index. | One `get()` per ping, per driver, is a real and recurring cost. | Dispatch offers rides only to approved drivers, and the rules re-check approval at acceptance. To remove suspended drivers from the index immediately, put `approved` in a custom auth claim and check `request.auth.token.role`. |
+| A driver's number is not verified, so it can reserve someone else's number. | Drivers sign in by email and receive no code. | Verify driver numbers by SMS at registration. |
+| `minAppVersion` is not enforced, so a broken build cannot be forced out of circulation. | There is no version gate in the app. | Add a gate that compares the running version with `config/app`. Until then, `acceptingRides` stops bookings while a new APK is distributed. |

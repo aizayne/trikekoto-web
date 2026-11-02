@@ -154,6 +154,18 @@ has been going.
 
 ---
 
+## Adding landmarks
+
+**Landmarks** on the dashboard lists the places the chapter has named on the map.
+Add the places people give directions by, such as the terminal, the barangay hall
+or a well-known store, especially any missing from the map.
+
+Press **Add a landmark**, move the map so the pin is on the spot, type the name
+people use for it, and confirm. It appears for everyone straight away, as a pin on
+the map and in search. To correct one, delete it and add it again.
+
+---
+
 ## Reading feedback
 
 **Feedback** on the dashboard shows reports from drivers and commuters, with a
@@ -163,6 +175,13 @@ Reports are split into **Needs attention** and **Resolved**. Press **Mark
 resolved** once you have acted; **Reopen** if it comes back. Resolved history
 stays visible on purpose — a recurring complaint is only recognisable against
 what came before it.
+
+Comments left with a rating are separate. They appear under that ride in **Ride
+history**, and the driver does not see them there.
+
+Press **Delete** to remove a report for good, such as spam or a test. The app asks
+first, and a deleted report cannot be brought back. Use **Mark resolved** for
+anything you may want to compare against later.
 
 If someone left a contact, it appears with the report.
 
@@ -270,16 +289,17 @@ the colours.
 | Delete a ride | Rides are the audit trail. Nobody can delete one, including you. |
 | Create another admin | No client path can. Someone with console access adds the `admins` document. |
 | Set or change a fare | The app has no fares. Tariffs are set by ordinance and posted at the terminal. |
-| See a commuter's identity | Commuters are anonymous. You see the name and number they typed for that ride, nothing more. |
+| Browse commuter profiles | You see the name and number on a ride, and an ID while reviewing it. You cannot list commuters or open their profiles. |
 
 ---
 
 ## When something is wrong
 
-1. **Nobody can book** — check that Anonymous sign-in is still enabled in the
-   Firebase console under Authentication → Sign-in method.
+1. **Nobody can sign in with a phone number** — ask whoever runs the project to
+   check that Phone sign-in is enabled in the Firebase console, under
+   Authentication → Sign-in method, and that billing is active.
 2. **A driver says they get no offers** — confirm they are Approved, that
-   their toggle is Online, and that a commuter is within the search radius.
+   their ID is approved, that their toggle is Online, and that a commuter is within the search radius.
 3. **The app closed on someone** — crashes are reported automatically. Ask
    whoever runs the project to check Crashlytics.
 4. **Everything is refused** — most likely the security rules were changed.

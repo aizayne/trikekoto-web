@@ -19,6 +19,7 @@ import {
 import {
   doc,
   getDoc,
+  writeBatch,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -97,7 +98,7 @@ const snapshotFor = (email) => ({
 const rideDoc = (overrides = {}) => ({
   commuterUid: COMMUTER_UID,
   commuterName: 'Maria',
-  commuterPhone: '09181234567',
+  commuterPhone: '+639171234567',
   commuterPhotoUrl: null,
   pickup: { label: 'Plaza', geopoint: new GeoPoint(14.5995, 120.9842) },
   dropoff: { label: 'Palengke', geopoint: new GeoPoint(14.6, 120.99) },
@@ -707,7 +708,7 @@ describe('drivers — registration and verification', () => {
     uid: DRIVER_UID,
     firstName: 'Juan',
     lastName: 'Dela Cruz',
-    phone: '09171234567',
+    phone: '+639171234567',
     plateNumber: 'ABC1234',
     todaChapter: 'Barangay Uno TODA',
     status: 'pending',
@@ -716,8 +717,25 @@ describe('drivers — registration and verification', () => {
     createdAt: serverTimestamp(),
   });
 
+  /** The profile and its phone claim, in one batch, as the app writes them. */
+  const register = (db, email) => {
+    const batch = writeBatch(db);
+    const profile = registration(email);
+    batch.set(doc(db, 'drivers', email), profile);
+    batch.set(doc(db, 'phone_claims', profile.phone), {
+      uid: profile.uid,
+      role: 'driver',
+      createdAt: serverTimestamp(),
+    });
+    return batch.commit();
+  };
+
   it('registers a driver as pending', async () => {
-    await assertSucceeds(
+    await assertSucceeds(register(driver(), DRIVER_EMAIL));
+  });
+
+  it('refuses a registration with no phone claim', async () => {
+    await assertFails(
       setDoc(doc(driver(), 'drivers', DRIVER_EMAIL), registration(DRIVER_EMAIL)),
     );
   });
@@ -742,14 +760,7 @@ describe('drivers — registration and verification', () => {
 
   it('matches emails case-insensitively', async () => {
     await assertSucceeds(
-      setDoc(
-        doc(
-          driver('Driver.One@TODA.ph', DRIVER_UID),
-          'drivers',
-          DRIVER_EMAIL,
-        ),
-        registration(DRIVER_EMAIL),
-      ),
+      register(driver('Driver.One@TODA.ph', DRIVER_UID), DRIVER_EMAIL),
     );
   });
 
@@ -757,7 +768,17 @@ describe('drivers — registration and verification', () => {
     await seedDriver(DRIVER_EMAIL, 'pending');
     await assertSucceeds(
       updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
-        phone: '09990000000',
+        plateNumber: 'XYZ9999',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it('stops a pending driver changing the number their claim holds', async () => {
+    await seedDriver(DRIVER_EMAIL, 'pending');
+    await assertFails(
+      updateDoc(doc(driver(), 'drivers', DRIVER_EMAIL), {
+        phone: '+639990000000',
         updatedAt: serverTimestamp(),
       }),
     );
@@ -1042,6 +1063,14 @@ describe('feedback and config', () => {
     await assertFails(getDoc(doc(commuter(OTHER_COMMUTER_UID), 'feedback', 'f1')));
     await seedAdmin();
     await assertSucceeds(getDoc(doc(admin(), 'feedback', 'f1')));
+  });
+
+  it('lets only an admin delete a report', async () => {
+    await assertSucceeds(setDoc(doc(commuter(), 'feedback', 'f1'), report()));
+    await assertFails(deleteDoc(doc(commuter(), 'feedback', 'f1')));
+    await assertFails(deleteDoc(doc(commuter(OTHER_COMMUTER_UID), 'feedback', 'f1')));
+    await seedAdmin();
+    await assertSucceeds(deleteDoc(doc(admin(), 'feedback', 'f1')));
   });
 
   it('lets anyone signed in read config, but only admins write it', async () => {

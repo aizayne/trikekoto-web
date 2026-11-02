@@ -1,29 +1,26 @@
-# TrikeKoTo — Firestore backend
+# TrikeKoTo
 
-The data layer for the Flutter rebuild: schema, security rules, indexes, typed
-Dart references, and rules tests. No UI, no dispatch algorithm — those sit on
-top of this.
+The Flutter app for commuters, drivers and admins, with its Cloud Functions,
+security rules and documentation. The React app at the repo root is the legacy
+web build.
 
 ```
 trikekoto_app/
-├── firebase.json                  rules + indexes + emulator ports
+├── lib/
+│   ├── core/                      auth, routing, Firestore refs, maps, theme
+│   ├── features/                  admin, commuter, drivers, feedback, identity,
+│   │                              landing, notifications, rides
+│   └── l10n/                      Filipino and English strings
+├── functions/src/                 dispatch, pushes, ratings, ID retention, removal
 ├── firestore.rules                security rules (v2)
+├── storage.rules                  profile photos and government IDs
 ├── firestore.indexes.json         composite indexes + GPS field exclusions
+├── firebase.json                  rules + indexes + functions + emulator ports
 ├── SCHEMA.md                      field reference and design rationale
-├── scripts/
-│   └── migrate_from_web.mjs       one-off migration off the web build's data
-├── test_rules/
-│   ├── package.json
-│   └── rules.test.mjs             167 rules tests against the emulator
-└── lib/
-    ├── core/firestore/
-    │   ├── collection_paths.dart  collection names, enums, normalizeEmail()
-    │   └── firestore_refs.dart    typed refs + every canonical query
-    └── features/
-        ├── drivers/data/driver.dart
-        ├── drivers/data/active_driver.dart
-        ├── rides/data/ride.dart           models + RideWrites payloads
-        └── feedback/data/feedback_report.dart
+├── test/                          Dart unit and widget tests
+├── test_rules/                    rules tests against the emulator
+├── scripts/                       verification, seeding, release and document tools
+└── docs/                          runbook, user guides, pilot and UAT material
 ```
 
 ---
@@ -130,37 +127,33 @@ been seeded must still work. See [pilot-plan.md](docs/pilot-plan.md).
 > There is no version gate in the app, so a broken build cannot be forced out
 > of circulation — you can only stop bookings and redistribute.
 
-### 6. Wire up Flutter
+Shared-ride and service-area settings live in the same document; see
+[SCHEMA.md](SCHEMA.md).
 
-```yaml
-dependencies:
-  firebase_core: ^3.8.0
-  firebase_auth: ^5.3.0
-  cloud_firestore: ^5.5.0
-  firebase_messaging: ^15.1.0
-  flutter_riverpod: ^2.6.1
-  go_router: ^14.6.0
-  flutter_map: ^7.0.2
-  geolocator: ^13.0.1
-```
+### 6. Deploy the Cloud Functions
 
 ```bash
+firebase deploy --only functions
+```
+
+These run dispatch, so no ride is offered to a driver until they are deployed.
+See the function list in [SCHEMA.md](SCHEMA.md#cloud-functions).
+
+### 7. Connect Flutter to the project
+
+Dependencies are in `pubspec.yaml`.
+
+```bash
+flutter pub get
 flutterfire configure
 ```
 
-Then expose the refs through Riverpod:
+In the app, the driver's offer inbox, the admin queues and other screens go
+through `FirestoreRefs` (`lib/core/firestore/firestore_refs.dart`) rather than
+building queries inline. The queries there are the ones the rules allow and the
+indexes cover.
 
-```dart
-final firestoreProvider = Provider((ref) => FirebaseFirestore.instance);
-
-final refsProvider = Provider((ref) => FirestoreRefs(ref.watch(firestoreProvider)));
-```
-
-Everything downstream — the dispatch controller, the driver's offer inbox, the
-admin queues — goes through `FirestoreRefs` rather than building queries inline.
-The queries there are the ones the rules allow and the indexes cover.
-
-### 7. Run the rules tests
+### 8. Run the rules tests
 
 ```bash
 cd test_rules
@@ -185,9 +178,17 @@ them down.
 bash scripts/verify.sh
 ```
 
-Runs all four checks CI runs — analyze, 162 Dart tests, 167 rules tests, and the
+Runs all four checks CI runs — analyze, the Dart tests, the rules tests, and the
 functions typecheck — and applies the `TEMP=C:\Temp` workaround automatically on
 Windows.
+
+The functions' own tests, including the dispatch ranking, are not part of this
+or of CI. Run them separately when you change a function:
+
+```bash
+cd functions
+npm test
+```
 
 Every check runs even after one fails, so a broken run tells you everything
 that is wrong rather than the first thing. The summary at the end is the part
@@ -208,9 +209,9 @@ runs on every push and pull request that touches `trikekoto_app/`:
 
 | Job | What it guards |
 |---|---|
-| **analyze** | `flutter analyze --fatal-infos` and 162 Dart tests |
-| **rules** | 167 Firestore emulator tests — rules, lifecycle, adversarial |
-| **functions** | `tsc --noEmit` on the Cloud Functions |
+| **analyze** | `flutter analyze --fatal-infos` and the Dart tests |
+| **rules** | Firestore emulator tests — rules, lifecycle, adversarial |
+| **functions** | `tsc --noEmit` on the Cloud Functions; their tests do not run here |
 | **build** | Release APK, uploaded as an artifact for 30 days |
 
 The **rules** job matters most. Those tests are what stands between a rules
@@ -219,12 +220,11 @@ without the `TEMP=C:\Temp` workaround for a broken AF_UNIX socket. On the
 Linux runner they simply run, which makes CI a more reliable place to execute
 them than a laptop.
 
-The **functions** job exists because those functions cannot be deployed until
-the Blaze plan is enabled. Typechecking is the only thing keeping them honest
-against schema changes in the meantime.
+The **functions** job catches a function that no longer compiles against a schema
+change. It does not run their tests.
 
 `build` depends on `analyze` and `rules`, so a broken ruleset never produces a
-downloadable APK.
+downloadable APK. It does not depend on `functions`.
 
 ### Versioning
 
@@ -252,8 +252,9 @@ it; leave the build number alone.
 flutter build web --release
 ```
 
-Verified working against the live Firebase project: the landing screen renders,
-anonymous sign-in succeeds, and the commuter booking screen loads.
+An earlier build was checked against the live Firebase project, before commuter
+accounts existed. Commuters on web now sign in with a phone number like everyone
+else, so check that flow on the current build before relying on it.
 
 ### What does not work on web, and why
 
@@ -309,8 +310,9 @@ while working perfectly on localhost.
 
 ## Release signing
 
-Everything around signing is wired; the one step left is creating the key,
-which is deliberately yours to do.
+The release key already exists at `trikekoto-release.jks`; see
+[RUNBOOK.md](docs/RUNBOOK.md#backing-up-the-release-keystore) for how to back it
+up. These steps are for a new checkout or project with no key.
 
 **1. Create the keystore.** Run this from `trikekoto_app/`:
 
@@ -355,7 +357,7 @@ key that signed it, so:
 So back it up somewhere that is not this repository and not only your laptop.
 An offline copy is the point.
 
-### Until then
+### Without a key
 
 Builds fall back to debug signing and print a warning. Those APKs install
 fine for testing on your own phone, but **must not be handed to drivers** —
@@ -392,19 +394,19 @@ to retroactively attach them to.
 
 | | Web build | Here |
 |---|---|---|
-| Commuter identity | none — unauthenticated writes | Anonymous Auth uid, stored as `rides.commuterUid` |
+| Commuter identity | none — unauthenticated writes | Phone-verified Auth uid, stored as `rides.commuterUid`, plus an approved government ID |
 | `rides` read | `if true` — every commuter's name, phone, pickup and drop-off public | owner, assigned driver, offered driver, admin |
 | Ride cancellation | anyone could cancel any ride | the owning commuter or the assigned driver |
 | `drivers` read | `if true` — every driver's phone public | self and admin; commuter-facing fields denormalised onto the ride |
 | Admin check | `exists(admins/{email})` on an **unverified** token | additionally requires `email_verified` |
 | Ride acceptance | any signed-in user could claim any searching ride | only the driver currently offered it, and only if approved |
 | Driver approval | admin-only via a field allowlist | unchanged — this part was already right |
-| Ratings | write-once on the ride, no driver aggregate | write-once, plus a rules-verified aggregate increment |
+| Ratings | write-once on the ride, no driver aggregate | write-once, with the driver aggregate updated only by a Cloud Function |
 
 The admin gap is worth spelling out: Firebase email/password signup does not
 prove you own the address you typed. Without `email_verified`, anyone could
 register an unverified account matching a document in `admins/` and receive a
 token that satisfied an email-keyed admin test — full access to the panel.
 
-See the "Known limits" table in [SCHEMA.md](SCHEMA.md) for what these rules
-deliberately do **not** try to solve without Cloud Functions.
+See the "Known limits" table in [SCHEMA.md](SCHEMA.md) for what is still
+deliberately left open.

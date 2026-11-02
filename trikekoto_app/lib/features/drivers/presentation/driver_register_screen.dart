@@ -1,11 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/firestore/collection_paths.dart';
+import '../../../core/firestore/phone_claims.dart';
 import '../../../core/providers.dart';
 import '../../../core/ui/app_theme.dart';
+import '../../commuter/data/phone_number.dart';
 import '../data/driver.dart';
 import '../../../core/ui/locale_controller.dart';
 
@@ -49,9 +52,17 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
 
+    // Creating the account signs the person in, and the router may leave this
+    // screen before the profile is written. Read now, so a refusal can still
+    // be reported after that.
+    final messenger = ScaffoldMessenger.of(context);
+    final taken = context.l.phoneNumberTaken;
+    final errorColour = context.scheme.error;
+    UserCredential? created;
+
     try {
       final session = ref.read(sessionProvider.notifier);
-      final credential = await session.registerDriverAccount(
+      created = await session.registerDriverAccount(
         _email.text,
         _password.text,
       );
@@ -59,23 +70,42 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       // The profile write must follow account creation: the rule requires
       // `uid == request.auth.uid`, so there is nothing valid to write until
       // the account exists.
-      await ref
-          .read(firestoreProvider)
-          .collection(FsCollections.drivers)
-          .doc(normalizeEmail(_email.text))
-          .set(Driver.registrationPayload(
-            email: _email.text,
-            uid: credential.user!.uid,
-            firstName: _firstName.text,
-            lastName: _lastName.text,
-            phone: _phone.text,
-            plateNumber: _plate.text,
-            todaChapter: _toda.text,
-          ));
+      //
+      // In one batch with the phone claim: the rules refuse the profile
+      // without it, and refuse the claim if another account holds this number.
+      final db = ref.read(firestoreProvider);
+      final phone = toE164Ph(_phone.text)!;
+      final uid = created.user!.uid;
+      final batch = db.batch();
+      batch.set(
+        db.collection(FsCollections.drivers).doc(normalizeEmail(_email.text)),
+        Driver.registrationPayload(
+          email: _email.text,
+          uid: uid,
+          firstName: _firstName.text,
+          lastName: _lastName.text,
+          phone: phone,
+          plateNumber: _plate.text,
+          todaChapter: _toda.text,
+        ),
+      );
+      PhoneClaims.addTo(batch, db,
+          phone: phone, uid: uid, role: PhoneClaims.driver);
+      await batch.commit();
 
       await session.refresh();
     } catch (e) {
-      if (mounted) showSnack(context, describeError(e), error: true);
+      // A sign-in with no profile would hold this email address for nothing,
+      // and "already registered" would be the answer to trying again.
+      try {
+        await created?.user?.delete();
+      } catch (_) {}
+      messenger.showSnackBar(SnackBar(
+        backgroundColor: errorColour,
+        content: Text(e.toString().contains('permission-denied')
+            ? taken
+            : describeError(e)),
+      ));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -123,10 +153,12 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
                     _field(
                       _phone,
                       context.l.regMobile,
-                      min: 7,
                       icon: Icons.phone_outlined,
                       keyboard: TextInputType.phone,
                       helper: context.l.regMobileHelper,
+                      validator: (v) => toE164Ph(v ?? '') == null
+                          ? context.l.signInNumberInvalid
+                          : null,
                     ),
 
                     const Gap(AppSpacing.xxl),
@@ -216,6 +248,7 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
     String? helper,
     TextInputType? keyboard,
     TextCapitalization capitalization = TextCapitalization.none,
+    FormFieldValidator<String>? validator,
   }) {
     return TextFormField(
       controller: c,
@@ -228,9 +261,10 @@ class _DriverRegisterScreenState extends ConsumerState<DriverRegisterScreen> {
       ),
       // Errors name the field rather than saying "Required", so an error
       // summary read aloud still identifies what to fix.
-      validator: (v) => (v == null || v.trim().length < min)
-          ? context.l.regFieldRequired(label.toLowerCase())
-          : null,
+      validator: validator ??
+          (v) => (v == null || v.trim().length < min)
+              ? context.l.regFieldRequired(label.toLowerCase())
+              : null,
     );
   }
 }

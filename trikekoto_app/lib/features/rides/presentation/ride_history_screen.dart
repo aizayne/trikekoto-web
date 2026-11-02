@@ -254,6 +254,13 @@ class _HistoryTile extends ConsumerWidget {
               const Gap(AppSpacing.xs),
               Text(line, style: context.text.bodySmall),
             ],
+            // For the person who wrote it and the chapter. Not shown to the
+            // driver being reviewed, so a commuter can be candid.
+            if (ride.feedback != null &&
+                audience != HistoryAudience.driver) ...[
+              const Gap(AppSpacing.sm),
+              Text('"${ride.feedback}"', style: context.text.bodyMedium),
+            ],
             // Under the parties, where the commuter is named, rather than in
             // the header: this acts on the person, not on the ride.
             if (_canRemoveCommuter) ...[

@@ -77,6 +77,14 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/id_verified/$(request.auth.uid));
     }
 
+    // One account per mobile number. `phone_claims/{number}` can only be
+    // created once, so the profile that names a number must be written in the
+    // same batch as a claim this account holds.
+    function holdsPhoneClaim(phone) {
+      let path = /databases/$(database)/documents/phone_claims/$(phone);
+      return existsAfter(path) && getAfter(path).data.uid == uid();
+    }
+
     function emailVerified() {
       return isSignedIn() && request.auth.token.get('email_verified', false) == true;
     }
@@ -158,6 +166,7 @@ service cloud.firestore {
           && d.phone is string       && d.phone.size() >= 7       && d.phone.size() <= 20
           && d.plateNumber is string && d.plateNumber.size() >= 3 && d.plateNumber.size() <= 16
           && d.todaChapter is string && d.todaChapter.size() <= 80
+          && holdsPhoneClaim(d.phone)
           && d.ratingSum == 0
           && d.ratingCount == 0
           && d.createdAt == request.time;
@@ -206,9 +215,12 @@ service cloud.firestore {
         // accept time; changing the plate afterwards would carry the
         // approval over to a tricycle nobody checked. An approved driver
         // asks the officer, who edits it as an admin.
+        //
+        // `phone` is absent: it is tied to a phone claim, and a number
+        // changed here would leave the old one reserved and the new one not.
         (isSelf(driverEmail)
           && resource.data.status == 'pending'
-          && onlyChanged(['firstName', 'lastName', 'phone',
+          && onlyChanged(['firstName', 'lastName',
                           'plateNumber', 'todaChapter', 'updatedAt']))
         ||
         // A push token, at any status. It is how the chapter reaches a
@@ -308,7 +320,9 @@ service cloud.firestore {
           && d.driverSnapshot == null
           && d.rating == null
           && d.commuterName is string  && d.commuterName.size() >= 1 && d.commuterName.size() <= 60
-          && d.commuterPhone is string && d.commuterPhone.size() >= 7 && d.commuterPhone.size() <= 20
+          // The number this account proved, so a driver can never be handed
+          // a stranger's number or a made-up one.
+          && d.commuterPhone == request.auth.token.get('phone_number', '')
           // Copied from the rider's profile so the driver can recognise who
           // they are collecting. Null for a commuter who has not added a
           // photo. Bounded for the same
@@ -496,6 +510,7 @@ service cloud.firestore {
       function validNewRider() {
         let d = request.resource.data;
         return phoneMatchesToken()
+          && holdsPhoneClaim(d.phone)
           && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
           && (d.profilePhotoUrl == null || d.profilePhotoUrl is string)
           && d.savedAddresses is list && d.savedAddresses.size() == 0
@@ -549,6 +564,72 @@ service cloud.firestore {
       // erase a commuter already identified on a ride, never the power
       // to browse the people who use the app.
       allow delete: if isSelfRider() || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  phone_claims/{number}
+    // ═══════════════════════════════════════════════════════
+    // Reserves a number in E.164 form for one account, across drivers and
+    // commuters. A rider can only claim the number their token proves. A
+    // driver can only claim the number on their own profile, written in the
+    // same batch. A taken number is refused because this document already
+    // belongs to somebody else, and nobody else can read it.
+    //
+    // Removed only by an admin or by the account-removal functions, which is
+    // what frees a number.
+    match /phone_claims/{phone} {
+      function validClaim() {
+        let d = request.resource.data;
+        let driver = /databases/$(database)/documents/drivers/$(tokenEmail());
+        return d.keys().hasOnly(['uid', 'role', 'createdAt'])
+          && d.uid == uid()
+          && d.createdAt == request.time
+          && ((d.role == 'rider'
+                && request.auth.token.get('phone_number', '') == phone)
+              || (d.role == 'driver'
+                && tokenEmail() != ''
+                && existsAfter(driver)
+                && getAfter(driver).data.uid == uid()
+                && getAfter(driver).data.phone == phone));
+      }
+
+      allow get: if isAdmin() || (isSignedIn() && resource.data.uid == uid());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && validClaim();
+      // Retrying a sign-up that failed partway rewrites the same claim.
+      allow update: if isSignedIn() && resource.data.uid == uid() && validClaim();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  landmarks/{landmarkId}
+    // ═══════════════════════════════════════════════════════
+    // Places the chapter has named on the map. Everyone sees them, so only an
+    // admin may add one: a commuter's pin would send drivers wherever it said.
+    match /landmarks/{landmarkId} {
+      function validLandmark() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['name', 'point', 'createdAt'])
+          && d.name is string
+          && d.name.size() >= 1
+          && d.name.size() <= 80
+          && d.point is latlng
+          && d.createdAt == request.time;
+      }
+
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && validLandmark();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  device_logins/{uid}
+    // ═══════════════════════════════════════════════════════
+    // The hash of the secret that lets one remembered phone sign back in
+    // without a code. Used only by the device-login functions. No client may
+    // read or write it, including an admin.
+    match /device_logins/{uid} {
+      allow read, write: if false;
     }
 
     // ═══════════════════════════════════════════════════════

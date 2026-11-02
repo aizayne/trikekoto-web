@@ -67,6 +67,7 @@ doubling the information you get, which is a bad trade at this stage.
 - [ ] Push notifications confirmed working on a backgrounded phone
 - [ ] APK signed with the real keystore, **and the keystore backed up offline**
 - [ ] Admin account created and email verified
+- [ ] Sample rides removed: `node scripts/seed_demo_rides.mjs --remove`
 - [ ] `config/app` seeded (search radius, offer timeout, drivers to try)
 - [ ] Crashlytics receiving a deliberately triggered test crash
 - [ ] Every driver has the [driver guide](driver-guide.md) and a way to reach you

@@ -4,12 +4,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/remembered_device.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/app_theme.dart';
 import '../../../core/ui/locale_controller.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/ui/theme_controller.dart';
 import '../data/phone_number.dart';
+
+/// Firebase's "Error code:39" arrives with the code `unknown`.
+///
+/// Firebase does not document it. Reports tie it to a failed app check or to
+/// its abuse limits on sending SMS, and either way the commuter can only wait.
+bool isSmsRefused(FirebaseAuthException e) =>
+    e.message?.contains('Error code:39') ?? false;
 
 /// Phone + OTP sign-in. Every commuter passes through here.
 ///
@@ -36,6 +44,10 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
 
   String? _verificationId;
   bool _busy = false;
+
+  /// Set when the person chooses a code over the remembered phone, or when
+  /// the remembered phone is refused.
+  bool _useCode = false;
 
   @override
   void dispose() {
@@ -86,6 +98,23 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
     }
   }
 
+  Future<void> _continueRemembered(RememberedDevice device) async {
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(sessionProvider.notifier)
+          .continueOnRememberedPhone(device);
+      // The router takes over, as it does after a code.
+    } catch (_) {
+      if (mounted) {
+        setState(() => _useCode = true);
+        showSnack(context, context.l.signInRememberFailed, error: true);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _confirm() async {
     if (_code.text.trim().length < 6) {
       showSnack(context, context.l.signInEnterSixDigits, error: true);
@@ -124,6 +153,7 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
         'captcha-check-failed' => l.authCaptchaFailed,
         'invalid-app-credential' => l.authAppNotRegistered,
         'app-not-authorized' => l.authSiteNotAllowed,
+        _ when isSmsRefused(e) => l.authSmsRefused,
         // Unknown codes keep the code visible. A bare "error" tells the
         // person nothing and tells whoever they report it to even less.
         _ => l.authUnknown(e.message ?? l.authCouldNotVerify, e.code),
@@ -144,6 +174,8 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
   @override
   Widget build(BuildContext context) {
     final onCode = _verificationId != null;
+    final remembered =
+        _useCode ? null : ref.watch(rememberedDeviceProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -163,13 +195,42 @@ class _RiderSignInScreenState extends ConsumerState<RiderSignInScreen> {
             padding: const EdgeInsets.all(AppSpacing.xxl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: onCode ? _codePane() : _phonePane(),
+              child: onCode
+                  ? _codePane()
+                  : remembered != null
+                      ? _rememberedPane(remembered)
+                      : _phonePane(),
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _rememberedPane(RememberedDevice device) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(context.l.loginWelcome, style: context.text.headlineSmall),
+          const Gap(AppSpacing.xxl),
+          FilledButton(
+            onPressed: _busy ? null : () => _continueRemembered(device),
+            child: _busy
+                ? const SizedBox(
+                    width: AppSpacing.iconSm,
+                    height: AppSpacing.iconSm,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.onAccent),
+                  )
+                : Text(context.l.signInContinueAs(device.maskedPhone)),
+          ),
+          const Gap(AppSpacing.md),
+          TextButton(
+            onPressed: _busy ? null : () => setState(() => _useCode = true),
+            child: Text(context.l.signInOtherNumber),
+          ),
+        ],
+      );
 
   Widget _phonePane() => Form(
         key: _formKey,

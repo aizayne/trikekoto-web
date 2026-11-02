@@ -25,6 +25,14 @@ class FsCollections {
   /// Rider profiles, keyed by uid rather than phone number — a phone number
   /// is personal data and should not be a key anyone can enumerate.
   static const riders = 'riders';
+
+  /// One document per mobile number in use, keyed by the number in E.164 form.
+  /// This is what limits a number to one account, across drivers and commuters.
+  static const phoneClaims = 'phone_claims';
+
+  /// Places the chapter has named on the map. Readable by anyone signed in,
+  /// written by admins.
+  static const landmarks = 'landmarks';
   static const activeDrivers = 'active_drivers';
   static const rides = 'rides';
   static const admins = 'admins';

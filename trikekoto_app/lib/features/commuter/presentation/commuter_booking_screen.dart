@@ -47,7 +47,6 @@ class CommuterBookingScreen extends ConsumerStatefulWidget {
 class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _phone = TextEditingController();
   bool _busy = false;
 
   /// Regular unless the commuter chooses otherwise. Special commits them to a
@@ -138,9 +137,7 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   @override
   void dispose() {
     _noDriverTimer?.cancel();
-    for (final c in [_name, _phone]) {
-      c.dispose();
-    }
+    _name.dispose();
     super.dispose();
   }
 
@@ -281,14 +278,16 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
     setState(() => _busy = true);
     try {
-      final uid = ref.read(firebaseAuthProvider).currentUser!.uid;
+      final user = ref.read(firebaseAuthProvider).currentUser!;
+      final uid = user.uid;
       final doc = await ref
           .read(firestoreProvider)
           .collection(FsCollections.rides)
           .add(RideWrites.create(
             commuterUid: uid,
             commuterName: _name.text,
-            commuterPhone: _phone.text,
+            // The verified number, never a typed one. The rules require it.
+            commuterPhone: user.phoneNumber ?? '',
             pickup: RidePlace(
               label: _pickup!.label,
               geopoint: _pickup!.point.geoPoint,
@@ -329,10 +328,12 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
     }
   }
 
-  Future<void> _rate(Ride ride, int stars) async {
+  Future<void> _rate(Ride ride, int stars, String feedback) async {
     try {
       final refs = ref.read(refsProvider);
-      await refs.ride(ride.id).update(RideWrites.rate(stars: stars));
+      await refs
+          .ride(ride.id)
+          .update(RideWrites.rate(stars: stars, feedback: feedback));
       if (mounted) showSnack(context, context.l.rateThanks);
     } catch (e) {
       if (mounted) showSnack(context, describeError(e), error: true);
@@ -446,9 +447,10 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                       ? _ActiveRideCard(
                           ride: ride, onCancel: () => _cancel(ride))
                       : rateable
-                          ? _RateCard(
+                          ? RateCard(
                               ride: ride,
-                              onRate: (stars) => _rate(ride, stars),
+                              onRate: (stars, feedback) =>
+                                  _rate(ride, stars, feedback),
                             )
                           : _bookingForm(),
                 ),
@@ -578,17 +580,17 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
                 (v == null || v.trim().isEmpty) ? context.l.bookEnterName : null,
           ),
           const Gap(AppSpacing.md),
+          // Shown, not editable: bookings carry the verified number. Keyed so
+          // the field fills in when the profile arrives after the first frame.
           TextFormField(
-            controller: _phone,
-            keyboardType: TextInputType.phone,
+            key: ValueKey(ref.watch(myRiderProfileProvider).value?.phone),
+            enabled: false,
+            initialValue: ref.watch(myRiderProfileProvider).value?.phone,
             decoration: InputDecoration(
               labelText: context.l.signInNumberLabel,
               prefixIcon: const Icon(Icons.phone_outlined),
               helperText: context.l.bookNumberHelper,
             ),
-            validator: (v) => (v == null || v.trim().length < 7)
-                ? context.l.bookNumberInvalid
-                : null,
           ),
           const Gap(AppSpacing.xxl),
           FilledButton.icon(
@@ -1238,14 +1240,45 @@ class _ActiveRideCard extends StatelessWidget {
       );
 }
 
-class _RateCard extends StatelessWidget {
-  const _RateCard({required this.ride, required this.onRate});
+/// Stars, then an optional comment, then one send.
+///
+/// A rating can only be written once, so tapping a star no longer sends it:
+/// that would close the ride before anyone could add a comment or correct a
+/// mistaken tap.
+class RateCard extends StatefulWidget {
+  const RateCard({super.key, required this.ride, required this.onRate});
 
   final Ride ride;
-  final ValueChanged<int> onRate;
+  final Future<void> Function(int stars, String feedback) onRate;
+
+  @override
+  State<RateCard> createState() => _RateCardState();
+}
+
+class _RateCardState extends State<RateCard> {
+  final _feedback = TextEditingController();
+  int _stars = 0;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _feedback.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    setState(() => _busy = true);
+    try {
+      await widget.onRate(_stars, _feedback.text);
+    } finally {
+      // Still here means the write failed, and the rating can be sent again.
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ride = widget.ride;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -1274,10 +1307,30 @@ class _RateCard extends StatelessWidget {
                 for (var i = 1; i <= 5; i++)
                   IconButton(
                     iconSize: 36,
-                    icon: const Icon(Icons.star_border),
-                    onPressed: () => onRate(i),
+                    tooltip: '$i',
+                    icon: Icon(i <= _stars ? Icons.star : Icons.star_border),
+                    color: i <= _stars ? context.scheme.primary : null,
+                    onPressed: _busy ? null : () => setState(() => _stars = i),
                   ),
               ],
+            ),
+            const Gap(AppSpacing.md),
+            TextField(
+              controller: _feedback,
+              enabled: !_busy,
+              maxLength: 500,
+              minLines: 2,
+              maxLines: 4,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: context.l.rateFeedbackLabel),
+            ),
+            const Gap(AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _stars == 0 || _busy ? null : _send,
+                child: Text(context.l.rateSend),
+              ),
             ),
           ],
         ),

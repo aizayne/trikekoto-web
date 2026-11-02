@@ -105,7 +105,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'rides', 'victim-ride'), {
       commuterUid: COMMUTER_UID,
       commuterName: 'Maria',
-      commuterPhone: '09181234567',
+      commuterPhone: '+639171234567',
       pickup: { label: 'Plaza', geopoint: new GeoPoint(14.5995, 120.9842) },
       dropoff: { label: 'Palengke', geopoint: new GeoPoint(14.6, 120.99) },
       status: 'searching',

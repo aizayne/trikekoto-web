@@ -60,6 +60,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  flutter_secure_storage: ^11.2.0
 
 # ── Pinned transitive dependency ─────────────────────────────
 # firebase_core_web 3.10.0+ calls `isA` from dart:js_interop, which this

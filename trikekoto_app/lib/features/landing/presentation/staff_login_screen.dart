@@ -46,6 +46,23 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
     }
   }
 
+  Future<void> _sendReset() async {
+    final email = _email.text.trim();
+    if (!email.contains('@')) {
+      showSnack(context, context.l.loginResetNeedsEmail, error: true);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await ref.read(sessionProvider.notifier).sendPasswordReset(email);
+      if (mounted) showSnack(context, context.l.loginResetSent);
+    } catch (e) {
+      if (mounted) showSnack(context, describeError(e), error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,7 +135,14 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
-                      const Gap(AppSpacing.xxl),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _busy ? null : _sendReset,
+                          child: Text(context.l.loginForgotPassword),
+                        ),
+                      ),
+                      const Gap(AppSpacing.lg),
                       FilledButton(
                         onPressed: _busy ? null : _submit,
                         child: _busy

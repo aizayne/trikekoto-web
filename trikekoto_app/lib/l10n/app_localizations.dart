@@ -205,6 +205,24 @@ abstract class L {
   /// **'Ibang number'**
   String get signInOtherNumber;
 
+  /// No description provided for @signInContinueAs.
+  ///
+  /// In fil, this message translates to:
+  /// **'Magpatuloy bilang {phone}'**
+  String signInContinueAs(String phone);
+
+  /// No description provided for @signInRememberFailed.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi ma-confirm ang phone na ito. Gumamit na lang ng code.'**
+  String get signInRememberFailed;
+
+  /// No description provided for @phoneNumberTaken.
+  ///
+  /// In fil, this message translates to:
+  /// **'May ibang account na gumagamit ng number na iyon. Isang account lang kada number. Kung sa iyo ito, sabihin sa TODA officer.'**
+  String get phoneNumberTaken;
+
   /// No description provided for @authInvalidPhone.
   ///
   /// In fil, this message translates to:
@@ -276,6 +294,12 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Hindi ma-verify ang number na iyon.'**
   String get authCouldNotVerify;
+
+  /// No description provided for @authSmsRefused.
+  ///
+  /// In fil, this message translates to:
+  /// **'Hindi maipadala ang code ngayon. Maghintay ng ilang minuto at subukan ulit. Kung ganito pa rin, sabihin sa TODA officer. [39]'**
+  String get authSmsRefused;
 
   /// No description provided for @authCouldNotSend.
   ///
@@ -798,6 +822,18 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Salamat sa rating!'**
   String get rateThanks;
+
+  /// No description provided for @rateFeedbackLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Feedback tungkol sa biyahe (opsyonal)'**
+  String get rateFeedbackLabel;
+
+  /// No description provided for @rateSend.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ipadala ang rating'**
+  String get rateSend;
 
   /// No description provided for @driverTitle.
   ///
@@ -1507,6 +1543,24 @@ abstract class L {
   /// **'Magparehistro bilang TODA driver'**
   String get loginRegisterAsDriver;
 
+  /// No description provided for @loginForgotPassword.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nakalimutan ang password?'**
+  String get loginForgotPassword;
+
+  /// No description provided for @loginResetNeedsEmail.
+  ///
+  /// In fil, this message translates to:
+  /// **'Ilagay muna ang email mo sa itaas.'**
+  String get loginResetNeedsEmail;
+
+  /// No description provided for @loginResetSent.
+  ///
+  /// In fil, this message translates to:
+  /// **'Kung may account ang email na iyon, nagpadala kami ng link para palitan ang password. Tingnan din ang spam folder.'**
+  String get loginResetSent;
+
   /// No description provided for @adminTitle.
   ///
   /// In fil, this message translates to:
@@ -1530,6 +1584,54 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'ID review'**
   String get adminIdReview;
+
+  /// No description provided for @adminLandmarks.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mga landmark'**
+  String get adminLandmarks;
+
+  /// No description provided for @lmAdd.
+  ///
+  /// In fil, this message translates to:
+  /// **'Magdagdag ng landmark'**
+  String get lmAdd;
+
+  /// No description provided for @lmAdded.
+  ///
+  /// In fil, this message translates to:
+  /// **'Naidagdag ang {name}.'**
+  String lmAdded(String name);
+
+  /// No description provided for @lmRemoveQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Alisin ang {name}?'**
+  String lmRemoveQuestion(String name);
+
+  /// No description provided for @lmRemoveBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Mawawala ito sa mapa at sa paghahanap para sa lahat. Mananatili ang pangalan ng pickup at drop-off sa mga dating biyahe.'**
+  String get lmRemoveBody;
+
+  /// No description provided for @lmEmptyTitle.
+  ///
+  /// In fil, this message translates to:
+  /// **'Wala pang landmark'**
+  String get lmEmptyTitle;
+
+  /// No description provided for @lmEmptyBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Idagdag ang mga lugar na ginagamit sa pagtuturo ng daan, gaya ng terminal o barangay hall. Mahahanap na ito ng mga commuter sa mapa.'**
+  String get lmEmptyBody;
+
+  /// No description provided for @lmResultLabel.
+  ///
+  /// In fil, this message translates to:
+  /// **'Landmark'**
+  String get lmResultLabel;
 
   /// No description provided for @adminPendingVerification.
   ///
@@ -1986,6 +2088,36 @@ abstract class L {
   /// In fil, this message translates to:
   /// **'Binuksan ulit.'**
   String get fbReopened;
+
+  /// No description provided for @fbDelete.
+  ///
+  /// In fil, this message translates to:
+  /// **'Burahin'**
+  String get fbDelete;
+
+  /// No description provided for @fbDeleteQuestion.
+  ///
+  /// In fil, this message translates to:
+  /// **'Burahin ang report na ito?'**
+  String get fbDeleteQuestion;
+
+  /// No description provided for @fbDeleteBody.
+  ///
+  /// In fil, this message translates to:
+  /// **'Permanente itong mawawala at hindi na maibabalik.'**
+  String get fbDeleteBody;
+
+  /// No description provided for @fbDeleteNo.
+  ///
+  /// In fil, this message translates to:
+  /// **'Huwag'**
+  String get fbDeleteNo;
+
+  /// No description provided for @fbDeleted.
+  ///
+  /// In fil, this message translates to:
+  /// **'Nabura ang report.'**
+  String get fbDeleted;
 
   /// No description provided for @fbFromRole.
   ///
