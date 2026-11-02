@@ -16,7 +16,7 @@ const _nearby = GeoPoint(14.9800, 120.1577); // ~0.6 km
 const _farOff = GeoPoint(15.0107, 120.1577); // ~4.0 km
 
 ServiceArea _area({double radiusKm = 3}) => ServiceArea.fromMap({
-      'label': 'Balaybay Resettlement',
+      'label': 'Castillejos',
       'lat': _centre.latitude,
       'lng': _centre.longitude,
       'radiusKm': radiusKm,
@@ -45,9 +45,9 @@ void main() {
     });
 
     test('and the name falls back to something a warning can print', () {
-      expect(ServiceArea.fromMap(null).label, 'Balaybay Resettlement');
+      expect(ServiceArea.fromMap(null).label, 'Castillejos');
       expect(ServiceArea.fromMap({'label': '   '}).label,
-          'Balaybay Resettlement');
+          'Castillejos');
     });
   });
 
@@ -80,7 +80,7 @@ void main() {
     test('round-trips through the document an admin saves', () {
       final saved = _area(radiusKm: 2.5).toMap();
       final read = ServiceArea.fromMap(saved);
-      expect(read.label, 'Balaybay Resettlement');
+      expect(read.label, 'Castillejos');
       expect(read.radiusKm, 2.5);
       expect(read.center.latitude, closeTo(_centre.latitude, 0.000001));
       expect(read.center.longitude, closeTo(_centre.longitude, 0.000001));

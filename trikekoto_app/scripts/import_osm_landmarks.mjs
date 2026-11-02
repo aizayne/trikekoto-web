@@ -6,7 +6,7 @@
 //   node import_osm_landmarks.mjs --commit
 //   node import_osm_landmarks.mjs --remove   delete every imported landmark
 //
-//   --radius=5    kilometres around the service area (1 to 25)
+//   --radius=8    kilometres around the service area (1 to 25); defaults to its radius
 //
 // Needs service-account.json here, as seed_admin.mjs does.
 //
@@ -30,7 +30,7 @@ const keyPath = resolve(here, 'service-account.json');
 const commit = process.argv.includes('--commit');
 const remove = process.argv.includes('--remove');
 const radiusArg = process.argv.find((a) => a.startsWith('--radius='));
-const radiusKm = Math.min(Math.max(Number(radiusArg?.split('=')[1]) || 5, 1), 25);
+const radiusChoice = Number(radiusArg?.split('=')[1]);
 
 if (!existsSync(keyPath)) {
   console.error('\n  service-account.json not found in trikekoto_app/scripts/.\n');
@@ -49,9 +49,19 @@ if (remove) {
 // Mirrors ServiceArea.fallback in lib/core/config/app_config.dart.
 const config = (await db.doc('config/app').get()).data();
 const area = config?.serviceArea ?? {};
-const lat = area.lat ?? 14.9747;
-const lng = area.lng ?? 120.1577;
-const label = area.label ?? 'Balaybay Resettlement';
+const lat = area.lat ?? 14.9321;
+const lng = area.lng ?? 120.2005;
+const label = area.label ?? 'Castillejos';
+
+// OSM has no boundary for Castillejos, and a circle wide enough for its far
+// barangays also reaches San Marcelino and Subic. So this box, drawn by hand
+// around the barangays OSM does have, decides what is imported. It is an
+// approximation. Look over the dry run, and delete any strays in the admin panel.
+const inCastillejos = (p) =>
+  p.lat >= 14.889 && p.lat <= 14.96 && p.lon >= 120.155 && p.lon <= 120.218;
+
+// Names that would match a dozen places and tell a driver nothing.
+const generic = /^(eatery|canteen|carinderia|store|clinic|church|catholic church|christian church|church of christ|baptist church|basketball court|covered court|court|school|elementary school|drug ?store|pharmacy|botika ng bayan|resort|chapel)$/i;
 
 // The kinds of place people give directions by.
 const kinds = [
@@ -62,6 +72,7 @@ const kinds = [
   'tourism~"^(attraction|hotel|resort)$"',
   'public_transport~"^(station)$"',
 ];
+const radiusKm = Math.min(Math.max(radiusChoice || area.radiusKm || 8, 1), 25);
 const metres = radiusKm * 1000;
 const query = `[out:json][timeout:60];(${kinds
   .map((k) => `nwr[${k}]["name"](around:${metres},${lat},${lng});`)
@@ -105,6 +116,7 @@ for (const e of elements) {
   const name = e.tags?.name?.trim();
   const point = e.type === 'node' ? { lat: e.lat, lon: e.lon } : e.center;
   if (!name || name.length > 80 || !point) continue;
+  if (generic.test(name) || !inCastillejos(point)) continue;
   const key = `${name.toLowerCase()}|${point.lat.toFixed(3)}|${point.lon.toFixed(3)}`;
   if (seen.has(key)) continue;
   seen.add(key);

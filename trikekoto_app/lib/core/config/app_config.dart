@@ -136,8 +136,8 @@ class ServiceArea {
   /// The chapter this was built for, as a starting point for the map picker.
   /// Nothing warns until an admin sets a radius.
   static const fallback = ServiceArea(
-    label: 'Balaybay Resettlement',
-    center: GeoPoint(14.9747, 120.1577),
+    label: 'Castillejos',
+    center: GeoPoint(14.9321, 120.2005),
     radiusKm: 0,
   );
 

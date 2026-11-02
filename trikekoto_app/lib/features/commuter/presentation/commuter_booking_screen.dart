@@ -58,9 +58,6 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
   PickedLocation? _pickup;
   PickedLocation? _dropoff;
 
-  /// Manila as a last resort, only until the first GPS fix lands.
-  static const _fallbackCenter = LatLng(14.5995, 120.9842);
-
   /// True while the opening GPS fix and its address lookup are in flight, so
   /// the pickup field can say it is working rather than looking empty.
   bool _locating = false;
@@ -219,17 +216,19 @@ class _CommuterBookingScreenState extends ConsumerState<CommuterBookingScreen> {
 
   Future<void> _pick({required bool isPickup}) async {
     final existing = isPickup ? _pickup : _dropoff;
-    final center = existing?.point ??
+    final known = existing?.point ??
         _pickup?.point ??
-        (await _currentPoint())?.latLng ??
-        _fallbackCenter;
+        (await _currentPoint())?.latLng;
+    final area = ref.read(serviceAreaProvider).center;
 
     if (!mounted) return;
     final result = await Navigator.of(context).push<PickedLocation>(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
           title: isPickup ? context.l.bookSetPickup : context.l.bookSetDropoff,
-          initialCenter: center,
+          initialCenter: known ?? LatLng(area.latitude, area.longitude),
+          // With no GPS and nothing chosen, show the whole service area.
+          initialZoom: known == null ? 12.5 : 17,
           initialLabel: existing?.label ?? '',
         ),
       ),

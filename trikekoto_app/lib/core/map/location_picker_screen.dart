@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../config/app_config.dart';
 import '../routing/geocoding_service.dart';
 import '../ui/app_theme.dart';
 import 'landmarks.dart';
@@ -31,11 +32,16 @@ class LocationPickerScreen extends ConsumerStatefulWidget {
     required this.title,
     required this.initialCenter,
     this.initialLabel = '',
+    this.initialZoom = 17,
   });
 
   final String title;
   final LatLng initialCenter;
   final String initialLabel;
+
+  /// Close enough to place a pin by default. Further out when there is no
+  /// known point to open on, so the whole service area is in view.
+  final double initialZoom;
 
   @override
   ConsumerState<LocationPickerScreen> createState() =>
@@ -182,7 +188,8 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
           OsmMap(
             controller: _controller,
             center: widget.initialCenter,
-            zoom: 17,
+            zoom: widget.initialZoom,
+            area: ref.watch(serviceAreaProvider),
             markers: [
               for (final l in landmarks)
                 MapMarkers.landmark(

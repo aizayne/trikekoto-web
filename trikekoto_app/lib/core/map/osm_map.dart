@@ -7,6 +7,7 @@ import 'package:http_cache_file_store/http_cache_file_store.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../config/app_config.dart';
 import '../ui/app_theme.dart';
 import '../ui/trike_icon.dart';
 
@@ -104,7 +105,12 @@ class OsmMap extends StatelessWidget {
     this.interactive = true,
     this.onPositionChanged,
     this.onTap,
+    this.area,
   });
+
+  /// Outlines the chapter's service area, when it has one. A guide rather than
+  /// a fence: trips may start or end outside it, and only get a warning.
+  final ServiceArea? area;
 
   final LatLng center;
   final double zoom;
@@ -143,6 +149,19 @@ class OsmMap extends StatelessWidget {
       ),
       children: [
         const OsmTiles(),
+        if (area case final a? when a.warns)
+          CircleLayer(
+            circles: [
+              CircleMarker(
+                point: LatLng(a.center.latitude, a.center.longitude),
+                radius: a.radiusKm * 1000,
+                useRadiusInMeter: true,
+                color: AppColors.accent.withValues(alpha: 0.05),
+                borderColor: AppColors.accent,
+                borderStrokeWidth: 2,
+              ),
+            ],
+          ),
         // Drawn under the markers so a pin is never hidden by the line.
         if (route.length > 1)
           PolylineLayer(
